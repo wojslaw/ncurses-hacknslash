@@ -1,5 +1,6 @@
 #pragma once
 #include <time.h>
+#include <sys/time.h>
 
 
 
@@ -58,12 +59,16 @@ struct CountdownTimer {
 	int ticks_collected = 0;
 	bool is_timer_repeating = true;
 
-	CountdownTimer();
+	CountdownTimer() {
+	}
 	CountdownTimer(double const _remaining_seconds) { 
 		seconds_countdown = _remaining_seconds;
 		remaining_seconds = _remaining_seconds;
 	}
 
+	void reset_countdown(void) {
+		remaining_seconds = seconds_countdown;
+	}
 
 	bool is_countdown_finished(void) const { return ticks_collected > 0; }
 

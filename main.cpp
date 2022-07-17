@@ -2,8 +2,6 @@
 
 
 #include <assert.h>
-#include <time.h>
-#include <sys/time.h>
 #include <stdlib.h>
 #include <locale.h>
 
@@ -13,7 +11,12 @@
 #include <fcntl.h>
 #include <unistd.h>
 
-#include "Timer.h"
+#include "Timer.hpp"
+#include "Level.hpp"
+#include "Entity.hpp"
+
+
+// TODO mouse, convert to level-coordinates
 
 
 
@@ -39,6 +42,11 @@ int main() {
 	keypad(stdscr, TRUE);
 	refresh();
 
+	WINDOW * w_gamewindow = newwin(40,40,10,10);
+	wrefresh(w_gamewindow);
+	refresh();
+
+	Level LEVEL  = Level(8,8);
 
 
 
@@ -57,19 +65,27 @@ int main() {
 	for(ch = ERR ;  ch != 'q' ; ch = getch() ) {
 
 		switch(ch) {
-			case 'a':
-				++timeout_miliseconds;
-				timeout(timeout_miliseconds);
+			case 'w':
+				LEVEL.ref_player_entity().direction = DIRECTION_UP;
 				break;
-			case 'z':
-				--timeout_miliseconds;
-				timeout(timeout_miliseconds);
+			case 'a':
+				LEVEL.ref_player_entity().direction = DIRECTION_LEFT;
+				break;
+			case 's':
+				LEVEL.ref_player_entity().direction = DIRECTION_DOWN;
+				break;
+			case 'd':
+				LEVEL.ref_player_entity().direction = DIRECTION_RIGHT;
 				break;
 		}
 
+		// timers
 		GLOBALTIMER.update_auto();
 		ct_1.update_from_globaltimer(GLOBALTIMER);
-		erase();
+
+
+		// render text
+		move(0,0);
 		printw( "timeout: %d [miliseconds]\n%40f\n%40f\n"
 				, timeout_miliseconds
 				, GLOBALTIMER.total_seconds
@@ -80,7 +96,11 @@ int main() {
 				, ct_1.remaining_seconds
 				, ct_1.ticks_collected
 			  );
-		refresh();
+		// only render if enough time moved
+		LEVEL.update_table_of_cells_with_pointers_to_entities();
+		LEVEL.update_entities();
+		LEVEL.wprint_range(w_gamewindow,0,0,12,20);
+		wrefresh(w_gamewindow);
 	} // loop
 
 

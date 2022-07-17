@@ -1,5 +1,5 @@
 SOURCES=main.cpp
-HEADERS=Timer.h
+HEADERS= Timer.hpp Level.hpp Entity.hpp Vec2d.hpp
 FLAGS=-Wall -Wextra -Wfatal-errors  -lncursesw
 APPNAME=a.out
 DIR_INSTALL=~/bin
