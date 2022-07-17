@@ -69,8 +69,8 @@ struct CountdownTimer {
 
 	void update_with_deltatime_seconds(double const deltatime_seconds) {
 		total_seconds += deltatime_seconds;
-		remaining_seconds -= deltatime_seconds;
 		if(seconds_countdown > 0) {
+			remaining_seconds -= deltatime_seconds;
 			if(remaining_seconds < 0) {
 				++ticks_collected;
 				if(is_timer_repeating) {
