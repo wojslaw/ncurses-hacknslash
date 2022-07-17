@@ -8,32 +8,7 @@ typedef struct CountdownTimer CountdownTimer;
 typedef struct GlobalTimer GlobalTimer;
 
 
-struct CountdownTimer {
-	double seconds_countdown = 0.0;
-	double total_seconds = 0.0;
-	double remaining_seconds = 0.0;
-	int ticks_collected = 0;
 
-
-	bool is_countdown_finished(void) const { return ticks_collected > 0; }
-
-	void update(double const deltatime_seconds) {
-		total_seconds += deltatime_seconds;
-		remaining_seconds -= deltatime_seconds;
-		if(seconds_countdown > 0) {
-			if(remaining_seconds < 0) {
-				++ticks_collected;
-				remaining_seconds += seconds_countdown;// TODO consume all
-			}
-		}
-	}
-
-	int consume_ticks(void) {
-		int const ticks = ticks_collected;
-		ticks_collected = 0;
-		return ticks;
-	};
-};
 
 
 
@@ -41,18 +16,18 @@ struct CountdownTimer {
 
 struct GlobalTimer {
 	double total_seconds = 0.0;
-
-
+	double deltatime_seconds = 0.0;
 	struct timeval time_last = {0,0};
 	struct timeval time_new = {0,0};
-	double deltatime_seconds = 0.0;
 
-	double update_from_global_time(void) {
+	double update_auto(void) {
 		//int const errval = // TODO
 		gettimeofday(&time_new,0);
 		deltatime_seconds
-			= (time_new.tv_sec  - time_last.tv_sec )
-			+ ((time_new.tv_usec - time_last.tv_usec) * 1000 * 1000) ;
+			=  ((double)time_new.tv_sec  - (double)time_last.tv_sec )
+			+ (((double)time_new.tv_usec - (double)time_last.tv_usec) / 1000000) ;
+		time_last = time_new;
+		total_seconds += deltatime_seconds;
 		return deltatime_seconds;
 	}
 
@@ -63,3 +38,57 @@ struct GlobalTimer {
 		time_new = time_last;
 	}
 };
+
+
+
+
+
+
+
+
+
+
+
+
+
+struct CountdownTimer {
+	double seconds_countdown = 0.0;
+	double total_seconds = 0.0;
+	double remaining_seconds = 0.0;
+	int ticks_collected = 0;
+	bool is_timer_repeating = true;
+
+	CountdownTimer();
+	CountdownTimer(double const _remaining_seconds) { 
+		seconds_countdown = _remaining_seconds;
+		remaining_seconds = _remaining_seconds;
+	}
+
+
+	bool is_countdown_finished(void) const { return ticks_collected > 0; }
+
+	void update_with_deltatime_seconds(double const deltatime_seconds) {
+		total_seconds += deltatime_seconds;
+		remaining_seconds -= deltatime_seconds;
+		if(seconds_countdown > 0) {
+			if(remaining_seconds < 0) {
+				++ticks_collected;
+				if(is_timer_repeating) {
+					remaining_seconds += seconds_countdown;// TODO consume all into ticks
+				}
+			}
+		}
+	}
+
+	void update_from_globaltimer( GlobalTimer const & global_timer) {
+		update_with_deltatime_seconds(global_timer.deltatime_seconds);
+	}
+
+	int consume_ticks(void) {
+		int const ticks = ticks_collected;
+		ticks_collected = 0;
+		return ticks;
+	};
+};
+
+
