@@ -193,6 +193,11 @@ struct Level {
 		,int y_halfsize
 		,int x_halfsize
 		) ;
+
+
+	void wprint_entitylist(
+				WINDOW * w
+				,int const max_entities_to_print);
 };
 
 
@@ -437,4 +442,41 @@ Level::update_time_from_globaltimer(GlobalTimer const & GLOBALTIMER)
 	// 
 	update_table_of_cells_with_pointers_to_entities();
 	update_entities();
+}
+
+
+
+
+
+
+	void
+Level::wprint_entitylist(
+		WINDOW * w
+		,int const max_entities_to_print)
+{
+	assert(w);
+	werase(w);
+	wmove(w,0,0);
+	int count_of_printed = 0;
+	for(size_t id : vector_of_entityids_on_screen) {
+		// skip 0 - playerref
+		if(id == 0) {
+			continue;
+		}
+		if(count_of_printed >= max_entities_to_print) {
+			break;
+		}
+		wprintw(w,"%zu  %c\n",id,vector_of_entity.at(id).ncurses_symbol );
+		++count_of_printed;
+	}
+
+	if(vector_of_entityids_on_screen.size() > 1) {
+		if(count_of_printed < (int)vector_of_entityids_on_screen.size()-1) {
+			wprintw(w,"...[%d more]"
+					, (((int)vector_of_entityids_on_screen.size())-count_of_printed-1)
+				   );
+		}
+	}
+
+	wrefresh(w);
 }

@@ -49,9 +49,10 @@ int main() {
 
 	init_colorpairs();
 
-	WINDOW * w_gamewindow = newwin(16,16,10,10);
-	WINDOW * w_text_entitylist = newwin(20,16,10,30);
+	WINDOW * w_gamewindow = newwin(16,16,10,30);
+	WINDOW * w_text_entitylist = newwin(20,16,10,50);
 	wrefresh(w_gamewindow);
+	wrefresh(w_text_entitylist);
 	refresh();
 
 	Level LEVEL  = Level(40,60);
@@ -103,7 +104,9 @@ int main() {
 			  );
 		// only render if enough time moved
 		LEVEL.wprint_centered_on_player_entity_with_window_halfsize(w_gamewindow,4,7);
+		LEVEL.wprint_entitylist(w_text_entitylist,getmaxy(w_text_entitylist));
 		wrefresh(w_gamewindow);
+		wrefresh(w_text_entitylist);
 		move(
 				 getbegy(w_gamewindow)+LEVEL.ncurses_cursor_y_offset_target
 				,getbegx(w_gamewindow)+LEVEL.ncurses_cursor_x_offset_target);
