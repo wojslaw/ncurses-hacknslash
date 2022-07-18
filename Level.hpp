@@ -77,71 +77,16 @@ struct Level {
 
 	unsigned seed = 0;
 
-	int ncurses_cursor_y_offset_target = -1;
-	int ncurses_cursor_x_offset_target = -1;
+	Level(
+		 int const _y_max 
+		,int const _x_max 
+			);
+
 	std::vector<std::vector<LevelCell>> table_of_cells;
 	std::vector<Entity> vector_of_entity;
 	std::vector<VisualEntity> vector_of_visual_entity;
 	std::vector<size_t> vector_of_entityids_on_screen;
 
-	Level(
-		 int const _y_max 
-		,int const _x_max 
-			)
-	{
-		// player entity:
-		vector_of_entity.resize(8);
-		vector_of_entity.at(0).vec2d_position.y = 8;
-		vector_of_entity.at(0).vec2d_position.x = 8;
-		//
-		vector_of_entity.at(1).ncurses_symbol = 'a';
-		vector_of_entity.at(2).ncurses_symbol = 'b';
-		vector_of_entity.at(3).ncurses_symbol = 'c';
-		vector_of_entity.at(4).ncurses_symbol = 'd';
-		vector_of_entity.at(5).ncurses_symbol = 'e';
-		vector_of_entity.at(6).ncurses_symbol = 'f';
-		vector_of_entity.at(7).ncurses_symbol = 'g';
-		//
-		vector_of_entity.at(1).vec2d_position.y = 4;
-		vector_of_entity.at(1).vec2d_position.x = 4;
-		vector_of_entity.at(2).vec2d_position.y = 2;
-		vector_of_entity.at(2).vec2d_position.x = 2;
-		vector_of_entity.at(3).vec2d_position.y = 8;
-		vector_of_entity.at(3).vec2d_position.x = 8;
-		//
-		vector_of_entity.at(4).vec2d_position.y = 2;
-		vector_of_entity.at(5).vec2d_position.y = 3;
-		vector_of_entity.at(6).vec2d_position.y = 4;
-		vector_of_entity.at(7).vec2d_position.y = 5;
-		//
-		vector_of_entity.at(1).timer_movement.seconds_countdown = 0.75;
-		vector_of_entity.at(2).timer_movement.seconds_countdown = 0.5;
-		vector_of_entity.at(3).timer_movement.seconds_countdown = 0.5;
-		//
-		
-		y_max = _y_max;
-		x_max = _x_max;
-		table_of_cells.resize(y_max);
-		int y = 0;
-		for(auto & row : table_of_cells ) {
-			row.resize(x_max);
-			int x = 0;
-			for(auto & cell : row) {
-				int const is_grass = rand_r(&seed)%0x20 == 0;
-				if(is_grass) {
-					cell.cellterrain = CELLTERRAIN_GRASS;
-				}
-				if(x == 0 || x == x_max-1 || y == 0 || y == y_max-1) {
-					cell.cellterrain = CELLTERRAIN_HASH;
-				}
-				if((x % 5) == 0 && (y % 3) == 0 ) {
-					cell.cellterrain = CELLTERRAIN_HASH;
-				}
-				++x;
-			}
-			++y;
-		}
-	}
 	Entity & ref_player_entity(void) { return vector_of_entity.at(0); }
 	Entity & ref_from_entityid(size_t const entityid) { return vector_of_entity.at(entityid); }
 	Entity & ref_target(void) { return ref_from_entityid(ref_player_entity().id_of_target); }
@@ -181,36 +126,19 @@ struct Level {
 
 	void update_entity_combat_rounds(void);
 	void update_table_of_cells_with_pointers_to_entities(void) ;
-	void update_entities(void) {
-		for(auto & ref_entity : vector_of_entity ) {
-			//ref_entity.update_position();
-			ensure_vec2d_position_is_within_bounds(&(ref_entity.vec2d_position));
-		}
-		update_table_of_cells_with_pointers_to_entities();
-		for(auto & ref_entity : vector_of_entity ) {
-			LevelCell & cell_at_new_position = ref_levelcell_at_vec2d(ref_entity.vec2d_position);
-			if(cell_at_new_position.is_blocked_cell()) {
-				ref_entity.position_restore_last();
-			}
-			for(auto & ref_entity_2 : vector_of_entity ) {
-				if(&ref_entity_2 == &ref_entity) { // skip check if same
-					continue;
-				}
-				if(!(ref_entity_2.is_blocking())) {
-					continue;
-				}
-				if(Vec2d_is_equal(ref_entity.vec2d_position ,ref_entity_2.vec2d_position )) {
-					ref_entity.position_restore_last();
-				}
-			}
-		}
-		//
-		update_table_of_cells_with_pointers_to_entities();
-	}
+
+	void update_vector_of_entityids_on_screen_within_range(
+		 int const y_start
+		,int const x_start
+		,int const y_end
+		,int const x_end );
+
 
 //public:
 
 	void update_time_from_globaltimer(GlobalTimer const & GLOBALTIMER);//TODO
+
+	void update_entities(void) ;
 
 	void
 		wprint_range(
@@ -234,7 +162,7 @@ struct Level {
 
 
 	void make_visual_effect_on_target(int const range);
-};
+}; // struct Level
 
 
 
@@ -254,16 +182,7 @@ Level::update_table_of_cells_with_pointers_to_entities(void)
 	size_t id_of_entity = 0;
 	for(const auto & entity : vector_of_entity) {
 		// skip invalid-positioned entities
-		if(entity.vec2d_position.y < 0) {
-			continue;
-		}
-		if(entity.vec2d_position.x < 0) {
-			continue;
-		}
-		if(entity.vec2d_position.x >= x_max) {
-			continue;
-		}
-		if(entity.vec2d_position.y >= y_max) {
+		if(!(is_vec2d_position_within_bounds_of_level(entity.vec2d_position))) {
 			continue;
 		}
 		//
@@ -279,16 +198,7 @@ Level::update_table_of_cells_with_pointers_to_entities(void)
 			continue;
 		}
 		// skip invalid-positioned entities
-		if(visual_entity.vec2d_position.y < 0) {
-			continue;
-		}
-		if(visual_entity.vec2d_position.x < 0) {
-			continue;
-		}
-		if(visual_entity.vec2d_position.x >= x_max) {
-			continue;
-		}
-		if(visual_entity.vec2d_position.y >= y_max) {
+		if(!(is_vec2d_position_within_bounds_of_level(visual_entity.vec2d_position))) {
 			continue;
 		}
 		//
@@ -432,28 +342,11 @@ Level::wprint_range(
 		}
 		wmove(w,getcury(w)+1,1);
 	}
-	// find ids of entities on screen, to check if you can draw cursor
-	ncurses_cursor_y_offset_target = -1;
-	ncurses_cursor_x_offset_target = -1;
-	vector_of_entityids_on_screen.resize(0);
-	bool is_target_on_screen = false;
-	for(size_t id = 0; id < vector_of_entity.size(); ++id) {
-		auto const & entity = vector_of_entity.at(id);
-		if(entity.is_dead()) { //don't show corpses
-			continue;
-		}
-		if(entity.vec2d_position.is_within_rectangle(y_start,x_start,y_end,x_end)) {
-			vector_of_entityids_on_screen.push_back(id);
-			if(id == vector_of_entity.at(0).id_of_target) {
-				ncurses_cursor_y_offset_target = 1+ entity.vec2d_position.y - y_start;
-				ncurses_cursor_x_offset_target = 1+ entity.vec2d_position.x - x_start;
-				is_target_on_screen = true;
-			}
-		}
-	}
-	if(!is_target_on_screen) {
-		ref_player_entity().reset_targeting();
-	}
+	update_vector_of_entityids_on_screen_within_range(
+		 y_start
+		,x_start
+		,y_end
+		,x_end );
 	// end
 	wrefresh(w);
 }
@@ -754,5 +647,151 @@ Level::move_decayed_entities(void)
 			vector_of_entity.at(i).vec2d_position.y = -1;
 			vector_of_entity.at(i).vec2d_position.x = -1;
 		}
+	}
+}
+
+
+
+
+
+
+
+
+
+
+//ctor
+Level::Level(
+		 int const _y_max 
+		,int const _x_max 
+			)
+{
+	// player entity:
+	vector_of_entity.resize(8);
+	vector_of_entity.at(0).vec2d_position.y = 8;
+	vector_of_entity.at(0).vec2d_position.x = 8;
+	//
+	vector_of_entity.at(1).ncurses_symbol = 'a';
+	vector_of_entity.at(2).ncurses_symbol = 'b';
+	vector_of_entity.at(3).ncurses_symbol = 'c';
+	vector_of_entity.at(4).ncurses_symbol = 'd';
+	vector_of_entity.at(5).ncurses_symbol = 'e';
+	vector_of_entity.at(6).ncurses_symbol = 'f';
+	vector_of_entity.at(7).ncurses_symbol = 'g';
+	//
+	vector_of_entity.at(1).vec2d_position.y = 4;
+	vector_of_entity.at(1).vec2d_position.x = 4;
+	vector_of_entity.at(2).vec2d_position.y = 2;
+	vector_of_entity.at(2).vec2d_position.x = 2;
+	vector_of_entity.at(3).vec2d_position.y = 8;
+	vector_of_entity.at(3).vec2d_position.x = 8;
+	//
+	vector_of_entity.at(4).vec2d_position.y = 2;
+	vector_of_entity.at(5).vec2d_position.y = 3;
+	vector_of_entity.at(6).vec2d_position.y = 4;
+	vector_of_entity.at(7).vec2d_position.y = 5;
+	//
+	vector_of_entity.at(1).timer_movement.seconds_countdown = 0.75;
+	vector_of_entity.at(2).timer_movement.seconds_countdown = 0.5;
+	vector_of_entity.at(3).timer_movement.seconds_countdown = 0.5;
+	//
+
+	y_max = _y_max;
+	x_max = _x_max;
+	table_of_cells.resize(y_max);
+	int y = 0;
+	for(auto & row : table_of_cells ) {
+		row.resize(x_max);
+		int x = 0;
+		for(auto & cell : row) {
+			int const is_grass = rand_r(&seed)%0x20 == 0;
+			if(is_grass) {
+				cell.cellterrain = CELLTERRAIN_GRASS;
+			}
+			if(x == 0 || x == x_max-1 || y == 0 || y == y_max-1) {
+				cell.cellterrain = CELLTERRAIN_HASH;
+			}
+			if((x % 5) == 0 && (y % 3) == 0 ) {
+				cell.cellterrain = CELLTERRAIN_HASH;
+			}
+			++x;
+		}
+		++y;
+	}
+}
+
+
+
+
+
+
+
+
+
+
+	void
+Level::update_entities(void) {
+	update_table_of_cells_with_pointers_to_entities();
+	for(auto & ref_entity : vector_of_entity ) {
+		LevelCell & cell_at_new_position = ref_levelcell_at_vec2d(ref_entity.vec2d_position);
+		if(cell_at_new_position.is_blocked_cell()) {
+			ref_entity.position_restore_last();
+		}
+		for(auto & ref_entity_2 : vector_of_entity ) {
+			if(&ref_entity_2 == &ref_entity) { // skip check if same
+				continue;
+			}
+			if(!(ref_entity_2.is_blocking())) {
+				continue;
+			}
+			if(Vec2d_is_equal(ref_entity.vec2d_position ,ref_entity_2.vec2d_position )) {
+				ref_entity.position_restore_last();
+			}
+		}
+	}
+	//
+	for(auto & ref_entity : vector_of_entity ) {
+		//ref_entity.update_position();
+		ensure_vec2d_position_is_within_bounds(&(ref_entity.vec2d_position));
+	}
+	//
+	update_table_of_cells_with_pointers_to_entities();
+}
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+	void
+Level::update_vector_of_entityids_on_screen_within_range(
+		int const y_start
+		,int const x_start
+		,int const y_end
+		,int const x_end )
+{
+	vector_of_entityids_on_screen.resize(0);
+	bool is_target_on_screen = false;
+	for(size_t id = 0; id < vector_of_entity.size(); ++id) {
+		auto const & entity = vector_of_entity.at(id);
+		if(entity.is_dead()) { //don't show corpses
+			continue;
+		}
+		if(entity.vec2d_position.is_within_rectangle(y_start,x_start,y_end,x_end)) {
+			vector_of_entityids_on_screen.push_back(id);
+			if(id == vector_of_entity.at(0).id_of_target) {
+				is_target_on_screen = true;
+			}
+		}
+	}
+	if(!is_target_on_screen) {
+		ref_player_entity().reset_targeting();
 	}
 }

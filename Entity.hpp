@@ -58,6 +58,7 @@ typedef struct Entity Entity;
 struct Entity {
 	Vec2d vec2d_position = Vec2d(1,1);
 	Vec2d vec2d_position_last = Vec2d(1,1);
+	Vec2d vec2d_direction_planned = Vec2d(0,0);
 	double total_seconds= 0.0;
 	CountdownTimer timer_combat_turn = CountdownTimer(COMBAT_TURN_SECONDS);
 	CountdownTimer timer_movement = CountdownTimer(MOVEMENT_TURN_SECONDS);
@@ -235,12 +236,14 @@ public:
 		vec2d_position_last = vec2d_position;
 		// TODO only update if ready to move
 		timer_movement.reset_countdown();
+		// TODO use vec2d_direction_planned
 		//
 		Vec2d const & direction_vector = DIRECTION_VECTOR[direction];
 		vec2d_position.add_vec2d(direction_vector);
 		if(is_direction_angled(direction)) {
 			timer_movement.remaining_seconds *= 2;
 		}
+		direction = direction_persistent;
 	}
 
 	void position_restore_last(void) {
