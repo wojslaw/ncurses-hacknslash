@@ -1,6 +1,6 @@
 SOURCES=main.cpp
 HEADERS= Timer.hpp Level.hpp Entity.hpp Vec2d.hpp Ncurses.hpp VisualEntity.hpp
-FLAGS=-Wall -Wextra -Wfatal-errors  -lncursesw
+FLAGS=-Wall -Wextra -Wfatal-errors  -lncursesw -Weffc++
 APPNAME=a.out
 DIR_INSTALL=~/bin
 

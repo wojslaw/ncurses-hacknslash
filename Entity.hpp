@@ -88,7 +88,10 @@ struct Entity {
 
 	bool has_selected_target = false;
 	size_t id_of_target = 0;
-	void reset_targeting(void) { id_of_target = 0 ; has_selected_target = false; }
+	void reset_targeting(void) {
+		id_of_target = 0 ;
+		has_selected_target = false;
+	}
 	void set_target_to_entityid(size_t const entityid) { 
 		id_of_target = entityid ; 
 		has_selected_target = true;
@@ -250,6 +253,7 @@ public:
 		vec2d_position = vec2d_position_last;
 		direction = DIRECTION_NONE;
 		direction_persistent = DIRECTION_NONE;
+		vec2d_direction_planned = DIRECTION_VECTOR[DIRECTION_NONE];
 	}
 
 
@@ -284,6 +288,7 @@ Entity::update_time_from_globaltimer(GlobalTimer const & GLOBALTIMER)
 	}
 	if(direction_persistent != DIRECTION_NONE) {
 		direction = direction_persistent;
+		vec2d_direction_planned = DIRECTION_VECTOR[direction_persistent];
 	}
 	if(direction != DIRECTION_NONE) {
 		int const tick_movement = timer_movement.consume_tick();
@@ -328,6 +333,10 @@ Entity::wprint_detailed_entity_info(WINDOW * w) const
 			,get_attack_maximum()
 			,last_combat_attack_damage
 			,last_combat_attack_roll );
+	wmove(w,5,1);
+	wprintw(w,"[%2d , %2d]"
+			,vec2d_direction_planned.y
+			,vec2d_direction_planned.x );
 	wrefresh(w);
 }
 
@@ -344,6 +353,9 @@ Entity::wprint_detailed_entity_info(WINDOW * w) const
 	void
 Entity::set_direction_temporary(enum DIRECTION const dir) 
 {
+	Vec2d const & vec2d_direction = DIRECTION_VECTOR[dir];
+	vec2d_direction_planned.add_vec2d(vec2d_direction);
+	vec2d_direction_planned.normalize();
 	// set angled
 	if(direction == DIRECTION_NONE) {
 		direction = dir;

@@ -20,6 +20,7 @@ struct Vec2d {
 			) const;
 
 	void add_vec2d(Vec2d const & v0);
+	void normalize(void);
 };
 
 
@@ -114,4 +115,15 @@ Vec2d::add_vec2d(Vec2d const & v0)
 {
 	y += v0.y;
 	x += v0.x;
+}
+
+
+
+	void
+Vec2d::normalize(void)
+{
+	if(y < -1) { y = -1; }
+	if(y > +1) { y = +1; }
+	if(x < -1) { x = -1; }
+	if(x > +1) { x = +1; }
 }

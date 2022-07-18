@@ -27,7 +27,7 @@
 #define WINDOW_DETAILS_SIZE_Y 8
 #define WINDOW_DETAILS_SIZE_X 40
 
-
+#define MULTIPLY_TIME 128.0
 
 
 
@@ -105,7 +105,7 @@ int main() {
 	wrefresh(w_text_player);
 	wrefresh(w_text_target);
 
-	Level LEVEL  = Level(40,60);
+	Level LEVEL  = Level(64,128);
 	LEVEL.ref_player_entity().id_of_target = 1;
 
 
@@ -119,9 +119,9 @@ int main() {
 
 
 	int input_character = ERR;
-	timeout(100);
+	int timeout_miliseconds=10;
+	timeout(timeout_miliseconds);
 	ESCDELAY = 10;
-	int timeout_miliseconds=100;
 	int input_digit = -1;
 	// loop
 	for(input_character = ERR ;  input_character != 'Z' ; input_character = getch() ) {
@@ -162,18 +162,23 @@ int main() {
 
 		// timers
 		GLOBALTIMER.update_auto();
+		if(MULTIPLY_TIME > 1.0) {
+			GLOBALTIMER.deltatime_seconds *= MULTIPLY_TIME;
+		}
+
+		mvprintw(LINES-2,0,"update_time_from_globaltimer\n");
 		LEVEL.update_time_from_globaltimer(GLOBALTIMER);
 
 
 		// render text
 		if(DISPLAY_DEBUG) {
-			move(1,0);
+			move(11,0);
 			printw( "timeout: %d [miliseconds]" , timeout_miliseconds);
-			move(2,0);
+			move(12,0);
 			printw("%f" , GLOBALTIMER.total_seconds );
-			move(3,0);
+			move(13,0);
 			printw("%f" , GLOBALTIMER.deltatime_seconds);
-			move(4,0);
+			move(14,0);
 			printw( "SFX: %zu" , LEVEL.vector_of_visual_entity.size() );
 		}
 		move(0,0);

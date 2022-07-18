@@ -69,8 +69,8 @@ struct LevelCell {
 
 
 struct Level {
-	int y_max;
-	int x_max;
+	int y_max = 1;
+	int x_max = 1;
 
 	double total_seconds = 0.0;
 	CountdownTimer timer_ai = CountdownTimer(2.0); // random number of seconds for countdown
@@ -82,10 +82,10 @@ struct Level {
 		,int const _x_max 
 			);
 
-	std::vector<std::vector<LevelCell>> table_of_cells;
-	std::vector<Entity> vector_of_entity;
-	std::vector<VisualEntity> vector_of_visual_entity;
-	std::vector<size_t> vector_of_entityids_on_screen;
+	std::vector<std::vector<LevelCell>> table_of_cells = std::vector<std::vector<LevelCell>>();
+	std::vector<Entity> vector_of_entity = std::vector<Entity>();
+	std::vector<VisualEntity> vector_of_visual_entity = std::vector<VisualEntity>();
+	std::vector<size_t> vector_of_entityids_on_screen = std::vector<size_t>();
 
 	Entity & ref_player_entity(void) { return vector_of_entity.at(0); }
 	Entity & ref_from_entityid(size_t const entityid) { return vector_of_entity.at(entityid); }
@@ -229,6 +229,9 @@ Level::ref_levelcell_at_vec2d(
 		)
 {
 	// TODO errorcheck
+	assert(v.y >= 0);
+	assert(v.x >= 0);
+	assert(is_vec2d_position_within_bounds_of_level(v));
 	return table_of_cells.at(v.y).at(v.x);
 }
 
@@ -411,21 +414,26 @@ Level::update_time_from_globaltimer(GlobalTimer const & GLOBALTIMER)
 		}
 	}
 	// visual entities
+	mvprintw(LINES-2,0,"visual entities update_time_from_globaltimer\n");
 	for(VisualEntity & visual_entity : vector_of_visual_entity) {
 		visual_entity.update_time_from_globaltimer(GLOBALTIMER);
 		// TODO delete useless visual entities
 	}
 
+	mvprintw(LINES-2,0,"move_decayed_entities\n");
 	move_decayed_entities();
 	// remove_decayed_entities();
 
 	// entities
+	mvprintw(LINES-2,0,"entities update_time_from_globaltimer\n");
 	for(Entity & entity : vector_of_entity) {
 		entity.update_time_from_globaltimer(GLOBALTIMER);
 		// remove decayed
 	}
 	// 
+	mvprintw(LINES-2,0,"update_table_of_cells_with_pointers_to_entities\n");
 	update_table_of_cells_with_pointers_to_entities();
+	mvprintw(LINES-2,0,"update_entities\n");
 	update_entities();
 	update_entity_combat_rounds();
 }
@@ -564,7 +572,8 @@ Level::player_set_target_to_visibleid_from_digit(int const input_digit)
 	void
 Level::update_entity_combat_rounds(void)
 {
-	for(Entity & attacker : vector_of_entity) {
+	for(int i = 0; i < (int)vector_of_entity.size(); ++i) {
+		Entity & attacker = vector_of_entity.at(i);
 		if(!(attacker.has_selected_target)) {
 			continue;
 		}
@@ -671,6 +680,7 @@ Level::Level(
 	vector_of_entity.at(0).vec2d_position.x = 8;
 	//
 	vector_of_entity.at(1).ncurses_symbol = 'a';
+	vector_of_entity.at(1).take_damage(100);
 	vector_of_entity.at(2).ncurses_symbol = 'b';
 	vector_of_entity.at(3).ncurses_symbol = 'c';
 	vector_of_entity.at(4).ncurses_symbol = 'd';
@@ -731,12 +741,13 @@ Level::Level(
 	void
 Level::update_entities(void) {
 	update_table_of_cells_with_pointers_to_entities();
-	for(auto & ref_entity : vector_of_entity ) {
+	for(Entity & ref_entity : vector_of_entity ) {
+		if(!(is_vec2d_position_within_bounds_of_level(ref_entity.vec2d_position))) { continue;  } // skip invalidly-placed
 		LevelCell & cell_at_new_position = ref_levelcell_at_vec2d(ref_entity.vec2d_position);
 		if(cell_at_new_position.is_blocked_cell()) {
 			ref_entity.position_restore_last();
 		}
-		for(auto & ref_entity_2 : vector_of_entity ) {
+		for(Entity const& ref_entity_2 : vector_of_entity ) {
 			if(&ref_entity_2 == &ref_entity) { // skip check if same
 				continue;
 			}
@@ -748,6 +759,7 @@ Level::update_entities(void) {
 			}
 		}
 	}
+	return;
 	//
 	for(auto & ref_entity : vector_of_entity ) {
 		//ref_entity.update_position();
