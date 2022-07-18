@@ -1,5 +1,3 @@
-//TODO fix tab selection
-
 #include <ncurses.h>
 
 
@@ -24,12 +22,10 @@
 #define WINDOW_ENTITYLIST_SIZE_Y 12
 #define WINDOW_ENTITYLIST_SIZE_X 24
 
-// TODO keep screen centered
 
 // TODO mouse, convert to level-coordinates
 
 // TODO AI: move towards player
-// TODO lose target after a few seconds out of screen
 
 // IDEA show enemy like in diablo - select target and it will show
 
