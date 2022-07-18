@@ -355,7 +355,7 @@ Level::wprint_range(
 				wattroff(w,ATTR_TERRAIN);
 			}
 		}
-		waddch(w,'\n');
+		wmove(w,getcury(w)+1,0);
 	}
 	// find ids of entities on screen, to check if you can draw cursor
 	ncurses_cursor_y_offset_target = -1;

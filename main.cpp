@@ -16,6 +16,10 @@
 #include "Level.hpp"
 #include "Entity.hpp"
 
+#define WINDOW_HALFSIZE_Y 4
+#define WINDOW_HALFSIZE_X 7
+
+// TODO keep screen centered
 
 // TODO mouse, convert to level-coordinates
 
@@ -49,7 +53,7 @@ int main() {
 
 	init_colorpairs();
 
-	WINDOW * w_gamewindow = newwin(16,16,10,30);
+	WINDOW * w_gamewindow = newwin(WINDOW_HALFSIZE_Y*2+2,WINDOW_HALFSIZE_X*2+2,10,30);
 	WINDOW * w_text_entitylist = newwin(20,16,10,50);
 	wrefresh(w_gamewindow);
 	wrefresh(w_text_entitylist);
@@ -64,6 +68,7 @@ int main() {
 
 
 	GlobalTimer GLOBALTIMER = GlobalTimer();
+	bool DISPLAY_DEBUG = false;
 
 
 
@@ -93,23 +98,28 @@ int main() {
 
 		// render text
 		move(0,0);
-		printw( "timeout: %d [miliseconds]\n%40f\n%40f\n"
-				, timeout_miliseconds
-				, GLOBALTIMER.total_seconds
-				, GLOBALTIMER.deltatime_seconds
-				);
-		printw( "\n\n%40f\n%40f\n    \n" 
-				, LEVEL.ref_player_entity().total_seconds
-				, LEVEL.ref_player_entity().timer_movement.remaining_seconds
-			  );
+		if(DISPLAY_DEBUG) {
+			printw( "timeout: %d [miliseconds]\n%40f\n%40f\n"
+					, timeout_miliseconds
+					, GLOBALTIMER.total_seconds
+					, GLOBALTIMER.deltatime_seconds
+					);
+			printw( "\n\n%40f\n%40f\n    \n" 
+					, LEVEL.ref_player_entity().total_seconds
+					, LEVEL.ref_player_entity().timer_movement.remaining_seconds
+				  );
+		}
 		// only render if enough time moved
-		LEVEL.wprint_centered_on_player_entity_with_window_halfsize(w_gamewindow,4,7);
+		border_around_window(w_gamewindow);
+		border_around_window(w_text_entitylist);
+		LEVEL.wprint_centered_on_player_entity_with_window_halfsize(w_gamewindow,WINDOW_HALFSIZE_Y,WINDOW_HALFSIZE_X);
 		LEVEL.wprint_entitylist(w_text_entitylist,getmaxy(w_text_entitylist));
 		wrefresh(w_gamewindow);
 		wrefresh(w_text_entitylist);
 		move(
 				 getbegy(w_gamewindow)+LEVEL.ncurses_cursor_y_offset_target
 				,getbegx(w_gamewindow)+LEVEL.ncurses_cursor_x_offset_target);
+		// border around window
 	} // loop
 
 
