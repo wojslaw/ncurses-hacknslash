@@ -46,7 +46,11 @@ int main() {
 	wrefresh(w_gamewindow);
 	refresh();
 
-	Level LEVEL  = Level(8,8);
+	Level LEVEL  = Level(8,12);
+	{
+		LevelCell & lc = LEVEL.ref_levelcell_at_vec2d(Vec2d(2,2));
+		lc.is_terrain = true;
+	}
 
 
 
@@ -65,18 +69,15 @@ int main() {
 	for(ch = ERR ;  ch != 'q' ; ch = getch() ) {
 
 		switch(ch) {
-			case 'w':
-				LEVEL.ref_player_entity().direction = DIRECTION_UP;
-				break;
-			case 'a':
-				LEVEL.ref_player_entity().direction = DIRECTION_LEFT;
-				break;
-			case 's':
-				LEVEL.ref_player_entity().direction = DIRECTION_DOWN;
-				break;
-			case 'd':
-				LEVEL.ref_player_entity().direction = DIRECTION_RIGHT;
-				break;
+			case 'w': LEVEL.ref_player_entity().direction = DIRECTION_UP;    break;
+			case 'a': LEVEL.ref_player_entity().direction = DIRECTION_LEFT;  break;
+			case 's': LEVEL.ref_player_entity().direction = DIRECTION_DOWN;  break;
+			case 'd': LEVEL.ref_player_entity().direction = DIRECTION_RIGHT; break;
+			case 'W': LEVEL.ref_player_entity().direction_persistent = DIRECTION_UP;    break;
+			case 'A': LEVEL.ref_player_entity().direction_persistent = DIRECTION_LEFT;  break;
+			case 'S': LEVEL.ref_player_entity().direction_persistent = DIRECTION_DOWN;  break;
+			case 'D': LEVEL.ref_player_entity().direction_persistent = DIRECTION_RIGHT; break;
+			case ' ': LEVEL.ref_player_entity().direction_persistent = DIRECTION_NONE; break;
 		}
 
 		// timers

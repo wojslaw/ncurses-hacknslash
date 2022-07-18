@@ -12,11 +12,14 @@
 typedef struct Level Level;
 typedef struct LevelCell LevelCell;
 
+// TODO collision
+
+
+
+
+
 // IDEA optimize rendering by only updating after enough time occured, or something moved
-
-
-
-// TODO smart pointers in std::vector<Entity>
+// IDEA smart pointers in std::vector<Entity>
 
 
 
@@ -73,6 +76,11 @@ struct Level {
 	//TODO update_with_seconds(); or from_globaltimer
 
 	LevelCell &
+		ref_levelcell_at_yx(
+				 int const y
+				,int const x
+				);
+	LevelCell &
 		ref_levelcell_at_vec2d(
 				Vec2d const & v
 				);
@@ -87,10 +95,16 @@ struct Level {
 		for(auto & ref_entity : vector_of_entity ) {
 			ref_entity.update_position();
 			ensure_vec2d_position_is_within_bounds(&(ref_entity.vec2d_position));
+			LevelCell & cell_at_new_positiion = ref_levelcell_at_vec2d(ref_entity.vec2d_position);
+			if(cell_at_new_positiion.is_blocked_cell()) {
+				ref_entity.position_restore_last();
+			}
 		}
 	}
 
 //public:
+
+	void update_time_from_globaltimer(void);//TODO
 
 	void
 		wprint_range(
@@ -141,6 +155,18 @@ Level::update_table_of_cells_with_pointers_to_entities(void)
 	}
 }
 
+
+
+
+	LevelCell &
+Level::ref_levelcell_at_yx(
+		 int const y
+		,int const x
+		)
+{
+	;// TODO errorcheck
+	return table_of_cells.at(y).at(x);
+}
 
 
 	LevelCell &
