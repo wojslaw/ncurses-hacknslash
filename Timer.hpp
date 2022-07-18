@@ -84,7 +84,7 @@ struct CountdownTimer {
 		}
 	}
 
-	void update_from_globaltimer( GlobalTimer const & global_timer) {
+	void update_time_from_globaltimer( GlobalTimer const & global_timer) {
 		update_with_deltatime_seconds(global_timer.deltatime_seconds);
 	}
 

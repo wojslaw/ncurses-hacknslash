@@ -3,10 +3,10 @@
 #include "Timer.hpp"
 #include "Entity.hpp"
 #include "Vec2d.hpp"
+#include "Ncurses.hpp"
 
 #include <assert.h>
 #include <vector>
-#include <ncurses.h>
 
 
 typedef struct Level Level;
@@ -70,6 +70,7 @@ struct Level {
 	int x_max;
 
 	double total_seconds = 0.0;
+	CountdownTimer timer_ai = CountdownTimer(2.0); // random number of seconds for countdown
 
 	Level(
 		 int const _y_max 
@@ -77,7 +78,20 @@ struct Level {
 			)
 	{
 		// player entity:
-		vector_of_entity.resize(1);
+		vector_of_entity.resize(4);
+		vector_of_entity.at(0).vec2d_position.y = 8;
+		vector_of_entity.at(0).vec2d_position.x = 8;
+		//
+		vector_of_entity.at(1).ncurses_symbol = 'g';
+		vector_of_entity.at(2).ncurses_symbol = 'g';
+		vector_of_entity.at(3).ncurses_symbol = 'g';
+		//
+		vector_of_entity.at(1).vec2d_position.y = 5;
+		vector_of_entity.at(1).vec2d_position.x = 2;
+		vector_of_entity.at(2).vec2d_position.y = 10;
+		vector_of_entity.at(2).vec2d_position.x = 2;
+		vector_of_entity.at(3).vec2d_position.y = 15;
+		vector_of_entity.at(3).vec2d_position.x = 2;
 		//
 		y_max = _y_max;
 		x_max = _x_max;
@@ -90,6 +104,9 @@ struct Level {
 				if(x == 0 || x == x_max-1 || y == 0 || y == y_max-1) {
 					cell.cellterrain = CELLTERRAIN_HASH;
 				}
+				if((x % 5) == 0 && (y % 3) == 0 ) {
+					cell.cellterrain = CELLTERRAIN_HASH;
+				}
 				++x;
 			}
 			++y;
@@ -100,7 +117,6 @@ struct Level {
 	std::vector<std::vector<LevelCell>> table_of_cells;
 	std::vector<Entity> vector_of_entity;
 
-	//TODO update_with_seconds(); or from_globaltimer
 
 	LevelCell &
 		ref_levelcell_at_yx(
@@ -129,6 +145,14 @@ struct Level {
 			if(cell_at_new_position.is_blocked_cell()) {
 				ref_entity.position_restore_last();
 			}
+			for(auto & ref_entity_2 : vector_of_entity ) {
+				if(&ref_entity_2 == &ref_entity) { // skip check if same
+					continue;
+				}
+				if(Vec2d_is_equal(ref_entity.vec2d_position ,ref_entity_2.vec2d_position )) {
+					ref_entity.position_restore_last();
+				}
+			}
 		}
 	}
 
@@ -144,6 +168,13 @@ struct Level {
 				,int const y_end
 				,int const x_end
 				) const ;
+
+	void
+		wprint_centered_on_player_entity_with_window_halfsize(
+		 WINDOW * w
+		,int y_halfsize
+		,int x_halfsize
+		) ;
 };
 
 
@@ -153,13 +184,12 @@ struct Level {
 Level::update_table_of_cells_with_pointers_to_entities(void) 
 {
 	// clean
-	table_of_cells.resize(y_max);
 	for(auto & row : table_of_cells ) {
 		for( auto & cell : row ) {
 			cell.ptr_entity = 0;
+			cell.id_of_entity = 0;
 		}
 	}
-	vector_of_entity.resize(1);
 	// and add
 	size_t id_of_entity = 0;
 	for(const auto & entity : vector_of_entity) {
@@ -269,6 +299,7 @@ Level::wprint_range(
 {
 
 	assert(w);
+	werase(w);
 	// ensure is within range
 	if(y_start < 0) {
 		y_start = 0;
@@ -294,12 +325,39 @@ Level::wprint_range(
 				waddch(w,ref_levelcell.ptr_entity->ncurses_symbol);
 			} else {
 				//otherwise try to render as terrain
+				wattron(w,ATTR_TERRAIN);
 				waddch(w,NCURSES_TABLE_CELLTERRAIN_SYMBOL[ref_levelcell.cellterrain]);
+				wattroff(w,ATTR_TERRAIN);
 			}
 		}
 		waddch(w,'\n');
 	}
 	wrefresh(w);
+}
+
+
+
+	void
+Level::wprint_centered_on_player_entity_with_window_halfsize(
+		 WINDOW * w
+		,int const y_halfsize
+		,int const x_halfsize
+		)
+{
+	assert(w);
+	const Vec2d center_of_screen = ref_player_entity().vec2d_position;
+	int const y_start = center_of_screen.y - y_halfsize;
+	int const x_start = center_of_screen.x - x_halfsize;
+	int const y_end   = center_of_screen.y + y_halfsize;
+	int const x_end   = center_of_screen.x + x_halfsize;
+	// NODO try to fill the given size screen - I decided that it's better to keep the screensize smaller
+	// It would be weird if at the corner you'd see more xD
+	wprint_range(
+			w
+			,y_start 
+			,x_start 
+			,y_end   
+			,x_end   );
 }
 
 
@@ -313,9 +371,36 @@ Level::wprint_range(
 Level::update_time_from_globaltimer(GlobalTimer const & GLOBALTIMER)
 {
 	total_seconds += GLOBALTIMER.deltatime_seconds;
+	// AI timer
+	timer_ai.update_time_from_globaltimer(GLOBALTIMER);
+	int const ai_tick = timer_ai.consume_all_ticks();
+	if(ai_tick > 0){
+		// change direction
+		for(size_t id = 1 ; id <= 3; ++ id ) {
+			Entity & entity = vector_of_entity.at(id);
+			switch(entity.direction_persistent_ai) {
+				case DIRECTION_NONE:
+				case DIRECTION_UP:
+					entity.direction_persistent_ai = DIRECTION_RIGHT;
+					break;
+				case DIRECTION_RIGHT:
+					entity.direction_persistent_ai = DIRECTION_DOWN;
+					break;
+				case DIRECTION_DOWN:
+					entity.direction_persistent_ai = DIRECTION_LEFT;
+					break;
+				case DIRECTION_LEFT:
+					entity.direction_persistent_ai = DIRECTION_UP;
+					break;
+			}
+		}
+	}
+
+	// entities
 	for(Entity & entity : vector_of_entity) {
 		entity.update_time_from_globaltimer(GLOBALTIMER);
 	}
+	// 
 	update_table_of_cells_with_pointers_to_entities();
 	update_entities();
 }

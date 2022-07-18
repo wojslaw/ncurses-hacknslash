@@ -3,7 +3,7 @@
 
 
 #define COMBAT_TURN_SECONDS 2.0
-#define MOVEMENT_TURN_SECONDS 0.5
+#define MOVEMENT_TURN_SECONDS 0.25
 
 
 enum DIRECTION {
@@ -32,6 +32,9 @@ struct Entity {
 
 	bool has_collision = true;
 	bool is_timed_life = false;
+
+	bool has_selected_target = false;
+	size_t id_of_target = 0;
 
 //ctor constructor
 	Entity()
@@ -66,6 +69,7 @@ private:
 	enum DIRECTION direction_persistent = DIRECTION_NONE;
 
 public:
+	enum DIRECTION direction_persistent_ai = DIRECTION_NONE;
 	void set_direction_persistent(enum DIRECTION const dir) { direction_persistent = dir; }
 	void set_direction_temporary(enum DIRECTION const dir) { direction = dir; direction_persistent = DIRECTION_NONE; }
 
@@ -107,9 +111,14 @@ Entity::update_time_from_globaltimer(GlobalTimer const & GLOBALTIMER)
 {
 	total_seconds += GLOBALTIMER.deltatime_seconds;
 
-	timer_combat_turn.update_from_globaltimer(GLOBALTIMER);
-	timer_movement.update_from_globaltimer(GLOBALTIMER);
-	timer_life.update_from_globaltimer(GLOBALTIMER);
+	timer_combat_turn.update_time_from_globaltimer(GLOBALTIMER);
+	timer_movement.update_time_from_globaltimer(GLOBALTIMER);
+	timer_life.update_time_from_globaltimer(GLOBALTIMER);
+
+
+	if(direction_persistent_ai != DIRECTION_NONE) {
+		direction_persistent = direction_persistent_ai;
+	}
 
 	if(direction_persistent != DIRECTION_NONE) {
 		direction = direction_persistent;

@@ -11,6 +11,7 @@
 #include <fcntl.h>
 #include <unistd.h>
 
+#include "Ncurses.hpp"
 #include "Timer.hpp"
 #include "Level.hpp"
 #include "Entity.hpp"
@@ -18,8 +19,13 @@
 
 // TODO mouse, convert to level-coordinates
 
+// TODO scroll view with player - center
+// TODO AI: move towards player
+
+// IDEA show enemy like in diablo - select target and it will show
 
 
+// IDEA rhythm - maybe if you press the movement key at the right moment, you can move faster or something?
 
 
 
@@ -42,11 +48,14 @@ int main() {
 	keypad(stdscr, TRUE);
 	refresh();
 
+	init_colorpairs();
+
 	WINDOW * w_gamewindow = newwin(40,40,10,10);
 	wrefresh(w_gamewindow);
 	refresh();
 
 	Level LEVEL  = Level(40,60);
+
 
 
 
@@ -92,7 +101,7 @@ int main() {
 				, LEVEL.ref_player_entity().timer_movement.remaining_seconds
 			  );
 		// only render if enough time moved
-		LEVEL.wprint_range(w_gamewindow,0,0,10,16);
+		LEVEL.wprint_centered_on_player_entity_with_window_halfsize(w_gamewindow,4,7);
 		wrefresh(w_gamewindow);
 	} // loop
 
