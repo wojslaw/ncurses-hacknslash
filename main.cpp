@@ -46,18 +46,13 @@ int main() {
 	wrefresh(w_gamewindow);
 	refresh();
 
-	Level LEVEL  = Level(8,12);
-	{
-		LevelCell & lc = LEVEL.ref_levelcell_at_vec2d(Vec2d(2,2));
-		lc.is_terrain = true;
-	}
+	Level LEVEL  = Level(40,60);
 
 
 
 
 
 	GlobalTimer GLOBALTIMER = GlobalTimer();
-	CountdownTimer ct_1 = CountdownTimer(2.0);
 
 
 
@@ -82,7 +77,6 @@ int main() {
 
 		// timers
 		GLOBALTIMER.update_auto();
-		ct_1.update_from_globaltimer(GLOBALTIMER);
 		LEVEL.update_time_from_globaltimer(GLOBALTIMER);
 
 
@@ -98,7 +92,7 @@ int main() {
 				, LEVEL.ref_player_entity().timer_movement.remaining_seconds
 			  );
 		// only render if enough time moved
-		LEVEL.wprint_range(w_gamewindow,0,0,12,20);
+		LEVEL.wprint_range(w_gamewindow,0,0,10,16);
 		wrefresh(w_gamewindow);
 	} // loop
 

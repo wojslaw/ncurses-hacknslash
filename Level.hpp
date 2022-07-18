@@ -12,7 +12,6 @@
 typedef struct Level Level;
 typedef struct LevelCell LevelCell;
 
-// TODO collision
 
 
 
@@ -23,15 +22,29 @@ typedef struct LevelCell LevelCell;
 
 
 
+enum CellTerrain {
+	CELLTERRAIN_NONE = 0 ,
+	CELLTERRAIN_HASH ,
+	CELLTERRAIN_WALL_HORIZONTAL ,
+	CELLTERRAIN_WALL_VERTICAL ,
+};
+
+int const NCURSES_TABLE_CELLTERRAIN_SYMBOL[] = {
+	[CELLTERRAIN_NONE] = '.' ,
+	[CELLTERRAIN_HASH] = '#' ,
+	[CELLTERRAIN_WALL_HORIZONTAL] = '-' ,
+	[CELLTERRAIN_WALL_VERTICAL]   = '|' ,
+};
+
 
 
 struct LevelCell {
-	bool is_terrain = false;
+	enum CellTerrain cellterrain = CELLTERRAIN_NONE;
 	Entity const * ptr_entity = 0;
 	size_t id_of_entity = 0;
 
 	bool is_blocked_cell(void) const {
-		if(is_terrain) {
+		if(cellterrain != CELLTERRAIN_NONE) {
 			return true;
 		}
 		return false;
@@ -63,13 +76,24 @@ struct Level {
 		,int const _x_max 
 			)
 	{
+		// player entity:
+		vector_of_entity.resize(1);
+		//
 		y_max = _y_max;
 		x_max = _x_max;
 		table_of_cells.resize(y_max);
+		int y = 0;
 		for(auto & row : table_of_cells ) {
 			row.resize(x_max);
+			int x = 0;
+			for(auto & cell : row) {
+				if(x == 0 || x == x_max-1 || y == 0 || y == y_max-1) {
+					cell.cellterrain = CELLTERRAIN_HASH;
+				}
+				++x;
+			}
+			++y;
 		}
-		vector_of_entity.resize(1);
 	}
 	Entity & ref_player_entity(void) { return vector_of_entity.at(0); }
 
@@ -270,11 +294,7 @@ Level::wprint_range(
 				waddch(w,ref_levelcell.ptr_entity->ncurses_symbol);
 			} else {
 				//otherwise try to render as terrain
-				if(ref_levelcell.is_terrain) {
-					waddch(w,'#');
-				} else {
-					waddch(w,'.');
-				}
+				waddch(w,NCURSES_TABLE_CELLTERRAIN_SYMBOL[ref_levelcell.cellterrain]);
 			}
 		}
 		waddch(w,'\n');

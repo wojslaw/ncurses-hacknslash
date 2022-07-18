@@ -20,8 +20,8 @@ enum DIRECTION {
 typedef struct Entity Entity;
 
 struct Entity {
-	Vec2d vec2d_position = Vec2d(0,0);
-	Vec2d vec2d_position_last = Vec2d(0,0);
+	Vec2d vec2d_position = Vec2d(1,1);
+	Vec2d vec2d_position_last = Vec2d(1,1);
 	double total_seconds= 0.0;
 	CountdownTimer timer_combat_turn = CountdownTimer(COMBAT_TURN_SECONDS);
 	CountdownTimer timer_movement = CountdownTimer(MOVEMENT_TURN_SECONDS);
