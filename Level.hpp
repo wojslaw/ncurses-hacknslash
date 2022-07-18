@@ -395,6 +395,9 @@ Level::wprint_range(
 	bool is_target_on_screen = false;
 	for(size_t id = 0; id < vector_of_entity.size(); ++id) {
 		auto const & entity = vector_of_entity.at(id);
+		if(entity.is_dead()) { //don't show corpses
+			continue;
+		}
 		if(entity.vec2d_position.is_within_rectangle(y_start,x_start,y_end,x_end)) {
 			vector_of_entityids_on_screen.push_back(id);
 			if(id == vector_of_entity.at(0).id_of_target) {
@@ -632,6 +635,6 @@ Level::update_entity_combat_rounds(void)
 			continue;
 		}
 		// finally 
-		target.take_damage(attacker.combat_roll_damage());
+		target.take_damage(attacker.combat_roll_damage_against_defense(target.get_defense()));
 	}
 }

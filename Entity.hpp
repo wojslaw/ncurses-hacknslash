@@ -38,6 +38,8 @@ struct Entity {
 	CountdownTimer timer_recently_hit = CountdownTimer(0.5);
 
 
+
+
 	int ncurses_symbol = '@';
 	int ncurses_get_attrs(void) const {
 		if(timer_recently_hit.remaining_seconds > 0.0) {
@@ -66,8 +68,20 @@ struct Entity {
 	}
 
 	// combat-things
+	unsigned randomness_seed_combat = 0;
+
 	int stat_life_max = 8;
 	int stat_life = 1;
+
+
+	int get_defense() const { return 1; }
+	int get_attack_base() const    { return 1; }
+	int get_attack_dice() const    { return 2; }
+	int get_attack_maximum() const { return get_attack_base()+(1+get_attack_dice()); }
+
+	int last_combat_attack_roll = -1;
+	int last_combat_attack_damage = -1;
+
 
 	bool is_alive(void) const {
 		return stat_life >= 0;
@@ -97,10 +111,24 @@ struct Entity {
 			return 0;
 		}
 		timer_combat_turn.reset();
-		return 1; // just a random given number for now
+		last_combat_attack_roll = rand_r(&randomness_seed_combat) % (1+get_attack_dice());
+		int const damage_rolled = last_combat_attack_roll + get_attack_base();
+		if(damage_rolled > 0) {
+			return damage_rolled;
+		}
+		return 0;
 	}
+
+	int combat_roll_damage_against_defense(int const defense) {
+		last_combat_attack_damage = combat_roll_damage() - defense;
+		return last_combat_attack_damage;
+	}
+
 	void take_damage(int const damage_to_take) {
 		assert(damage_to_take >= 0);
+		if(damage_to_take <= 0) {
+			return;
+		}
 		stat_life -= damage_to_take;
 		timer_recently_hit.reset();
 	}
@@ -250,6 +278,12 @@ Entity::wprint_detailed_entity_info(WINDOW * w) const
 	wprintw(w,"%6.1f" , timer_regenerate_life.remaining_seconds);
 	wmove(w,3,1);
 	wprintw(w,"%6.1f" , timer_wellfed.remaining_seconds);
+	wmove(w,4,1);
+	wprintw(w,"A:%d-%d , last: %d (rolled %d)"
+			,get_attack_base()
+			,get_attack_maximum()
+			,last_combat_attack_damage
+			,last_combat_attack_roll );
 	wrefresh(w);
 }
 

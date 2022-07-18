@@ -1,6 +1,7 @@
 DONE fix other entities pushing the player on movement
 TODO cleaner angled-movement - when you press them quickly enough, you will get moved in the angled direction
 TODO refactor that huge mess of angled-movement in setting temporary direction somehow
+TODO hide dead enemies from visible
 
 
 TODO mouse, convert to level-coordinates
