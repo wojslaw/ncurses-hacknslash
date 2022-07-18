@@ -591,6 +591,11 @@ Level::player_tab_target()
 	void
 Level::player_set_target_to_visibleid_from_digit(int const input_digit)
 {
-	assert(input_digit >=0);
+	assert(input_digit >= 0);
+	size_t const highest_visibleid = vector_of_entityids_on_screen.size();
+	if((size_t)input_digit >= highest_visibleid) {
+		ref_player_entity().id_of_target = highest_visibleid;
+		return;
+	}
 	ref_player_entity().id_of_target = entityid_from_visibleid(input_digit);
 }

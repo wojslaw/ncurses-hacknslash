@@ -7,10 +7,10 @@ if expand('%') == '' && !&modified && line('$') <= 1 && getline(1) == ''
   let s:wipebuf = bufnr('%')
 endif
 set shortmess=aoO
-badd +70 Entity.hpp
-badd +1 Level.hpp
-badd +30 main.cpp
-badd +0 Ncurses.hpp
+badd +27 Entity.hpp
+badd +542 Level.hpp
+badd +122 main.cpp
+badd +1 Ncurses.hpp
 argglobal
 %argdel
 $argadd Entity.hpp
@@ -34,13 +34,13 @@ setlocal fml=1
 setlocal fdn=20
 setlocal nofen
 silent! normal! zE
-let s:l = 549 - ((23 * winheight(0) + 14) / 29)
+let s:l = 346 - ((27 * winheight(0) + 14) / 29)
 if s:l < 1 | let s:l = 1 | endif
 exe s:l
 normal! zt
-549
-normal! 048|
-tabedit Entity.hpp
+346
+normal! 0
+tabedit Level.hpp
 set splitbelow splitright
 set nosplitbelow
 set nosplitright
@@ -59,12 +59,12 @@ setlocal fml=1
 setlocal fdn=20
 setlocal nofen
 silent! normal! zE
-let s:l = 1 - ((0 * winheight(0) + 14) / 29)
+let s:l = 552 - ((5 * winheight(0) + 14) / 29)
 if s:l < 1 | let s:l = 1 | endif
 exe s:l
 normal! zt
-1
-normal! 0
+552
+normal! 025|
 tabedit Ncurses.hpp
 set splitbelow splitright
 set nosplitbelow
@@ -84,12 +84,37 @@ setlocal fml=1
 setlocal fdn=20
 setlocal nofen
 silent! normal! zE
-let s:l = 9 - ((1 * winheight(0) + 14) / 29)
+let s:l = 19 - ((1 * winheight(0) + 14) / 29)
 if s:l < 1 | let s:l = 1 | endif
 exe s:l
 normal! zt
-9
+19
 normal! 0
+tabedit main.cpp
+set splitbelow splitright
+set nosplitbelow
+set nosplitright
+wincmd t
+set winminheight=0
+set winheight=1
+set winminwidth=0
+set winwidth=1
+argglobal
+setlocal fdm=manual
+setlocal fde=0
+setlocal fmr={{{,}}}
+setlocal fdi=#
+setlocal fdl=0
+setlocal fml=1
+setlocal fdn=20
+setlocal nofen
+silent! normal! zE
+let s:l = 122 - ((16 * winheight(0) + 14) / 29)
+if s:l < 1 | let s:l = 1 | endif
+exe s:l
+normal! zt
+122
+normal! 019|
 tabnext 1
 set stal=1
 if exists('s:wipebuf') && getbufvar(s:wipebuf, '&buftype') isnot# 'terminal'
