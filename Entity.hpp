@@ -20,7 +20,35 @@ enum DIRECTION {
 	DIRECTION_ANGLED_DOWN_LEFT,
 	DIRECTION_ANGLED_UP_RIGHT,
 	DIRECTION_ANGLED_UP_LEFT,
+	// 
+	DIRECTION_COUNT
 };
+
+
+const Vec2d DIRECTION_VECTOR[DIRECTION_COUNT] = {
+	[DIRECTION_NONE] = Vec2d( 0, 0) ,
+	[DIRECTION_UP     ] = Vec2d(-1, 0) , 
+	[DIRECTION_DOWN   ] = Vec2d(+1, 0) , 
+	[DIRECTION_LEFT   ] = Vec2d( 0,-1) , 
+	[DIRECTION_RIGHT  ] = Vec2d( 0, 1) , 
+	[DIRECTION_ANGLED_DOWN_RIGHT] = Vec2d( 1, 1) ,
+	[DIRECTION_ANGLED_DOWN_LEFT ] = Vec2d( 1,-1) ,
+	[DIRECTION_ANGLED_UP_RIGHT  ] = Vec2d(-1, 1) ,
+	[DIRECTION_ANGLED_UP_LEFT   ] = Vec2d(-1,-1) ,
+};
+
+bool is_direction_angled(enum DIRECTION direction)
+{
+	return
+		direction == DIRECTION_ANGLED_DOWN_RIGHT
+		||
+		direction == DIRECTION_ANGLED_DOWN_LEFT 
+		||
+		direction == DIRECTION_ANGLED_UP_RIGHT  
+		||
+		direction == DIRECTION_ANGLED_UP_LEFT   
+		;
+}
 
 
 
@@ -110,7 +138,7 @@ struct Entity {
 		return ncurses_symbol;
 	}
 
-	// TODO attack target
+
 	int combat_get_range(void) const {
 		if(ncurses_symbol == '@') {
 			return 6;
@@ -207,19 +235,12 @@ public:
 		vec2d_position_last = vec2d_position;
 		// TODO only update if ready to move
 		timer_movement.reset_countdown();
-		switch(direction) {
-			case DIRECTION_UP    : --(vec2d_position.y); break;
-			case DIRECTION_DOWN  : ++(vec2d_position.y); break;
-			case DIRECTION_LEFT  : --(vec2d_position.x); break;
-			case DIRECTION_RIGHT : ++(vec2d_position.x); break;
-			case DIRECTION_ANGLED_DOWN_RIGHT : ++(vec2d_position.y); ++(vec2d_position.x); timer_movement.remaining_seconds *= 2;  break;
-			case DIRECTION_ANGLED_DOWN_LEFT  : ++(vec2d_position.y); --(vec2d_position.x); timer_movement.remaining_seconds *= 2;  break;
-			case DIRECTION_ANGLED_UP_RIGHT   : --(vec2d_position.y); ++(vec2d_position.x); timer_movement.remaining_seconds *= 2;  break;
-			case DIRECTION_ANGLED_UP_LEFT    : --(vec2d_position.y); --(vec2d_position.x); timer_movement.remaining_seconds *= 2;  break;
-			case DIRECTION_NONE : break;
+		//
+		Vec2d const & direction_vector = DIRECTION_VECTOR[direction];
+		vec2d_position.add_vec2d(direction_vector);
+		if(is_direction_angled(direction)) {
+			timer_movement.remaining_seconds *= 2;
 		}
-		
-		direction = direction_persistent;
 	}
 
 	void position_restore_last(void) {

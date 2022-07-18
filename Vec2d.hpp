@@ -18,6 +18,8 @@ struct Vec2d {
 			,int const y_max
 			,int const x_max
 			) const;
+
+	void add_vec2d(Vec2d const & v0);
 };
 
 
@@ -102,4 +104,14 @@ vec2d_highest_distance_between(
 			,
 			std::abs(v0.x - v1.x)
 			);
+}
+
+
+
+
+	void
+Vec2d::add_vec2d(Vec2d const & v0)
+{
+	y += v0.y;
+	x += v0.x;
 }
