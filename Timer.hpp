@@ -59,8 +59,7 @@ struct CountdownTimer {
 	int ticks_collected = 0;
 	bool is_timer_repeating = true;
 
-	CountdownTimer() {
-	}
+	CountdownTimer() { }
 	CountdownTimer(double const _remaining_seconds) { 
 		seconds_countdown = _remaining_seconds;
 		remaining_seconds = _remaining_seconds;
@@ -89,11 +88,20 @@ struct CountdownTimer {
 		update_with_deltatime_seconds(global_timer.deltatime_seconds);
 	}
 
-	int consume_ticks(void) {
+	int consume_tick(void) {
+		if(ticks_collected < 1) {
+			return 0;
+		}
 		int const ticks = ticks_collected;
 		ticks_collected = 0;
 		return ticks;
-	};
+	}
+
+	int consume_all_ticks(void) {
+		int const ticks = ticks_collected;
+		ticks_collected = 0;
+		return ticks;
+	}
 };
 
 

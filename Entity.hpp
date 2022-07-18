@@ -2,7 +2,8 @@
 #include "Vec2d.hpp"
 
 
-#define COMBAT_TURN_SECONDS
+#define COMBAT_TURN_SECONDS 2.0
+#define MOVEMENT_TURN_SECONDS 0.5
 
 
 enum DIRECTION {
@@ -21,8 +22,9 @@ typedef struct Entity Entity;
 struct Entity {
 	Vec2d vec2d_position = Vec2d(0,0);
 	Vec2d vec2d_position_last = Vec2d(0,0);
+	double total_seconds= 0.0;
 	CountdownTimer timer_combat_turn = CountdownTimer(COMBAT_TURN_SECONDS);
-	CountdownTimer timer_movement = CountdownTimer(COMBAT_TURN_SECONDS);
+	CountdownTimer timer_movement = CountdownTimer(MOVEMENT_TURN_SECONDS);
 	CountdownTimer timer_life = CountdownTimer(0);
 
 	int ncurses_symbol = '@';
@@ -31,6 +33,14 @@ struct Entity {
 	bool has_collision = true;
 	bool is_timed_life = false;
 
+//ctor constructor
+	Entity()
+	{
+		timer_movement.remaining_seconds = 0.0;
+		timer_combat_turn.is_timer_repeating = true;
+		timer_movement.is_timer_repeating = false;
+		timer_life.is_timer_repeating     = false;
+	}
 
 // timer
 	void update_with_seconds(double const deltatime_seconds);
@@ -82,5 +92,36 @@ public:
 	}
 
 
+	void update_time_from_globaltimer(GlobalTimer const & GLOBALTIMER);
 };
 
+
+
+
+
+
+
+
+	void
+Entity::update_time_from_globaltimer(GlobalTimer const & GLOBALTIMER)
+{
+	total_seconds += GLOBALTIMER.deltatime_seconds;
+
+	timer_combat_turn.update_from_globaltimer(GLOBALTIMER);
+	timer_movement.update_from_globaltimer(GLOBALTIMER);
+	timer_life.update_from_globaltimer(GLOBALTIMER);
+
+	if(direction_persistent != DIRECTION_NONE) {
+		direction = direction_persistent;
+	}
+	// movement
+	if(direction != DIRECTION_NONE) {
+		int const tick_movement = timer_movement.consume_tick();
+		if(tick_movement >= 1) {
+			update_position();
+			timer_movement.reset_countdown();
+		}
+	}
+
+
+}

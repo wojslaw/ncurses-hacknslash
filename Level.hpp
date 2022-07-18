@@ -34,6 +34,7 @@ struct LevelCell {
 		if(is_terrain) {
 			return true;
 		}
+		return false;
 		if(ptr_entity) {
 			return ptr_entity->is_blocking();
 		}
@@ -54,6 +55,8 @@ struct LevelCell {
 struct Level {
 	int y_max;
 	int x_max;
+
+	double total_seconds = 0.0;
 
 	Level(
 		 int const _y_max 
@@ -93,10 +96,13 @@ struct Level {
 	void update_table_of_cells_with_pointers_to_entities(void) ;
 	void update_entities(void) {
 		for(auto & ref_entity : vector_of_entity ) {
-			ref_entity.update_position();
+			//ref_entity.update_position();
 			ensure_vec2d_position_is_within_bounds(&(ref_entity.vec2d_position));
-			LevelCell & cell_at_new_positiion = ref_levelcell_at_vec2d(ref_entity.vec2d_position);
-			if(cell_at_new_positiion.is_blocked_cell()) {
+		}
+		update_table_of_cells_with_pointers_to_entities();
+		for(auto & ref_entity : vector_of_entity ) {
+			LevelCell & cell_at_new_position = ref_levelcell_at_vec2d(ref_entity.vec2d_position);
+			if(cell_at_new_position.is_blocked_cell()) {
 				ref_entity.position_restore_last();
 			}
 		}
@@ -104,7 +110,7 @@ struct Level {
 
 //public:
 
-	void update_time_from_globaltimer(void);//TODO
+	void update_time_from_globaltimer(GlobalTimer const & GLOBALTIMER);//TODO
 
 	void
 		wprint_range(
@@ -274,4 +280,22 @@ Level::wprint_range(
 		waddch(w,'\n');
 	}
 	wrefresh(w);
+}
+
+
+
+
+
+
+
+
+	void
+Level::update_time_from_globaltimer(GlobalTimer const & GLOBALTIMER)
+{
+	total_seconds += GLOBALTIMER.deltatime_seconds;
+	for(Entity & entity : vector_of_entity) {
+		entity.update_time_from_globaltimer(GLOBALTIMER);
+	}
+	update_table_of_cells_with_pointers_to_entities();
+	update_entities();
 }

@@ -83,6 +83,7 @@ int main() {
 		// timers
 		GLOBALTIMER.update_auto();
 		ct_1.update_from_globaltimer(GLOBALTIMER);
+		LEVEL.update_time_from_globaltimer(GLOBALTIMER);
 
 
 		// render text
@@ -92,14 +93,11 @@ int main() {
 				, GLOBALTIMER.total_seconds
 				, GLOBALTIMER.deltatime_seconds
 				);
-		printw( "\n\n%40f\n%40f\n%40d\n" 
-				, ct_1.total_seconds
-				, ct_1.remaining_seconds
-				, ct_1.ticks_collected
+		printw( "\n\n%40f\n%40f\n    \n" 
+				, LEVEL.ref_player_entity().total_seconds
+				, LEVEL.ref_player_entity().timer_movement.remaining_seconds
 			  );
 		// only render if enough time moved
-		LEVEL.update_table_of_cells_with_pointers_to_entities();
-		LEVEL.update_entities();
 		LEVEL.wprint_range(w_gamewindow,0,0,12,20);
 		wrefresh(w_gamewindow);
 	} // loop
