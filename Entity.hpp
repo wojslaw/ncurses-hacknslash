@@ -25,12 +25,18 @@ struct Entity {
 	CountdownTimer timer_movement = CountdownTimer(COMBAT_TURN_SECONDS);
 	CountdownTimer timer_life = CountdownTimer(0);
 
-	enum DIRECTION direction = DIRECTION_NONE;
-	enum DIRECTION direction_persistent = DIRECTION_NONE;
+	int ncurses_symbol = '@';
+	int ncurses_attrs = 0;
 
 	bool has_collision = true;
 	bool is_timed_life = false;
 
+
+// timer
+	void update_with_seconds(double const deltatime_seconds);
+
+
+// general
 	bool is_dead(void) const { return false; } // TODO
 
 	bool is_blocking(void) const { 
@@ -42,10 +48,21 @@ struct Entity {
 		}
 		return true;
 	}
-	int ncurses_symbol = '@';
-	int ncurses_attrs = 0;
+
+
+	// movement
+private:
+	enum DIRECTION direction = DIRECTION_NONE;
+	enum DIRECTION direction_persistent = DIRECTION_NONE;
+
+public:
+	void set_direction_persistent(enum DIRECTION const dir) { direction_persistent = dir; }
+	void set_direction_temporary(enum DIRECTION const dir) { direction = dir; direction_persistent = DIRECTION_NONE; }
 
 	void update_position(void) {
+		if(direction_persistent != DIRECTION_NONE) {
+			direction = direction_persistent;
+		}
 		vec2d_position_last = vec2d_position;
 		// TODO only update if ready to move
 		switch(direction) {
@@ -65,7 +82,5 @@ struct Entity {
 	}
 
 
-
-	void update_with_seconds(double const deltatime_seconds);
 };
 
