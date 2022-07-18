@@ -142,8 +142,10 @@ struct Level {
 	Entity & ref_from_entityid(size_t const entityid) { return vector_of_entity.at(entityid); }
 	Entity & ref_from_visibleid(size_t const visibleid) { return vector_of_entity.at(vector_of_entityids_on_screen.at(visibleid)); }
 	size_t entityid_from_visibleid(size_t const visibleid) const { return vector_of_entityids_on_screen.at(visibleid); }
+	size_t visibleid_from_entityid(size_t const entityid) const;
 
 	void player_tab_target();
+	void player_set_target_to_visibleid_from_digit(int const input_digit);
 
 	std::vector<std::vector<LevelCell>> table_of_cells;
 	std::vector<Entity> vector_of_entity;
@@ -483,11 +485,8 @@ Level::wprint_entitylist(
 	int const max_entities_to_print = getmaxy(w)-(2+1); // +2 for borders, +1
 	int const max_line_length = getmaxx(w)-(2+2); // +2 for borders, +2 for ".."
 	int count_of_printed = 0;
+	size_t visibleid = 0;
 	for(size_t id : vector_of_entityids_on_screen) {
-		// skip 0 - playerref
-		if(id == 0) {
-			continue;
-		}
 		if(count_of_printed >= max_entities_to_print) {
 			break;
 		}
@@ -497,9 +496,10 @@ Level::wprint_entitylist(
 			= snprintf(
 					buffer
 					,max_line_length
-					," %zu  %c\n"
-					,id
+					,"  %zu %c  (e%zu) \n"
+					,visibleid
 					,vector_of_entity.at(id).ncurses_symbol
+					,id
 					 );
 		//
 		if(id == ref_player_entity().id_of_target ) {
@@ -511,6 +511,7 @@ Level::wprint_entitylist(
 			waddstr(w,"..");
 		}
 		++count_of_printed;
+		++visibleid;
 	}
 
 	if(vector_of_entityids_on_screen.size() > 1) {
@@ -525,6 +526,22 @@ Level::wprint_entitylist(
 }
 
 
+
+
+
+
+	size_t 
+Level::visibleid_from_entityid(size_t const entityid) const
+{
+	for(    size_t visibleid = 0 ; 
+	        visibleid < vector_of_entityids_on_screen.size() ;
+	        ++visibleid ) {
+		if(entityid_from_visibleid(visibleid) == entityid) {
+			return visibleid;
+		}
+	}
+	return 0;
+}
 
 
 
@@ -565,4 +582,15 @@ Level::player_tab_target()
 	//
 	player_entity.id_of_target = entityid_from_visibleid(visibleid_to_set);
 
+}
+
+
+
+
+
+	void
+Level::player_set_target_to_visibleid_from_digit(int const input_digit)
+{
+	assert(input_digit >=0);
+	ref_player_entity().id_of_target = entityid_from_visibleid(input_digit);
 }

@@ -4,7 +4,7 @@
 #include <assert.h>
 #include <stdlib.h>
 #include <locale.h>
-
+#include <ctype.h>
 #include <vector>
 
 #include <sys/stat.h>
@@ -19,7 +19,7 @@
 #define WINDOW_HALFSIZE_Y 5
 #define WINDOW_HALFSIZE_X 8
 
-#define WINDOW_ENTITYLIST_SIZE_Y 8
+#define WINDOW_ENTITYLIST_SIZE_Y 12
 #define WINDOW_ENTITYLIST_SIZE_X 24
 
 // TODO keep screen centered
@@ -91,14 +91,14 @@ int main() {
 
 
 
-	int ch = ERR;
+	int input_character = ERR;
 	timeout(100);
 	int timeout_miliseconds=100;
-
+	int input_digit = -1;
 	// loop
-	for(ch = ERR ;  ch != 'Z' ; ch = getch() ) {
+	for(input_character = ERR ;  input_character != 'Z' ; input_character = getch() ) {
 
-		switch(ch) {
+		switch(input_character) {
 			case 'w': LEVEL.ref_player_entity().set_direction_temporary(DIRECTION_UP   ); break;
 			case 'a': LEVEL.ref_player_entity().set_direction_temporary(DIRECTION_LEFT ); break;
 			case 's': LEVEL.ref_player_entity().set_direction_temporary(DIRECTION_DOWN ); break;
@@ -116,6 +116,10 @@ int main() {
 			//
 			case '\t': LEVEL.player_tab_target(); break;
 			
+		}
+		if(isdigit(input_character)) {
+			input_digit = input_character - '0';
+			LEVEL.player_set_target_to_visibleid_from_digit(input_digit);
 		}
 
 		// timers
