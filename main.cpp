@@ -6,6 +6,7 @@
 #include <locale.h>
 #include <ctype.h>
 #include <vector>
+#include <algorithm>
 
 #include <sys/stat.h>
 #include <fcntl.h>
@@ -21,6 +22,9 @@
 
 #define WINDOW_ENTITYLIST_SIZE_Y 12
 #define WINDOW_ENTITYLIST_SIZE_X 24
+
+#define WINDOW_DETAILS_SIZE_Y 8
+#define WINDOW_DETAILS_SIZE_X 24
 
 
 // TODO mouse, convert to level-coordinates
@@ -72,9 +76,41 @@ int main() {
 				,WINDOW_ENTITYLIST_SIZE_X
 				,w_gamewindow_start_y+2
 				,w_gamewindow_start_x+w_gamewindow_size_x+2 );
+
+	int const w_text_start_y
+		= 2 + std::max(
+				(getbegy(w_gamewindow) + getmaxy(w_gamewindow))
+				,
+				(getbegy(w_text_entitylist) + getmaxy(w_text_entitylist))
+				);
+
+	int const w_text_start_x
+		= (COLS/2) - WINDOW_DETAILS_SIZE_X;
+
+	// text windows
+	WINDOW * w_text_player
+		= newwin(
+				 WINDOW_DETAILS_SIZE_Y
+				,WINDOW_DETAILS_SIZE_X
+				,w_text_start_y
+				,w_text_start_x
+				);
+	WINDOW * w_text_target
+		= newwin(
+				 WINDOW_DETAILS_SIZE_Y
+				,WINDOW_DETAILS_SIZE_X
+				,w_text_start_y
+				,w_text_start_x + WINDOW_DETAILS_SIZE_X
+				);
+
+	refresh();
 	wrefresh(w_gamewindow);
 	wrefresh(w_text_entitylist);
-	refresh();
+
+	box(w_text_player,0,0);
+	box(w_text_target,0,0);
+	wrefresh(w_text_player);
+	wrefresh(w_text_target);
 
 	Level LEVEL  = Level(40,60);
 	LEVEL.ref_player_entity().id_of_target = 1;
@@ -91,6 +127,7 @@ int main() {
 
 	int input_character = ERR;
 	timeout(100);
+	ESCDELAY = 10;
 	int timeout_miliseconds=100;
 	int input_digit = -1;
 	// loop
@@ -141,6 +178,8 @@ int main() {
 		// only render if enough time moved
 		LEVEL.wprint_centered_on_player_entity_with_window_halfsize(w_gamewindow,WINDOW_HALFSIZE_Y,WINDOW_HALFSIZE_X);
 		LEVEL.wprint_entitylist(w_text_entitylist);
+		LEVEL.ref_player_entity().wprint_detailed_entity_info(w_text_player);
+		LEVEL.ref_target().wprint_detailed_entity_info(w_text_target);
 		wrefresh(w_gamewindow);
 		wrefresh(w_text_entitylist);
 		move(

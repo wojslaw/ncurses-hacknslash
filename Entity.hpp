@@ -5,6 +5,8 @@
 #define COMBAT_TURN_SECONDS 2.0
 #define MOVEMENT_TURN_SECONDS 0.25
 
+constexpr double WELLFED_SECONDS_PER_REGEN = 3.0;
+
 
 enum DIRECTION {
 	DIRECTION_NONE = 0 ,
@@ -31,6 +33,8 @@ struct Entity {
 	CountdownTimer timer_combat_turn = CountdownTimer(COMBAT_TURN_SECONDS);
 	CountdownTimer timer_movement = CountdownTimer(MOVEMENT_TURN_SECONDS);
 	CountdownTimer timer_life = CountdownTimer(0);
+	CountdownTimer timer_regenerate_life = CountdownTimer(WELLFED_SECONDS_PER_REGEN);
+	CountdownTimer timer_wellfed = CountdownTimer(20.0);
 
 	int ncurses_symbol = '@';
 	int ncurses_attrs = 0;
@@ -42,13 +46,15 @@ struct Entity {
 	size_t id_of_target = 0;
 	void reset_targeting(void) { id_of_target = 0 ; has_selected_target = false; };
 
+	// combat-things
+	int stat_life_max = 8;
+	int stat_life = 1;
+
 //ctor constructor
 	Entity()
 	{
 		timer_movement.remaining_seconds = 0.0;
-		timer_combat_turn.is_timer_repeating = true;
-		timer_movement.is_timer_repeating = false;
-		timer_life.is_timer_repeating     = false;
+		timer_wellfed.remaining_seconds     = 20.0;
 	}
 
 // timer
@@ -67,6 +73,10 @@ struct Entity {
 		}
 		return true;
 	}
+
+
+	// ncurses
+	void wprint_detailed_entity_info(WINDOW * w) const;
 
 
 	// movement
@@ -128,14 +138,13 @@ Entity::update_time_from_globaltimer(GlobalTimer const & GLOBALTIMER)
 	timer_life.update_time_from_globaltimer(GLOBALTIMER);
 
 
+	// movement
 	if(direction_persistent_ai != DIRECTION_NONE) {
 		direction_persistent = direction_persistent_ai;
 	}
-
 	if(direction_persistent != DIRECTION_NONE) {
 		direction = direction_persistent;
 	}
-	// movement
 	if(direction != DIRECTION_NONE) {
 		int const tick_movement = timer_movement.consume_tick();
 		if(tick_movement >= 1) {
@@ -144,4 +153,38 @@ Entity::update_time_from_globaltimer(GlobalTimer const & GLOBALTIMER)
 	}
 
 
+	// wellfed/life regen
+	timer_regenerate_life.update_time_from_globaltimer(GLOBALTIMER);
+	timer_wellfed.update_time_from_globaltimer(GLOBALTIMER);
+	if(timer_wellfed.remaining_seconds > 0) {
+		if(timer_regenerate_life.consume_tick()) {
+			++stat_life;
+			timer_regenerate_life.reset_countdown();
+		}
+	}
+
+
 }
+
+
+
+
+	void
+Entity::wprint_detailed_entity_info(WINDOW * w) const
+{
+	assert(w);
+	
+	werase(w);
+	box(w,0,0);
+	wmove(w,1,1);
+	wprintw(w,"%c  %2d/%2d" , ncurses_symbol , stat_life , stat_life_max);
+	wmove(w,2,1);
+	wprintw(w,"%6.1f" , timer_regenerate_life.remaining_seconds);
+	wmove(w,3,1);
+	wprintw(w,"%6.1f" , timer_wellfed.remaining_seconds);
+	wrefresh(w);
+}
+
+
+
+

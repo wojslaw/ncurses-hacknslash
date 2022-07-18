@@ -13,6 +13,7 @@ typedef struct Level Level;
 typedef struct LevelCell LevelCell;
 
 
+bool FLAG_PRINT_ENTITYLIST_DEBUG = false;
 
 
 
@@ -140,6 +141,7 @@ struct Level {
 	}
 	Entity & ref_player_entity(void) { return vector_of_entity.at(0); }
 	Entity & ref_from_entityid(size_t const entityid) { return vector_of_entity.at(entityid); }
+	Entity & ref_target(void) { return ref_from_entityid(ref_player_entity().id_of_target); }
 	Entity & ref_from_visibleid(size_t const visibleid) { return vector_of_entity.at(vector_of_entityids_on_screen.at(visibleid)); }
 	size_t entityid_from_visibleid(size_t const visibleid) const { return vector_of_entityids_on_screen.at(visibleid); }
 	size_t visibleid_from_entityid(size_t const entityid) const;
@@ -493,13 +495,22 @@ Level::wprint_entitylist(
 		//
 		char buffer[0x100] = {0};
 		int const bytes_written
-			= snprintf(
+			= FLAG_PRINT_ENTITYLIST_DEBUG
+			? snprintf(
 					buffer
 					,max_line_length
 					,"  %zu %c  (e%zu) \n"
 					,visibleid
 					,vector_of_entity.at(id).ncurses_symbol
 					,id
+					 )
+			: snprintf(
+					buffer
+					,max_line_length
+					,"  %c %2d/%2d\n"
+					,vector_of_entity.at(id).ncurses_symbol
+					,vector_of_entity.at(id).stat_life
+					,vector_of_entity.at(id).stat_life_max
 					 );
 		//
 		if(id == ref_player_entity().id_of_target ) {

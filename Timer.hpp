@@ -57,7 +57,7 @@ struct CountdownTimer {
 	double total_seconds = 0.0;
 	double remaining_seconds = 0.0;
 	int ticks_collected = 0;
-	bool is_timer_repeating = true;
+	bool collect_ticks = false; // TODO? for timers that shouldn't have to be resetted
 
 	CountdownTimer() { }
 	CountdownTimer(double const _remaining_seconds) { 
@@ -69,17 +69,23 @@ struct CountdownTimer {
 		remaining_seconds = seconds_countdown;
 	}
 
+	void reset(void) {
+		remaining_seconds = seconds_countdown;
+		ticks_collected = 0;
+	}
+
 	bool is_countdown_finished(void) const { return ticks_collected > 0; }
 
 	void update_with_deltatime_seconds(double const deltatime_seconds) {
 		total_seconds += deltatime_seconds;
-		if(seconds_countdown > 0) {
-			remaining_seconds -= deltatime_seconds;
-			if(remaining_seconds < 0) {
+		remaining_seconds -= deltatime_seconds;
+		if(remaining_seconds < 0) {
+			if(collect_ticks) {
+				remaining_seconds += seconds_countdown;
 				++ticks_collected;
-				if(is_timer_repeating) {
-					remaining_seconds += seconds_countdown;// TODO consume all into ticks
-				}
+			} else {
+				ticks_collected = 1;
+				remaining_seconds = 0;
 			}
 		}
 	}
