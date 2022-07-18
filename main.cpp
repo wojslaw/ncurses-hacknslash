@@ -114,7 +114,7 @@ int main() {
 
 
 	GlobalTimer GLOBALTIMER = GlobalTimer();
-	bool DISPLAY_DEBUG = false;
+	bool DISPLAY_DEBUG = true;
 
 
 
@@ -166,18 +166,17 @@ int main() {
 
 
 		// render text
-		move(0,0);
 		if(DISPLAY_DEBUG) {
-			printw( "timeout: %d [miliseconds]\n%40f\n%40f\n"
-					, timeout_miliseconds
-					, GLOBALTIMER.total_seconds
-					, GLOBALTIMER.deltatime_seconds
-					);
-			printw( "\n\n%40f\n%40f\n    \n" 
-					, LEVEL.ref_player_entity().total_seconds
-					, LEVEL.ref_player_entity().timer_movement.remaining_seconds
-				  );
+			move(1,0);
+			printw( "timeout: %d [miliseconds]" , timeout_miliseconds);
+			move(2,0);
+			printw("%f" , GLOBALTIMER.total_seconds );
+			move(3,0);
+			printw("%f" , GLOBALTIMER.deltatime_seconds);
+			move(4,0);
+			printw( "SFX: %zu" , LEVEL.vector_of_visual_entity.size() );
 		}
+		move(0,0);
 		// only render if enough time moved
 		LEVEL.wprint_centered_on_player_entity_with_window_halfsize(w_gamewindow,WINDOW_HALFSIZE_Y,WINDOW_HALFSIZE_X);
 		LEVEL.wprint_entitylist(w_text_entitylist);

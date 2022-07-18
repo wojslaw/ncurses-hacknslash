@@ -4,6 +4,7 @@
 
 #define COMBAT_TURN_SECONDS 2.0
 #define MOVEMENT_TURN_SECONDS 0.25
+#define SECONDS_CORPSE_DECAY 8.0
 
 constexpr double WELLFED_SECONDS_PER_REGEN = 3.0;
 
@@ -36,6 +37,13 @@ struct Entity {
 	CountdownTimer timer_regenerate_life = CountdownTimer(WELLFED_SECONDS_PER_REGEN);
 	CountdownTimer timer_wellfed = CountdownTimer(20.0);
 	CountdownTimer timer_recently_hit = CountdownTimer(0.5);
+	CountdownTimer timer_decay = CountdownTimer(SECONDS_CORPSE_DECAY);
+
+
+	bool flag_skip_update = false;
+	bool has_collision = true;
+	bool is_timed_life = false;
+	bool flag_follow_target = true;
 
 
 
@@ -48,9 +56,6 @@ struct Entity {
 		return 0;
 	}
 
-	bool has_collision = true;
-	bool is_timed_life = false;
-	bool flag_follow_target = true;
 
 	bool has_selected_target = false;
 	size_t id_of_target = 0;
@@ -89,9 +94,18 @@ struct Entity {
 	bool is_dead(void) const {
 		return stat_life < 0;
 	}
+	bool is_fully_decayed(void) const {
+		return is_dead() && timer_decay.remaining_seconds <= 0;
+	}
+	bool is_corpse(void) const {
+		return is_dead() && timer_decay.remaining_seconds > 0;
+	}
 	int ncurses_get_symbol(void) const {
 		if(is_dead()) {
-			return '%'; // corpse
+			if(timer_decay.remaining_seconds > 0) {
+				return '%';
+			}
+			return 0;
 		}
 		return ncurses_symbol;
 	}
@@ -156,11 +170,13 @@ struct Entity {
 // general
 
 	bool is_blocking(void) const { 
-		if(is_dead()) {
-			return false;
-		}
 		if(!has_collision) {
 			return false;
+		}
+		if(is_dead()) {
+			if(timer_decay.remaining_seconds <= 0) {
+				return false;
+			}
 		}
 		return true;
 	}
@@ -232,6 +248,10 @@ Entity::update_time_from_globaltimer(GlobalTimer const & GLOBALTIMER)
 	timer_movement.update_time_from_globaltimer(GLOBALTIMER);
 	timer_life.update_time_from_globaltimer(GLOBALTIMER);
 	timer_recently_hit.update_time_from_globaltimer(GLOBALTIMER);
+
+	if(is_dead()) {
+		timer_decay.update_time_from_globaltimer(GLOBALTIMER);
+	}
 
 	vec2d_position_last = vec2d_position;
 	// movement

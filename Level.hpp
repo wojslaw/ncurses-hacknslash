@@ -30,6 +30,7 @@ enum CellTerrain {
 	CELLTERRAIN_HASH ,
 	CELLTERRAIN_WALL_HORIZONTAL ,
 	CELLTERRAIN_WALL_VERTICAL ,
+	CELLTERRAIN_CORPSE ,
 };
 
 int const NCURSES_TABLE_CELLTERRAIN_SYMBOL[] = {
@@ -38,6 +39,7 @@ int const NCURSES_TABLE_CELLTERRAIN_SYMBOL[] = {
 	[CELLTERRAIN_HASH] = '#' ,
 	[CELLTERRAIN_WALL_HORIZONTAL] = '-' ,
 	[CELLTERRAIN_WALL_VERTICAL]   = '|' ,
+	[CELLTERRAIN_CORPSE]   = '%' ,
 };
 
 
@@ -174,6 +176,9 @@ struct Level {
 
 
 //private:
+	void remove_decayed_entities(void);
+	void move_decayed_entities(void);
+
 	void update_entity_combat_rounds(void);
 	void update_table_of_cells_with_pointers_to_entities(void) ;
 	void update_entities(void) {
@@ -191,11 +196,15 @@ struct Level {
 				if(&ref_entity_2 == &ref_entity) { // skip check if same
 					continue;
 				}
+				if(!(ref_entity_2.is_blocking())) {
+					continue;
+				}
 				if(Vec2d_is_equal(ref_entity.vec2d_position ,ref_entity_2.vec2d_position )) {
 					ref_entity.position_restore_last();
 				}
 			}
 		}
+		//
 		update_table_of_cells_with_pointers_to_entities();
 	}
 
@@ -397,14 +406,18 @@ Level::wprint_range(
 	for(int y = y_start; y <= y_end; ++y ) {
 		for(int x = x_start; x <= x_end; ++x ) {
 			const auto & ref_levelcell = table_of_cells.at(y).at(x);
-			if(ref_levelcell.ptr_entity) { // render entity
-				int attrs = ref_levelcell.ptr_entity->ncurses_get_attrs();
-				if(ref_levelcell.ptr_entity == &ref_from_entityid(ref_player_entity().id_of_target)) {
-					attrs = attrs | WA_REVERSE;
+			if(ref_levelcell.ptr_entity) { // render entity //playing with fire, dereferencing a pointer before checking xD
+				if( ref_levelcell.ptr_entity->ncurses_get_symbol() != 0 ) {
+					int attrs = ref_levelcell.ptr_entity->ncurses_get_attrs();
+					if(ref_levelcell.ptr_entity == &ref_from_entityid(ref_player_entity().id_of_target)) {
+						attrs = attrs | WA_REVERSE;
+					}
+					if(attrs != 0) { wattron(w,attrs); }
+					waddch(w,ref_levelcell.ptr_entity->ncurses_get_symbol());
+					if(attrs != 0) { wattroff(w,attrs); }
+				} else {
+					wmove(w,getcury(w),getcurx(w));
 				}
-				if(attrs != 0) { wattron(w,attrs); }
-				waddch(w,ref_levelcell.ptr_entity->ncurses_get_symbol());
-				if(attrs != 0) { wattroff(w,attrs); }
 			} else if(ref_levelcell.ptr_visual_entity){ // visual entity
 				int attrs = ref_levelcell.ptr_visual_entity->ncurses_attrs;
 				if(attrs != 0) { wattron(w,attrs); }
@@ -510,9 +523,13 @@ Level::update_time_from_globaltimer(GlobalTimer const & GLOBALTIMER)
 		// TODO delete useless visual entities
 	}
 
+	move_decayed_entities();
+	// remove_decayed_entities();
+
 	// entities
 	for(Entity & entity : vector_of_entity) {
 		entity.update_time_from_globaltimer(GLOBALTIMER);
+		// remove decayed
 	}
 	// 
 	update_table_of_cells_with_pointers_to_entities();
@@ -692,6 +709,50 @@ Level::make_visual_effect_on_target(int const range)
 						,0.25
 						,v_base.y+y
 						,v_base.x+x) );
+		}
+	}
+}
+
+
+
+
+
+
+
+
+
+
+
+
+
+	void
+Level::remove_decayed_entities(void)
+{
+	// difficult to make it safely xD throws exceptions at weird moments // remove decayed corpses
+	// maybe if I go from end to start, it will be less deadly
+	for(size_t i = vector_of_entity.size()-1;
+			i > 0;
+			--i
+	   ) {
+		if(vector_of_entity.at(i).is_fully_decayed()) {
+			vector_of_entity.erase(vector_of_entity.begin() + i);
+		}
+	}
+}
+
+
+	void
+Level::move_decayed_entities(void)
+{
+	// difficult to make it safely xD throws exceptions at weird moments // remove decayed corpses
+	// maybe if I go from end to start, it will be less deadly
+	for(size_t i = 0;
+			i < vector_of_entity.size();
+			++i
+	   ) {
+		if(vector_of_entity.at(i).is_fully_decayed()) {
+			vector_of_entity.at(i).vec2d_position.y = -1;
+			vector_of_entity.at(i).vec2d_position.x = -1;
 		}
 	}
 }
