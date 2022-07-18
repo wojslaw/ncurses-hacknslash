@@ -1,3 +1,4 @@
+
 #include <ncurses.h>
 
 
@@ -17,8 +18,8 @@
 #include "Level.hpp"
 #include "Entity.hpp"
 
-#define WINDOW_HALFSIZE_Y 5
-#define WINDOW_HALFSIZE_X 8
+#define WINDOW_HALFSIZE_Y 6
+#define WINDOW_HALFSIZE_X 11
 
 #define WINDOW_ENTITYLIST_SIZE_Y 12
 #define WINDOW_ENTITYLIST_SIZE_X 24
@@ -27,14 +28,6 @@
 #define WINDOW_DETAILS_SIZE_X 24
 
 
-// TODO mouse, convert to level-coordinates
-
-// TODO AI: move towards player
-
-// IDEA show enemy like in diablo - select target and it will show
-
-
-// IDEA rhythm - maybe if you press the movement key at the right moment, you can move faster or something?
 
 
 
@@ -147,7 +140,15 @@ int main() {
 			case 'A': LEVEL.ref_player_entity().set_direction_persistent(DIRECTION_LEFT ); break;
 			case 'S': LEVEL.ref_player_entity().set_direction_persistent(DIRECTION_DOWN ); break;
 			case 'D': LEVEL.ref_player_entity().set_direction_persistent(DIRECTION_RIGHT); break;
-			case ' ': LEVEL.ref_player_entity().set_direction_persistent(DIRECTION_NONE ); break;
+			//
+			case 'f': LEVEL.ref_player_entity().flag_follow_target = true; break;
+			case 'F': LEVEL.ref_player_entity().flag_follow_target = false; break;
+			  //
+			case '\e': {
+						  LEVEL.ref_player_entity().set_direction_persistent(DIRECTION_NONE );
+						  LEVEL.ref_player_entity().reset_targeting();
+						  break;
+			          }
 			//
 			case '\t': LEVEL.player_tab_target(); break;
 			
@@ -182,9 +183,9 @@ int main() {
 		LEVEL.ref_target().wprint_detailed_entity_info(w_text_target);
 		wrefresh(w_gamewindow);
 		wrefresh(w_text_entitylist);
-		move(
-				 getbegy(w_gamewindow)+LEVEL.ncurses_cursor_y_offset_target
-				,getbegx(w_gamewindow)+LEVEL.ncurses_cursor_x_offset_target);
+		//move(
+		//		 getbegy(w_gamewindow)+LEVEL.ncurses_cursor_y_offset_target
+		//		,getbegx(w_gamewindow)+LEVEL.ncurses_cursor_x_offset_target);
 		// border around window
 	} // loop
 

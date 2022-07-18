@@ -88,3 +88,18 @@ Vec2d::is_within_rectangle(
 	}
 	return true;
 }
+
+
+
+	int
+vec2d_highest_distance_between(
+		 const Vec2d & v0
+		,const Vec2d & v1
+		)
+{
+	return std::max(
+			std::abs(v0.y - v1.y)
+			,
+			std::abs(v0.x - v1.x)
+			);
+}

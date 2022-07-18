@@ -1,0 +1,13 @@
+DONE fix other entities pushing the player on movement
+TODO cleaner angled-movement - when you press them quickly enough, you will get moved in the angled direction
+TODO refactor that huge mess of angled-movement in setting temporary direction somehow
+
+
+TODO mouse, convert to level-coordinates
+
+TODO AI: move towards player
+
+IDEA show enemy like in diablo - select target and it will show
+
+
+IDEA rhythm - maybe if you press the movement key at the right moment, you can move faster or something?

@@ -175,6 +175,7 @@ struct Level {
 
 
 //private:
+	void update_entity_combat_rounds(void);
 	void update_table_of_cells_with_pointers_to_entities(void) ;
 	void update_entities(void) {
 		for(auto & ref_entity : vector_of_entity ) {
@@ -371,7 +372,13 @@ Level::wprint_range(
 			const auto & ref_levelcell = table_of_cells.at(y).at(x);
 			if(ref_levelcell.ptr_entity) {
 				// render entity
-				waddch(w,ref_levelcell.ptr_entity->ncurses_symbol);
+				int attrs = ref_levelcell.ptr_entity->ncurses_get_attrs();
+				if(ref_levelcell.ptr_entity == &ref_from_entityid(ref_player_entity().id_of_target)) {
+					attrs = attrs | WA_REVERSE;
+				}
+				if(attrs != 0) { wattron(w,attrs); }
+				waddch(w,ref_levelcell.ptr_entity->ncurses_get_symbol());
+				if(attrs != 0) { wattroff(w,attrs); }
 			} else {
 				//otherwise try to render as terrain
 				wattron(w,ATTR_TERRAIN);
@@ -413,7 +420,7 @@ Level::wprint_centered_on_player_entity_with_window_halfsize(
 		)
 {
 	assert(w);
-	const Vec2d center_of_screen = ref_player_entity().vec2d_position;
+	const Vec2d & center_of_screen = ref_player_entity().vec2d_position;
 	int const y_start = center_of_screen.y - y_halfsize;
 	int const x_start = center_of_screen.x - x_halfsize;
 	int const y_end   = center_of_screen.y + y_halfsize;
@@ -470,6 +477,7 @@ Level::update_time_from_globaltimer(GlobalTimer const & GLOBALTIMER)
 	// 
 	update_table_of_cells_with_pointers_to_entities();
 	update_entities();
+	update_entity_combat_rounds();
 }
 
 
@@ -573,9 +581,9 @@ Level::player_tab_target()
 
 	// set visible id
 	if(visibleid_of_next_target <= highest_visibleid) {
-		player_entity.id_of_target = entityid_from_visibleid(visibleid_of_next_target);
+		player_entity.set_target_to_entityid(entityid_from_visibleid(visibleid_of_next_target));
 	} else {
-		player_entity.id_of_target = 1; // lowest expected visibleid
+		player_entity.set_target_to_entityid(1); // lowest expected visibleid
 	}
 }
 
@@ -593,4 +601,37 @@ Level::player_set_target_to_visibleid_from_digit(int const input_digit)
 		return;
 	}
 	ref_player_entity().id_of_target = entityid_from_visibleid(input_digit);
+}
+
+
+
+
+
+
+
+
+
+	void
+Level::update_entity_combat_rounds(void)
+{
+	for(Entity & attacker : vector_of_entity) {
+		if(!(attacker.has_selected_target)) {
+			continue;
+		}
+		if(!(attacker.is_ready_to_attack())) {
+			continue;
+		}
+		Entity & target = ref_from_entityid(attacker.id_of_target);
+		int const distance
+			= vec2d_highest_distance_between(
+					 target.vec2d_position
+					,attacker.vec2d_position
+					);
+		// and within range
+		if(distance > attacker.combat_get_range()) {
+			continue;
+		}
+		// finally 
+		target.take_damage(attacker.combat_roll_damage());
+	}
 }
