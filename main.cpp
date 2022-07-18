@@ -19,7 +19,6 @@
 
 // TODO mouse, convert to level-coordinates
 
-// TODO scroll view with player - center
 // TODO AI: move towards player
 
 // IDEA show enemy like in diablo - select target and it will show
@@ -50,11 +49,13 @@ int main() {
 
 	init_colorpairs();
 
-	WINDOW * w_gamewindow = newwin(40,40,10,10);
+	WINDOW * w_gamewindow = newwin(16,16,10,10);
+	WINDOW * w_text_entitylist = newwin(20,16,10,30);
 	wrefresh(w_gamewindow);
 	refresh();
 
 	Level LEVEL  = Level(40,60);
+	LEVEL.ref_player_entity().id_of_target = 1;
 
 
 
@@ -103,6 +104,9 @@ int main() {
 		// only render if enough time moved
 		LEVEL.wprint_centered_on_player_entity_with_window_halfsize(w_gamewindow,4,7);
 		wrefresh(w_gamewindow);
+		move(
+				 getbegy(w_gamewindow)+LEVEL.ncurses_cursor_y_offset_target
+				,getbegx(w_gamewindow)+LEVEL.ncurses_cursor_x_offset_target);
 	} // loop
 
 

@@ -72,6 +72,11 @@ struct Level {
 	double total_seconds = 0.0;
 	CountdownTimer timer_ai = CountdownTimer(2.0); // random number of seconds for countdown
 
+
+	int ncurses_cursor_y_offset_target = -1;
+	int ncurses_cursor_x_offset_target = -1;
+	std::vector<size_t> vector_of_entityids_on_screen;
+
 	Level(
 		 int const _y_max 
 		,int const _x_max 
@@ -82,7 +87,7 @@ struct Level {
 		vector_of_entity.at(0).vec2d_position.y = 8;
 		vector_of_entity.at(0).vec2d_position.x = 8;
 		//
-		vector_of_entity.at(1).ncurses_symbol = 'g';
+		vector_of_entity.at(1).ncurses_symbol = 'D';
 		vector_of_entity.at(2).ncurses_symbol = 'g';
 		vector_of_entity.at(3).ncurses_symbol = 'g';
 		//
@@ -93,6 +98,11 @@ struct Level {
 		vector_of_entity.at(3).vec2d_position.y = 15;
 		vector_of_entity.at(3).vec2d_position.x = 2;
 		//
+		vector_of_entity.at(1).timer_movement.seconds_countdown = 0.75;
+		vector_of_entity.at(2).timer_movement.seconds_countdown = 0.5;
+		vector_of_entity.at(3).timer_movement.seconds_countdown = 0.5;
+		//
+		
 		y_max = _y_max;
 		x_max = _x_max;
 		table_of_cells.resize(y_max);
@@ -127,7 +137,14 @@ struct Level {
 		ref_levelcell_at_vec2d(
 				Vec2d const & v
 				);
-	bool is_vec2d_position_within_bounds(Vec2d const & v) const;
+	bool is_vec2d_position_within_bounds_of_level(Vec2d const & v) const;
+	bool is_vec2d_position_within_rectangle(
+			Vec2d const & v
+			,int const y_start
+			,int const x_start
+			,int const y_max
+			,int const x_max
+			) const;
 	void ensure_vec2d_position_is_within_bounds(Vec2d * v);
 
 
@@ -154,6 +171,7 @@ struct Level {
 				}
 			}
 		}
+		update_table_of_cells_with_pointers_to_entities();
 	}
 
 //public:
@@ -167,7 +185,7 @@ struct Level {
 				,int const x_start
 				,int const y_end
 				,int const x_end
-				) const ;
+				) ;
 
 	void
 		wprint_centered_on_player_entity_with_window_halfsize(
@@ -241,7 +259,7 @@ Level::ref_levelcell_at_vec2d(
 
 
 	bool
-Level::is_vec2d_position_within_bounds(Vec2d const & v) const
+Level::is_vec2d_position_within_bounds_of_level(Vec2d const & v) const
 {
 	if(v.y < 0) {
 		return false;
@@ -257,6 +275,8 @@ Level::is_vec2d_position_within_bounds(Vec2d const & v) const
 	}
 	return true;
 }
+
+
 
 
 
@@ -295,11 +315,10 @@ Level::wprint_range(
 		,int x_start
 		,int y_end
 		,int x_end
-		) const
+		)
 {
 
 	assert(w);
-	werase(w);
 	// ensure is within range
 	if(y_start < 0) {
 		y_start = 0;
@@ -314,9 +333,10 @@ Level::wprint_range(
 		x_end = x_max-1;
 	}
 
-
 	// render into window
+	werase(w);
 	wmove(w,0,0);
+	// render terrain
 	for(int y = y_start; y <= y_end; ++y ) {
 		for(int x = x_start; x <= x_end; ++x ) {
 			const auto & ref_levelcell = table_of_cells.at(y).at(x);
@@ -331,6 +351,20 @@ Level::wprint_range(
 			}
 		}
 		waddch(w,'\n');
+	}
+	// find ids of entities on screen, to check if you can draw cursor
+	ncurses_cursor_y_offset_target = -1;
+	ncurses_cursor_x_offset_target = -1;
+	vector_of_entityids_on_screen.resize(0);
+	for(size_t id = 0; id < vector_of_entity.size(); ++id) {
+		auto const & entity = vector_of_entity.at(id);
+		if(entity.vec2d_position.is_within_rectangle(y_start,x_start,y_end,x_end)) {
+			vector_of_entityids_on_screen.push_back(id);
+			if(id == vector_of_entity.at(0).id_of_target) {
+				ncurses_cursor_y_offset_target = entity.vec2d_position.y - y_start;
+				ncurses_cursor_x_offset_target = entity.vec2d_position.x - x_start;
+			}
+		}
 	}
 	wrefresh(w);
 }

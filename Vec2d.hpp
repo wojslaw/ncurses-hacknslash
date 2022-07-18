@@ -11,6 +11,13 @@ struct Vec2d {
 		y = _y;
 		x = _x;
 	}
+
+	bool is_within_rectangle(
+			int const y_start
+			,int const x_start
+			,int const y_max
+			,int const x_max
+			) const;
 };
 
 
@@ -25,4 +32,59 @@ Vec2d_is_equal(
 		( v0.y == v1.y )
 		  &&
 		( v0.x == v1.x ) ;
+}
+
+
+
+	bool
+is_vec2d_position_within_rectangle(
+		Vec2d const & v
+		,int const y_start
+		,int const x_start
+		,int const y_max
+		,int const x_max
+		)
+{
+	
+	if(v.y < y_start) {
+		return false;
+	}
+	if(v.x < x_start) {
+		return false;
+	}
+	if(v.y >= y_max) {
+		return false;
+	}
+	if(v.x >= x_max) {
+		return false;
+	}
+	return true;
+}
+
+
+
+
+
+
+	bool
+Vec2d::is_within_rectangle(
+		 int const y_start
+		,int const x_start
+		,int const y_max
+		,int const x_max
+		) const
+{
+	if(y < y_start) {
+		return false;
+	}
+	if(x < x_start) {
+		return false;
+	}
+	if(y >= y_max) {
+		return false;
+	}
+	if(x >= x_max) {
+		return false;
+	}
+	return true;
 }
