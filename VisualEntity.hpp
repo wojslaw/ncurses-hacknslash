@@ -1,0 +1,87 @@
+#pragma once
+#include "Vec2d.hpp"
+#include "Timer.hpp"
+
+
+typedef struct VisualEntity VisualEntity;
+
+struct VisualEntity {
+	Vec2d vec2d_position = Vec2d(1,1);
+	double total_seconds= 0.0;
+	CountdownTimer timer_life = CountdownTimer(1.0);
+	int ncurses_symbol = 'x';
+	// bool flag_is_on_top = true; // I'd have to loop the visual effects twice
+	int ncurses_attrs = ATTR_RECENTLY_HIT;
+	bool is_valid(void) const { return timer_life.remaining_seconds > 0.0; }
+
+
+	// ctors
+	VisualEntity(
+			 int const _ncurses_symbol
+			,double const time_of_expiration
+			,int const _y
+			,int const _x
+			)
+	{
+		timer_life = CountdownTimer(time_of_expiration);
+		ncurses_symbol = _ncurses_symbol;
+		vec2d_position.y = _y;
+		vec2d_position.x = _x;
+	}
+
+	VisualEntity(
+			 int const _ncurses_symbol
+			,double const time_of_expiration
+			,Vec2d const _vec2d_position
+			)
+	{
+		timer_life = CountdownTimer(time_of_expiration);
+		ncurses_symbol = _ncurses_symbol;
+		vec2d_position = _vec2d_position;
+	}
+
+	VisualEntity(
+			 int const _ncurses_symbol
+			,double const time_of_expiration
+			,int const _ncurses_attrs
+			,int const _y
+			,int const _x
+			)
+	{
+		timer_life = CountdownTimer(time_of_expiration);
+		ncurses_symbol = _ncurses_symbol;
+		ncurses_attrs = _ncurses_attrs;
+		vec2d_position.y = _y;
+		vec2d_position.x = _x;
+	}
+
+	VisualEntity(
+			 int const _ncurses_symbol
+			,double const time_of_expiration
+			,int const _ncurses_attrs
+			,Vec2d const _vec2d_position
+			)
+	{
+		timer_life = CountdownTimer(time_of_expiration);
+		ncurses_symbol = _ncurses_symbol;
+		ncurses_attrs = _ncurses_attrs;
+		vec2d_position = _vec2d_position;
+	}
+	// end: ctor
+
+	void update_time_from_globaltimer(GlobalTimer const & GLOBALTIMER);
+};
+
+
+
+
+
+
+
+
+	void
+VisualEntity::update_time_from_globaltimer(GlobalTimer const & GLOBALTIMER)
+{
+	total_seconds += GLOBALTIMER.deltatime_seconds;
+	timer_life.update_time_from_globaltimer(GLOBALTIMER);
+}

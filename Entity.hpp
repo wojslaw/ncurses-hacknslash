@@ -156,10 +156,10 @@ struct Entity {
 // general
 
 	bool is_blocking(void) const { 
-		if(!has_collision) {
+		if(is_dead()) {
 			return false;
 		}
-		if(is_dead()) {
+		if(!has_collision) {
 			return false;
 		}
 		return true;

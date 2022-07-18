@@ -127,6 +127,8 @@ int main() {
 	for(input_character = ERR ;  input_character != 'Z' ; input_character = getch() ) {
 
 		switch(input_character) {
+			case 'x': LEVEL.make_visual_effect_on_target(5); break;
+			//
 			case 'w': LEVEL.ref_player_entity().set_direction_temporary(DIRECTION_UP   ); break;
 			case 'a': LEVEL.ref_player_entity().set_direction_temporary(DIRECTION_LEFT ); break;
 			case 's': LEVEL.ref_player_entity().set_direction_temporary(DIRECTION_DOWN ); break;

@@ -2,6 +2,7 @@
 
 #include "Timer.hpp"
 #include "Entity.hpp"
+#include "VisualEntity.hpp"
 #include "Vec2d.hpp"
 #include "Ncurses.hpp"
 
@@ -45,14 +46,11 @@ struct LevelCell {
 	enum CellTerrain cellterrain = CELLTERRAIN_NONE;
 	Entity const * ptr_entity = 0;
 	size_t id_of_entity = 0;
+	VisualEntity const * ptr_visual_entity = 0;
 
 	bool is_blocked_cell(void) const {
 		if(cellterrain != CELLTERRAIN_NONE) {
 			return true;
-		}
-		return false;
-		if(ptr_entity) {
-			return ptr_entity->is_blocking();
 		}
 		return false;
 	}
@@ -79,6 +77,9 @@ struct Level {
 
 	int ncurses_cursor_y_offset_target = -1;
 	int ncurses_cursor_x_offset_target = -1;
+	std::vector<std::vector<LevelCell>> table_of_cells;
+	std::vector<Entity> vector_of_entity;
+	std::vector<VisualEntity> vector_of_visual_entity;
 	std::vector<size_t> vector_of_entityids_on_screen;
 
 	Level(
@@ -149,8 +150,6 @@ struct Level {
 	void player_tab_target();
 	void player_set_target_to_visibleid_from_digit(int const input_digit);
 
-	std::vector<std::vector<LevelCell>> table_of_cells;
-	std::vector<Entity> vector_of_entity;
 
 
 	LevelCell &
@@ -223,6 +222,9 @@ struct Level {
 
 	void wprint_entitylist(
 				WINDOW * w);
+
+
+	void make_visual_effect_on_target(int const range);
 };
 
 
@@ -236,6 +238,7 @@ Level::update_table_of_cells_with_pointers_to_entities(void)
 		for( auto & cell : row ) {
 			cell.ptr_entity = 0;
 			cell.id_of_entity = 0;
+			cell.ptr_visual_entity = 0;
 		}
 	}
 	// and add
@@ -258,6 +261,30 @@ Level::update_table_of_cells_with_pointers_to_entities(void)
 		LevelCell & levelcell = ref_levelcell_at_vec2d(entity.vec2d_position);
 		levelcell.ptr_entity = &entity;
 		levelcell.id_of_entity = id_of_entity;
+		//
+		++id_of_entity;
+	}
+
+	for(const auto & visual_entity : vector_of_visual_entity) {
+		if(!(visual_entity.is_valid())) {
+			continue;
+		}
+		// skip invalid-positioned entities
+		if(visual_entity.vec2d_position.y < 0) {
+			continue;
+		}
+		if(visual_entity.vec2d_position.x < 0) {
+			continue;
+		}
+		if(visual_entity.vec2d_position.x >= x_max) {
+			continue;
+		}
+		if(visual_entity.vec2d_position.y >= y_max) {
+			continue;
+		}
+		//
+		LevelCell & levelcell = ref_levelcell_at_vec2d(visual_entity.vec2d_position);
+		levelcell.ptr_visual_entity = &visual_entity;
 		//
 		++id_of_entity;
 	}
@@ -370,14 +397,18 @@ Level::wprint_range(
 	for(int y = y_start; y <= y_end; ++y ) {
 		for(int x = x_start; x <= x_end; ++x ) {
 			const auto & ref_levelcell = table_of_cells.at(y).at(x);
-			if(ref_levelcell.ptr_entity) {
-				// render entity
+			if(ref_levelcell.ptr_entity) { // render entity
 				int attrs = ref_levelcell.ptr_entity->ncurses_get_attrs();
 				if(ref_levelcell.ptr_entity == &ref_from_entityid(ref_player_entity().id_of_target)) {
 					attrs = attrs | WA_REVERSE;
 				}
 				if(attrs != 0) { wattron(w,attrs); }
 				waddch(w,ref_levelcell.ptr_entity->ncurses_get_symbol());
+				if(attrs != 0) { wattroff(w,attrs); }
+			} else if(ref_levelcell.ptr_visual_entity){ // visual entity
+				int attrs = ref_levelcell.ptr_visual_entity->ncurses_attrs;
+				if(attrs != 0) { wattron(w,attrs); }
+				waddch(w,ref_levelcell.ptr_visual_entity->ncurses_symbol);
 				if(attrs != 0) { wattroff(w,attrs); }
 			} else {
 				//otherwise try to render as terrain
@@ -410,6 +441,7 @@ Level::wprint_range(
 	if(!is_target_on_screen) {
 		ref_player_entity().reset_targeting();
 	}
+	// end
 	wrefresh(w);
 }
 
@@ -471,6 +503,11 @@ Level::update_time_from_globaltimer(GlobalTimer const & GLOBALTIMER)
 					break;
 			}
 		}
+	}
+	// visual entities
+	for(VisualEntity & visual_entity : vector_of_visual_entity) {
+		visual_entity.update_time_from_globaltimer(GLOBALTIMER);
+		// TODO delete useless visual entities
 	}
 
 	// entities
@@ -636,5 +673,25 @@ Level::update_entity_combat_rounds(void)
 		}
 		// finally 
 		target.take_damage(attacker.combat_roll_damage_against_defense(target.get_defense()));
+	}
+}
+
+
+
+
+	void
+Level::make_visual_effect_on_target(int const range)
+{
+	assert(range >= 1);
+	const Vec2d & v_base = ref_from_entityid(ref_player_entity().id_of_target).vec2d_position;
+	for(int y = -range ; y < range; ++y) {
+		for(int x = -range ; x < range; ++x) {
+			vector_of_visual_entity.push_back(
+					VisualEntity(
+						 'x'
+						,0.25
+						,v_base.y+y
+						,v_base.x+x) );
+		}
 	}
 }
