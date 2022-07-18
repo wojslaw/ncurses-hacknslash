@@ -12,6 +12,11 @@ enum DIRECTION {
 	DIRECTION_DOWN,
 	DIRECTION_LEFT,
 	DIRECTION_RIGHT,
+	// angled:
+	DIRECTION_ANGLED_DOWN_RIGHT,
+	DIRECTION_ANGLED_DOWN_LEFT,
+	DIRECTION_ANGLED_UP_RIGHT,
+	DIRECTION_ANGLED_UP_LEFT,
 };
 
 
@@ -35,6 +40,7 @@ struct Entity {
 
 	bool has_selected_target = false;
 	size_t id_of_target = 0;
+	void reset_targeting(void) { id_of_target = 0 ; has_selected_target = false; };
 
 //ctor constructor
 	Entity()
@@ -79,13 +85,19 @@ public:
 		}
 		vec2d_position_last = vec2d_position;
 		// TODO only update if ready to move
+		timer_movement.reset_countdown();
 		switch(direction) {
 			case DIRECTION_UP    : --(vec2d_position.y); break;
 			case DIRECTION_DOWN  : ++(vec2d_position.y); break;
 			case DIRECTION_LEFT  : --(vec2d_position.x); break;
 			case DIRECTION_RIGHT : ++(vec2d_position.x); break;
+			case DIRECTION_ANGLED_DOWN_RIGHT : ++(vec2d_position.y); ++(vec2d_position.x); timer_movement.remaining_seconds *= 2;  break;
+			case DIRECTION_ANGLED_DOWN_LEFT  : ++(vec2d_position.y); --(vec2d_position.x); timer_movement.remaining_seconds *= 2;  break;
+			case DIRECTION_ANGLED_UP_RIGHT   : --(vec2d_position.y); ++(vec2d_position.x); timer_movement.remaining_seconds *= 2;  break;
+			case DIRECTION_ANGLED_UP_LEFT    : --(vec2d_position.y); --(vec2d_position.x); timer_movement.remaining_seconds *= 2;  break;
 			case DIRECTION_NONE : break;
 		}
+		
 		direction = direction_persistent;
 	}
 
@@ -128,7 +140,6 @@ Entity::update_time_from_globaltimer(GlobalTimer const & GLOBALTIMER)
 		int const tick_movement = timer_movement.consume_tick();
 		if(tick_movement >= 1) {
 			update_position();
-			timer_movement.reset_countdown();
 		}
 	}
 

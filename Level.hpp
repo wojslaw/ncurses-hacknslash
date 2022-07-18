@@ -24,13 +24,15 @@ typedef struct LevelCell LevelCell;
 
 enum CellTerrain {
 	CELLTERRAIN_NONE = 0 ,
+	CELLTERRAIN_GRASS ,
 	CELLTERRAIN_HASH ,
 	CELLTERRAIN_WALL_HORIZONTAL ,
 	CELLTERRAIN_WALL_VERTICAL ,
 };
 
 int const NCURSES_TABLE_CELLTERRAIN_SYMBOL[] = {
-	[CELLTERRAIN_NONE] = '.' ,
+	[CELLTERRAIN_NONE] = ' ' ,
+	[CELLTERRAIN_GRASS] = '+' ,
 	[CELLTERRAIN_HASH] = '#' ,
 	[CELLTERRAIN_WALL_HORIZONTAL] = '-' ,
 	[CELLTERRAIN_WALL_VERTICAL]   = '|' ,
@@ -72,6 +74,7 @@ struct Level {
 	double total_seconds = 0.0;
 	CountdownTimer timer_ai = CountdownTimer(2.0); // random number of seconds for countdown
 
+	unsigned seed = 0;
 
 	int ncurses_cursor_y_offset_target = -1;
 	int ncurses_cursor_x_offset_target = -1;
@@ -83,20 +86,29 @@ struct Level {
 			)
 	{
 		// player entity:
-		vector_of_entity.resize(4);
+		vector_of_entity.resize(8);
 		vector_of_entity.at(0).vec2d_position.y = 8;
 		vector_of_entity.at(0).vec2d_position.x = 8;
 		//
-		vector_of_entity.at(1).ncurses_symbol = 'D';
-		vector_of_entity.at(2).ncurses_symbol = 'g';
-		vector_of_entity.at(3).ncurses_symbol = 'g';
+		vector_of_entity.at(1).ncurses_symbol = 'a';
+		vector_of_entity.at(2).ncurses_symbol = 'b';
+		vector_of_entity.at(3).ncurses_symbol = 'c';
+		vector_of_entity.at(4).ncurses_symbol = 'd';
+		vector_of_entity.at(5).ncurses_symbol = 'e';
+		vector_of_entity.at(6).ncurses_symbol = 'f';
+		vector_of_entity.at(7).ncurses_symbol = 'g';
 		//
-		vector_of_entity.at(1).vec2d_position.y = 5;
-		vector_of_entity.at(1).vec2d_position.x = 2;
-		vector_of_entity.at(2).vec2d_position.y = 10;
+		vector_of_entity.at(1).vec2d_position.y = 4;
+		vector_of_entity.at(1).vec2d_position.x = 4;
+		vector_of_entity.at(2).vec2d_position.y = 2;
 		vector_of_entity.at(2).vec2d_position.x = 2;
-		vector_of_entity.at(3).vec2d_position.y = 15;
-		vector_of_entity.at(3).vec2d_position.x = 2;
+		vector_of_entity.at(3).vec2d_position.y = 8;
+		vector_of_entity.at(3).vec2d_position.x = 8;
+		//
+		vector_of_entity.at(4).vec2d_position.y = 2;
+		vector_of_entity.at(5).vec2d_position.y = 3;
+		vector_of_entity.at(6).vec2d_position.y = 4;
+		vector_of_entity.at(7).vec2d_position.y = 5;
 		//
 		vector_of_entity.at(1).timer_movement.seconds_countdown = 0.75;
 		vector_of_entity.at(2).timer_movement.seconds_countdown = 0.5;
@@ -111,6 +123,10 @@ struct Level {
 			row.resize(x_max);
 			int x = 0;
 			for(auto & cell : row) {
+				int const is_grass = rand_r(&seed)%0x20 == 0;
+				if(is_grass) {
+					cell.cellterrain = CELLTERRAIN_GRASS;
+				}
 				if(x == 0 || x == x_max-1 || y == 0 || y == y_max-1) {
 					cell.cellterrain = CELLTERRAIN_HASH;
 				}
@@ -123,6 +139,11 @@ struct Level {
 		}
 	}
 	Entity & ref_player_entity(void) { return vector_of_entity.at(0); }
+	Entity & ref_from_entityid(size_t const entityid) { return vector_of_entity.at(entityid); }
+	Entity & ref_from_visibleid(size_t const visibleid) { return vector_of_entity.at(vector_of_entityids_on_screen.at(visibleid)); }
+	size_t entityid_from_visibleid(size_t const visibleid) const { return vector_of_entityids_on_screen.at(visibleid); }
+
+	void player_tab_target();
 
 	std::vector<std::vector<LevelCell>> table_of_cells;
 	std::vector<Entity> vector_of_entity;
@@ -196,8 +217,7 @@ struct Level {
 
 
 	void wprint_entitylist(
-				WINDOW * w
-				,int const max_entities_to_print);
+				WINDOW * w);
 };
 
 
@@ -322,7 +342,6 @@ Level::wprint_range(
 		,int x_end
 		)
 {
-
 	assert(w);
 	// ensure is within range
 	if(y_start < 0) {
@@ -340,7 +359,8 @@ Level::wprint_range(
 
 	// render into window
 	werase(w);
-	wmove(w,0,0);
+	box(w,0,0);
+	wmove(w,1,1);
 	// render terrain
 	for(int y = y_start; y <= y_end; ++y ) {
 		for(int x = x_start; x <= x_end; ++x ) {
@@ -355,21 +375,26 @@ Level::wprint_range(
 				wattroff(w,ATTR_TERRAIN);
 			}
 		}
-		wmove(w,getcury(w)+1,0);
+		wmove(w,getcury(w)+1,1);
 	}
 	// find ids of entities on screen, to check if you can draw cursor
 	ncurses_cursor_y_offset_target = -1;
 	ncurses_cursor_x_offset_target = -1;
 	vector_of_entityids_on_screen.resize(0);
+	bool is_target_on_screen = false;
 	for(size_t id = 0; id < vector_of_entity.size(); ++id) {
 		auto const & entity = vector_of_entity.at(id);
 		if(entity.vec2d_position.is_within_rectangle(y_start,x_start,y_end,x_end)) {
 			vector_of_entityids_on_screen.push_back(id);
 			if(id == vector_of_entity.at(0).id_of_target) {
-				ncurses_cursor_y_offset_target = entity.vec2d_position.y - y_start;
-				ncurses_cursor_x_offset_target = entity.vec2d_position.x - x_start;
+				ncurses_cursor_y_offset_target = 1+ entity.vec2d_position.y - y_start;
+				ncurses_cursor_x_offset_target = 1+ entity.vec2d_position.x - x_start;
+				is_target_on_screen = true;
 			}
 		}
+	}
+	if(!is_target_on_screen) {
+		ref_player_entity().reset_targeting();
 	}
 	wrefresh(w);
 }
@@ -418,7 +443,6 @@ Level::update_time_from_globaltimer(GlobalTimer const & GLOBALTIMER)
 		for(size_t id = 1 ; id <= 3; ++ id ) {
 			Entity & entity = vector_of_entity.at(id);
 			switch(entity.direction_persistent_ai) {
-				case DIRECTION_NONE:
 				case DIRECTION_UP:
 					entity.direction_persistent_ai = DIRECTION_RIGHT;
 					break;
@@ -428,7 +452,7 @@ Level::update_time_from_globaltimer(GlobalTimer const & GLOBALTIMER)
 				case DIRECTION_DOWN:
 					entity.direction_persistent_ai = DIRECTION_LEFT;
 					break;
-				case DIRECTION_LEFT:
+				default:
 					entity.direction_persistent_ai = DIRECTION_UP;
 					break;
 			}
@@ -451,12 +475,13 @@ Level::update_time_from_globaltimer(GlobalTimer const & GLOBALTIMER)
 
 	void
 Level::wprint_entitylist(
-		WINDOW * w
-		,int const max_entities_to_print)
+		WINDOW * w)
 {
 	assert(w);
 	werase(w);
 	wmove(w,0,0);
+	int const max_entities_to_print = getmaxy(w)-(2+1); // +2 for borders, +1
+	int const max_line_length = getmaxx(w)-(2+2); // +2 for borders, +2 for ".."
 	int count_of_printed = 0;
 	for(size_t id : vector_of_entityids_on_screen) {
 		// skip 0 - playerref
@@ -466,7 +491,25 @@ Level::wprint_entitylist(
 		if(count_of_printed >= max_entities_to_print) {
 			break;
 		}
-		wprintw(w,"%zu  %c\n",id,vector_of_entity.at(id).ncurses_symbol );
+		//
+		char buffer[0x100] = {0};
+		int const bytes_written
+			= snprintf(
+					buffer
+					,max_line_length
+					," %zu  %c\n"
+					,id
+					,vector_of_entity.at(id).ncurses_symbol
+					 );
+		//
+		if(id == ref_player_entity().id_of_target ) {
+			buffer[0] = '>';
+		}
+		int const y = 1 + count_of_printed;
+		mvwaddstr(w,y,1,buffer);
+		if(bytes_written >= max_line_length) {
+			waddstr(w,"..");
+		}
 		++count_of_printed;
 	}
 
@@ -479,4 +522,47 @@ Level::wprint_entitylist(
 	}
 
 	wrefresh(w);
+}
+
+
+
+
+
+
+	void
+Level::player_tab_target()
+{
+	Entity & player_entity = ref_player_entity();
+	if(vector_of_entityids_on_screen.size() <= 1 ) {
+		player_entity.reset_targeting();
+		return;
+	}
+	// find id of visible entity
+	size_t const visibleid_of_target = visibleid_from_entityid(player_entity.id_of_target);
+
+	size_t const entityid_of_target_in_vector_of_all = player_entity.id_of_target;
+	size_t visibleid_of_target_in_vector_of_visible = 0;
+	for(size_t visibleid = 0 ;
+	    visibleid < vector_of_entityids_on_screen.size()  ;
+	    ++visibleid
+			) {
+		size_t const entityid_of_target = vector_of_entityids_on_screen.at(visibleid);
+		if(     entityid_of_target
+		        ==
+		        entityid_of_target_in_vector_of_all ) {
+			visibleid_of_target_in_vector_of_visible = entityid_of_target;
+		}
+	}
+
+	size_t const visibleid_of_next_target = visibleid_of_target_in_vector_of_visible+1;
+	size_t const highest_visibleid = vector_of_entityids_on_screen.size() - 1;
+
+	size_t const visibleid_to_set
+		= (visibleid_of_next_target <= highest_visibleid)
+		? visibleid_of_next_target //  normally get next
+		: 1; // lowest non-player otherwise // POTENTIALBUG? will cause problems if player isn't in vec of visible
+
+	//
+	player_entity.id_of_target = entityid_from_visibleid(visibleid_to_set);
+
 }

@@ -16,14 +16,18 @@
 #include "Level.hpp"
 #include "Entity.hpp"
 
-#define WINDOW_HALFSIZE_Y 4
-#define WINDOW_HALFSIZE_X 7
+#define WINDOW_HALFSIZE_Y 5
+#define WINDOW_HALFSIZE_X 8
+
+#define WINDOW_ENTITYLIST_SIZE_Y 8
+#define WINDOW_ENTITYLIST_SIZE_X 24
 
 // TODO keep screen centered
 
 // TODO mouse, convert to level-coordinates
 
 // TODO AI: move towards player
+// TODO lose target after a few seconds out of screen
 
 // IDEA show enemy like in diablo - select target and it will show
 
@@ -53,8 +57,23 @@ int main() {
 
 	init_colorpairs();
 
-	WINDOW * w_gamewindow = newwin(WINDOW_HALFSIZE_Y*2+2,WINDOW_HALFSIZE_X*2+2,10,30);
-	WINDOW * w_text_entitylist = newwin(20,16,10,50);
+	int const w_gamewindow_size_y = WINDOW_HALFSIZE_Y*2+3; // I don't know why, but it needs +3
+	int const w_gamewindow_size_x = WINDOW_HALFSIZE_X*2+3; // ah, I know: +1 player, +2 border
+	int const w_gamewindow_start_y = (LINES/2)-(w_gamewindow_size_y); // I don't know why, but it needs +3 to 
+	int const w_gamewindow_start_x = (COLS/2)-(w_gamewindow_size_x); // I don't know why, but it needs +3 to 
+
+	WINDOW * w_gamewindow
+		= newwin(
+				 w_gamewindow_size_y
+				,w_gamewindow_size_x
+				,w_gamewindow_start_y
+				,w_gamewindow_start_x);
+	WINDOW * w_text_entitylist
+		= newwin(
+				 WINDOW_ENTITYLIST_SIZE_Y
+				,WINDOW_ENTITYLIST_SIZE_X
+				,w_gamewindow_start_y+2
+				,w_gamewindow_start_x+w_gamewindow_size_x+2 );
 	wrefresh(w_gamewindow);
 	wrefresh(w_text_entitylist);
 	refresh();
@@ -77,18 +96,26 @@ int main() {
 	int timeout_miliseconds=100;
 
 	// loop
-	for(ch = ERR ;  ch != 'q' ; ch = getch() ) {
+	for(ch = ERR ;  ch != 'Z' ; ch = getch() ) {
 
 		switch(ch) {
 			case 'w': LEVEL.ref_player_entity().set_direction_temporary(DIRECTION_UP   ); break;
 			case 'a': LEVEL.ref_player_entity().set_direction_temporary(DIRECTION_LEFT ); break;
 			case 's': LEVEL.ref_player_entity().set_direction_temporary(DIRECTION_DOWN ); break;
 			case 'd': LEVEL.ref_player_entity().set_direction_temporary(DIRECTION_RIGHT); break;
+			case 'c': LEVEL.ref_player_entity().set_direction_temporary(DIRECTION_ANGLED_DOWN_RIGHT); break;
+			case 'z': LEVEL.ref_player_entity().set_direction_temporary(DIRECTION_ANGLED_DOWN_LEFT ); break;
+			case 'e': LEVEL.ref_player_entity().set_direction_temporary(DIRECTION_ANGLED_UP_RIGHT  ); break;
+			case 'q': LEVEL.ref_player_entity().set_direction_temporary(DIRECTION_ANGLED_UP_LEFT   ); break;
+			//
 			case 'W': LEVEL.ref_player_entity().set_direction_persistent(DIRECTION_UP   ); break;
 			case 'A': LEVEL.ref_player_entity().set_direction_persistent(DIRECTION_LEFT ); break;
 			case 'S': LEVEL.ref_player_entity().set_direction_persistent(DIRECTION_DOWN ); break;
 			case 'D': LEVEL.ref_player_entity().set_direction_persistent(DIRECTION_RIGHT); break;
 			case ' ': LEVEL.ref_player_entity().set_direction_persistent(DIRECTION_NONE ); break;
+			//
+			case '\t': LEVEL.player_tab_target(); break;
+			
 		}
 
 		// timers
@@ -110,10 +137,8 @@ int main() {
 				  );
 		}
 		// only render if enough time moved
-		border_around_window(w_gamewindow);
-		border_around_window(w_text_entitylist);
 		LEVEL.wprint_centered_on_player_entity_with_window_halfsize(w_gamewindow,WINDOW_HALFSIZE_Y,WINDOW_HALFSIZE_X);
-		LEVEL.wprint_entitylist(w_text_entitylist,getmaxy(w_text_entitylist));
+		LEVEL.wprint_entitylist(w_text_entitylist);
 		wrefresh(w_gamewindow);
 		wrefresh(w_text_entitylist);
 		move(
