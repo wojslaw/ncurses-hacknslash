@@ -1,3 +1,5 @@
+//TODO fix tab selection
+
 #include <ncurses.h>
 
 

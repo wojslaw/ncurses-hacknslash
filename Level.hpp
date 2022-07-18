@@ -554,34 +554,18 @@ Level::player_tab_target()
 		player_entity.reset_targeting();
 		return;
 	}
-	// find id of visible entity
+
+	// find visibleid for entityid of target
 	size_t const visibleid_of_target = visibleid_from_entityid(player_entity.id_of_target);
-
-	size_t const entityid_of_target_in_vector_of_all = player_entity.id_of_target;
-	size_t visibleid_of_target_in_vector_of_visible = 0;
-	for(size_t visibleid = 0 ;
-	    visibleid < vector_of_entityids_on_screen.size()  ;
-	    ++visibleid
-			) {
-		size_t const entityid_of_target = vector_of_entityids_on_screen.at(visibleid);
-		if(     entityid_of_target
-		        ==
-		        entityid_of_target_in_vector_of_all ) {
-			visibleid_of_target_in_vector_of_visible = entityid_of_target;
-		}
-	}
-
-	size_t const visibleid_of_next_target = visibleid_of_target_in_vector_of_visible+1;
+	size_t const visibleid_of_next_target = visibleid_of_target + 1;
 	size_t const highest_visibleid = vector_of_entityids_on_screen.size() - 1;
 
-	size_t const visibleid_to_set
-		= (visibleid_of_next_target <= highest_visibleid)
-		? visibleid_of_next_target //  normally get next
-		: 1; // lowest non-player otherwise // POTENTIALBUG? will cause problems if player isn't in vec of visible
-
-	//
-	player_entity.id_of_target = entityid_from_visibleid(visibleid_to_set);
-
+	// set visible id
+	if(visibleid_of_next_target <= highest_visibleid) {
+		player_entity.id_of_target = entityid_from_visibleid(visibleid_of_next_target);
+	} else {
+		player_entity.id_of_target = 1; // lowest expected visibleid
+	}
 }
 
 
