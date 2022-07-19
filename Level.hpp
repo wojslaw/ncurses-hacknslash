@@ -50,18 +50,30 @@ struct LevelCell {
 	size_t id_of_entity = 0;
 	VisualEntity const * ptr_visual_entity = 0;
 
-	bool is_blocked_cell(void) const {
-		if(cellterrain != CELLTERRAIN_NONE) {
-			return true;
-		}
-		return false;
-	}
+	bool is_blocked_cell(void) const ;
+	bool is_cell_walkable(void) const ;
 };
 
 
+	bool 
+LevelCell::is_blocked_cell(void) const
+{
+	if(cellterrain != CELLTERRAIN_NONE) {
+		return true;
+	}
+	return false;
+}
 
 
 
+	bool 
+LevelCell::is_cell_walkable(void) const
+{
+	if(cellterrain == CELLTERRAIN_NONE) {
+		return true;
+	}
+	return false;
+}
 
 
 
@@ -139,6 +151,7 @@ struct Level {
 	void update_time_from_globaltimer(GlobalTimer const & GLOBALTIMER);//TODO
 
 	void update_entities(void) ;
+	void update_entities_direction_planned(void) ;
 
 	void
 		wprint_range(
@@ -435,6 +448,7 @@ Level::update_time_from_globaltimer(GlobalTimer const & GLOBALTIMER)
 	update_table_of_cells_with_pointers_to_entities();
 	mvprintw(LINES-2,0,"update_entities\n");
 	update_entities();
+	update_entities_direction_planned();
 	update_entity_combat_rounds();
 }
 
@@ -566,6 +580,28 @@ Level::player_set_target_to_visibleid_from_digit(int const input_digit)
 
 
 
+	void
+Level::update_entities_direction_planned(void)
+{
+	for(int i = 0; i < (int)vector_of_entity.size(); ++i) {
+		Entity & attacker = vector_of_entity.at(i);
+		if( attacker.flag_skip_update ) {
+			continue;
+		}
+		if( not(attacker.has_selected_target) ) {
+			continue;
+		}
+		if( not(attacker.flag_follow_target) ) {
+			continue;
+		}
+		Entity & target = ref_from_entityid(attacker.id_of_target);
+		attacker.vec2d_direction_planned
+			= vec2d_find_direction_vec2d_from_to(
+					attacker.vec2d_position
+					,target.vec2d_position
+					);
+	}
+}
 
 
 

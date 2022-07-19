@@ -1,0 +1,269 @@
+#include "Entity.hpp"
+
+
+bool is_direction_angled(enum DIRECTION direction)
+{
+	return
+		direction == DIRECTION_ANGLED_DOWN_RIGHT
+		||
+		direction == DIRECTION_ANGLED_DOWN_LEFT 
+		||
+		direction == DIRECTION_ANGLED_UP_RIGHT  
+		||
+		direction == DIRECTION_ANGLED_UP_LEFT   
+		;
+}
+
+
+
+
+
+
+
+
+
+
+
+	void
+Entity::update_time_from_globaltimer(GlobalTimer const & GLOBALTIMER)
+{
+	total_seconds += GLOBALTIMER.deltatime_seconds;
+
+	timer_combat_turn.update_time_from_globaltimer(GLOBALTIMER);
+	timer_movement.update_time_from_globaltimer(GLOBALTIMER);
+	timer_life.update_time_from_globaltimer(GLOBALTIMER);
+	timer_recently_hit.update_time_from_globaltimer(GLOBALTIMER);
+
+	if(is_dead()) {
+		timer_decay.update_time_from_globaltimer(GLOBALTIMER);
+	}
+
+	if(is_ready_to_move()) {
+		update_movement();
+	}
+
+
+	// wellfed/life regen
+	timer_regenerate_life.update_time_from_globaltimer(GLOBALTIMER);
+	timer_wellfed.update_time_from_globaltimer(GLOBALTIMER);
+	if(timer_wellfed.remaining_seconds > 0) {
+		if(timer_regenerate_life.consume_tick()) {
+			regen_life(1);
+			timer_regenerate_life.reset_countdown();
+		}
+	}
+
+
+}
+
+
+
+
+	void
+Entity::wprint_detailed_entity_info(WINDOW * w) const
+{
+	assert(w);
+	
+	werase(w);
+	box(w,0,0);
+	wmove(w,1,1);
+	wprintw(w,"%c  %2d/%2d" , ncurses_symbol , stat_life , stat_life_max);
+	wmove(w,2,1);
+	wprintw(w,"%6.1f" , timer_regenerate_life.remaining_seconds);
+	wmove(w,3,1);
+	wprintw(w,"%6.1f" , timer_wellfed.remaining_seconds);
+	wmove(w,4,1);
+	wprintw(w,"A:%d-%d , last: %d (rolled %d)"
+			,get_attack_base()
+			,get_attack_maximum()
+			,last_combat_attack_damage
+			,last_combat_attack_roll );
+	wmove(w,5,1);
+	wprintw(w,"[%2d , %2d]"
+			,vec2d_direction_planned.y
+			,vec2d_direction_planned.x );
+	wrefresh(w);
+}
+
+
+
+
+
+
+
+
+
+
+
+	void
+Entity::set_direction_temporary(enum DIRECTION const dir) 
+{
+	Vec2d const & vec2d_direction = DIRECTION_VECTOR[dir];
+	vec2d_direction_planned.add_vec2d(vec2d_direction);
+	vec2d_direction_planned.normalize();
+	// set angled
+	if(direction == DIRECTION_NONE) {
+		direction = dir;
+		return;
+	}
+	if(direction == dir) {
+		direction_persistent = dir;
+		return;
+	}
+	direction_persistent = DIRECTION_NONE;
+	// combine angled direction
+	if( direction == DIRECTION_UP ) {
+		if(dir == DIRECTION_LEFT) {
+			direction = DIRECTION_ANGLED_UP_LEFT;
+			return;
+		}
+		if(dir == DIRECTION_RIGHT) {
+			direction = DIRECTION_ANGLED_UP_RIGHT;
+			return;
+		}
+	}
+	if( direction == DIRECTION_DOWN ) {
+		if(dir == DIRECTION_LEFT) {
+			direction = DIRECTION_ANGLED_DOWN_LEFT;
+			return;
+		}
+		if(dir == DIRECTION_RIGHT) {
+			direction = DIRECTION_ANGLED_DOWN_RIGHT;
+			return;
+		}
+	}
+	if( direction == DIRECTION_LEFT ) {
+		if(dir == DIRECTION_UP) {
+			direction = DIRECTION_ANGLED_UP_LEFT;
+			return;
+		}
+		if(dir == DIRECTION_DOWN) {
+			direction = DIRECTION_ANGLED_DOWN_LEFT;
+			return;
+		}
+	}
+	if( direction == DIRECTION_LEFT ) {
+		if(dir == DIRECTION_UP) {
+			direction = DIRECTION_ANGLED_UP_LEFT;
+			return;
+		}
+		if(dir == DIRECTION_DOWN) {
+			direction = DIRECTION_ANGLED_DOWN_LEFT;
+			return;
+		}
+	}
+	if( direction == DIRECTION_RIGHT ) {
+		if(dir == DIRECTION_UP) {
+			direction = DIRECTION_ANGLED_UP_RIGHT;
+			return;
+		}
+		if(dir == DIRECTION_DOWN) {
+			direction = DIRECTION_ANGLED_DOWN_RIGHT;
+			return;
+		}
+	}
+	// or just set
+	direction = dir;
+}
+
+
+
+
+
+	void
+Entity::position_restore_last(void) {
+	vec2d_position = vec2d_position_last;
+	direction = DIRECTION_NONE;
+	direction_persistent = DIRECTION_NONE;
+	vec2d_direction_planned = DIRECTION_VECTOR[DIRECTION_NONE];
+}
+
+
+
+
+	void
+Entity::update_movement_from_planned_direction(void)
+{
+	assert(
+			(vec2d_direction_planned.y != 0)
+			||
+			(vec2d_direction_planned.x != 0)
+			);
+	// 1. prepare vector
+	Vec2d direction_vector = vec2d_direction_planned;
+	direction_vector.normalize();
+	// 2. perform movement
+	vec2d_position.add_vec2d(direction_vector);
+	// 3. overwrite movement vector of last movement
+	vec2d_direction_last_movement = direction_vector;
+}
+
+
+
+
+
+	bool 
+Entity::has_direction_planned(void)
+{
+	return
+	        (vec2d_direction_planned.y != 0)
+	         ||                            
+	        (vec2d_direction_planned.x != 0);
+}
+
+
+
+
+	void
+Entity::update_movement(void)
+{
+	if(is_dead()) {
+		return;
+	}
+	// 1 save last position
+	vec2d_position_last = vec2d_position;
+	// and clear direction
+	vec2d_direction_last_movement.set_zero();
+
+	// 2 consume a movement tick
+	assert(timer_movement.remaining_seconds <= 0);
+	timer_movement.consume_tick();
+
+
+	// 2. try to move from planned:
+	if(has_direction_planned()) {
+		update_movement_from_planned_direction();
+		return;
+	}
+
+	vec2d_position_last = vec2d_position;
+	// movement
+	if(direction_persistent_ai != DIRECTION_NONE) {
+		direction_persistent = direction_persistent_ai;
+	}
+	if(direction_persistent != DIRECTION_NONE) {
+		direction = direction_persistent;
+		vec2d_direction_planned = DIRECTION_VECTOR[direction_persistent];
+	}
+	if(direction != DIRECTION_NONE) {
+		int const tick_movement = timer_movement.consume_tick();
+		if(tick_movement >= 1) {
+			update_movement();
+		}
+	}
+
+
+	if(direction_persistent != DIRECTION_NONE) {
+		direction = direction_persistent;
+	}
+	vec2d_position_last = vec2d_position;
+	// TODO only update if ready to move
+	timer_movement.reset_countdown();
+	//
+	Vec2d const & direction_vector = DIRECTION_VECTOR[direction];
+	vec2d_position.add_vec2d(direction_vector);
+	if(is_direction_angled(direction)) {
+		timer_movement.remaining_seconds *= 2;
+	}
+	direction = direction_persistent;
+}

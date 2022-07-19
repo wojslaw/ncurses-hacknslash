@@ -1,6 +1,6 @@
-SOURCES=main.cpp
+SOURCES=main.cpp entity.cpp vec2d.cpp ncurses.cpp timer.cpp
 HEADERS= Timer.hpp Level.hpp Entity.hpp Vec2d.hpp Ncurses.hpp VisualEntity.hpp
-FLAGS=-Wall -Wextra -Wfatal-errors  -lncursesw -Weffc++
+FLAGS=-Wall -Wextra -Wfatal-errors  -lncursesw
 APPNAME=a.out
 DIR_INSTALL=~/bin
 
@@ -19,4 +19,4 @@ install: $(APPNAME) $(DIR_INSTALL)
 	cp $(APPNAME) -t $(DIR_INSTALL)
 
 
-.PHONY: install
+.PHONY: install run play

@@ -27,7 +27,7 @@
 #define WINDOW_DETAILS_SIZE_Y 8
 #define WINDOW_DETAILS_SIZE_X 40
 
-#define MULTIPLY_TIME 128.0
+#define MULTIPLY_TIME 1.0
 
 
 
@@ -41,7 +41,8 @@
 
 
 
-int main() {
+int main()
+{
 
 	initscr();
 	srand(time(NULL));
