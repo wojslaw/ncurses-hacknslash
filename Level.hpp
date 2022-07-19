@@ -27,7 +27,7 @@ int DISTANCE_FOLLOW_MAX_BEFORE_TARGET_LOST = 20;
 
 enum CellTerrain {
 	CELLTERRAIN_NONE = 0 ,
-	CELLTERRAIN_GRASS ,
+	CELLTERRAIN_RUBBLE ,
 	CELLTERRAIN_HASH ,
 	CELLTERRAIN_WALL_HORIZONTAL ,
 	CELLTERRAIN_WALL_VERTICAL ,
@@ -36,7 +36,7 @@ enum CellTerrain {
 
 int const NCURSES_TABLE_CELLTERRAIN_SYMBOL[] = {
 	[CELLTERRAIN_NONE] = ' ' ,
-	[CELLTERRAIN_GRASS] = '+' ,
+	[CELLTERRAIN_RUBBLE] = '+' ,
 	[CELLTERRAIN_HASH] = '#' ,
 	[CELLTERRAIN_WALL_HORIZONTAL] = '-' ,
 	[CELLTERRAIN_WALL_VERTICAL]   = '|' ,
@@ -53,6 +53,18 @@ struct LevelCell {
 
 	bool is_blocked_cell(void) const ;
 	bool is_cell_walkable(void) const ;
+
+	// mutating methods
+	void damage_cell() {
+		if(cellterrain == CELLTERRAIN_NONE) {
+			return;
+		}
+		if(cellterrain == CELLTERRAIN_RUBBLE) {
+			cellterrain = CELLTERRAIN_NONE;
+			return;
+		}
+		cellterrain = CELLTERRAIN_RUBBLE;
+	}
 };
 
 
@@ -489,16 +501,16 @@ Level::wprint_entitylist(
 					,max_line_length
 					,"  %zu %c  (e%zu) \n"
 					,visibleid
-					,vector_of_entity.at(id).ncurses_symbol
+					,vector_of_entity.at(id).ncurses_get_symbol()
 					,id
 					 )
 			: snprintf(
 					buffer
 					,max_line_length
 					,"  %c %2d/%2d\n"
-					,vector_of_entity.at(id).ncurses_symbol
+					,vector_of_entity.at(id).ncurses_get_symbol()
 					,vector_of_entity.at(id).stat_life
-					,vector_of_entity.at(id).stat_life_max
+					,vector_of_entity.at(id).get_life_max()
 					 );
 		//
 		if(id == ref_player_entity().id_of_target ) {
@@ -740,10 +752,13 @@ Level::update_entities(void) {
 	for(Entity & ref_entity : vector_of_entity ) {
 		if(!(is_vec2d_position_within_bounds_of_level(ref_entity.vec2d_position))) { continue;  } // skip invalidly-placed
 		LevelCell & cell_at_new_position = ref_levelcell_at_vec2d(ref_entity.vec2d_position);
-		if(!ref_entity.flag_has_collision) {  // skip entities without collision
+		if(!ref_entity.has_collision()) {  // skip entities without collision
 			continue;
 		}
 		if(cell_at_new_position.is_blocked_cell()) {
+			if(ref_entity.has_destroyer_of_terrain()) { // try to destroy cell
+				cell_at_new_position.damage_cell();
+			}
 			ref_entity.position_restore_last();
 		}
 		for(Entity const& ref_entity_2 : vector_of_entity ) {
@@ -891,51 +906,37 @@ Level::Level(
 		)
 	: collision_table(CollisionTable(_y_max,_x_max))
 {
-	vector_of_entity.resize(8);
 	// player entity:
+	vector_of_entity.push_back(Entity(ID_BaseEntity_human));
 	ref_player_entity().set_life_to_max();
+	vector_of_entity.at(0).vec2d_position.y = 6;
+	vector_of_entity.at(0).vec2d_position.x = 6;
 	// enemies:
-	vector_of_entity.at(0).vec2d_position.y = 8;
-	vector_of_entity.at(0).vec2d_position.x = 8;
-	vector_of_entity.at(1).ncurses_symbol = 'c';
-	vector_of_entity.at(2).ncurses_symbol = 'c';
 	// shooters
-	vector_of_entity.at(3).ncurses_symbol = 'g';
-	vector_of_entity.at(3).stat_life_max = 8;
-	vector_of_entity.at(4).ncurses_symbol = 'g';
-	vector_of_entity.at(4).stat_life_max = 8;
+	vector_of_entity.push_back(Entity(ID_BaseEntity_goblin));
+	vector_of_entity.at(1).vec2d_position.y = 1;
+	vector_of_entity.at(1).vec2d_position.x = 2;
 	// "wraith" - ignores collision with terrain
-	vector_of_entity.at(5).ncurses_symbol = 'w';
-	vector_of_entity.at(6).ncurses_symbol = 'w';
-	vector_of_entity.at(7).ncurses_symbol = 'w';
-	vector_of_entity.at(5).flag_has_collision = false;
-	vector_of_entity.at(6).flag_has_collision = false;
-	vector_of_entity.at(7).flag_has_collision = false;
+	vector_of_entity.push_back(Entity(ID_BaseEntity_wraith));
+	vector_of_entity.at(2).vec2d_position.y = 4;
+	vector_of_entity.at(2).vec2d_position.x = 2;
 	//
-	vector_of_entity.at(1).vec2d_position.y = 16;
-	vector_of_entity.at(1).vec2d_position.x = 20;
-	vector_of_entity.at(2).vec2d_position.y = 12;
-	vector_of_entity.at(2).vec2d_position.x = 26;
-	vector_of_entity.at(3).vec2d_position.y = 10;
-	vector_of_entity.at(3).vec2d_position.x = 44;
-	//
-	vector_of_entity.at(4).vec2d_position.y = 25;
-	vector_of_entity.at(4).vec2d_position.x = 20;
-	vector_of_entity.at(5).vec2d_position.y = 25;
-	vector_of_entity.at(5).vec2d_position.x = 30;
-	vector_of_entity.at(6).vec2d_position.y = 25;
-	vector_of_entity.at(6).vec2d_position.x = 40;
-	vector_of_entity.at(7).vec2d_position.y = 25;
-	vector_of_entity.at(7).vec2d_position.x = 40;
-	//
-	vector_of_entity.at(1).timer_movement.seconds_countdown = 0.5 ;
-	vector_of_entity.at(2).timer_movement.seconds_countdown = 0.5 ;
-	vector_of_entity.at(3).timer_movement.seconds_countdown = 0.5 ;
-	vector_of_entity.at(4).timer_movement.seconds_countdown = 0.5 ;
-	vector_of_entity.at(5).timer_movement.seconds_countdown = 0.75;
-	vector_of_entity.at(6).timer_movement.seconds_countdown = 0.75;
-	vector_of_entity.at(7).timer_movement.seconds_countdown = 0.75;
-	//
+	vector_of_entity.push_back(Entity(ID_BaseEntity_rockworm));
+	vector_of_entity.back().vec2d_position.y = 2;
+	vector_of_entity.back().vec2d_position.x = 5;
+	// a few giants
+	vector_of_entity.push_back(Entity(ID_BaseEntity_giant));
+	vector_of_entity.back().vec2d_position.y = 24;
+	vector_of_entity.back().vec2d_position.x = 2;
+	vector_of_entity.push_back(Entity(ID_BaseEntity_giant));
+	vector_of_entity.back().vec2d_position.y = 24;
+	vector_of_entity.back().vec2d_position.x = 4;
+	vector_of_entity.push_back(Entity(ID_BaseEntity_giant));
+	vector_of_entity.back().vec2d_position.y = 24;
+	vector_of_entity.back().vec2d_position.x = 6;
+	vector_of_entity.push_back(Entity(ID_BaseEntity_giant));
+	vector_of_entity.back().vec2d_position.y = 24;
+	vector_of_entity.back().vec2d_position.x = 8;
 
 	y_max = _y_max;
 	x_max = _x_max;
@@ -945,9 +946,9 @@ Level::Level(
 		row.resize(x_max);
 		int x = 0;
 		for(auto & cell : row) {
-			int const is_grass = rand_r(&seed)%0x20 == 0;
+			int const is_grass = rand_r(&seed)%0x10 == 0;
 			if(is_grass) {
-				cell.cellterrain = CELLTERRAIN_GRASS;
+				cell.cellterrain = CELLTERRAIN_RUBBLE;
 			}
 			if(x == 0 || x == x_max-1 || y == 0 || y == y_max-1) {
 				cell.cellterrain = CELLTERRAIN_HASH;

@@ -67,7 +67,7 @@ Entity::wprint_detailed_entity_info(WINDOW * w) const
 	werase(w);
 	box(w,0,0);
 	wmove(w,1,1);
-	wprintw(w,"%c  %2d/%2d" , ncurses_symbol , stat_life , stat_life_max);
+	wprintw(w,"%c  %2d/%2d  %s" , ncurses_get_symbol() , stat_life , get_life_max() , get_name() );
 	wmove(w,2,1);
 	wprintw(w,"fed:%.1f( %.1f)" ,timer_wellfed.remaining_seconds, timer_regenerate_life.remaining_seconds);
 	wmove(w,3,1);
@@ -238,4 +238,21 @@ Entity::order_stop(void)
 {
 	set_direction_persistent(DIRECTION_NONE );
 	reset_targeting();
+}
+
+
+
+
+
+
+
+
+
+
+Entity::Entity(ID_BaseEntity const _id_of_base_entity)
+	: id_base_entity(_id_of_base_entity)
+{
+	timer_movement = CountdownTimer(ref_base_entity().seconds_movement);
+	timer_wellfed.remaining_seconds  = 20.0;
+	set_life_to_max();
 }

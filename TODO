@@ -4,6 +4,9 @@ IDEA show something better on border of map?
 IDEA wraparound: go to y=y_max, get teleported to y=0
 TODO make enemies wander slowly by default - random seconds of delay before they move in a random direction
 
+IDEA create new obstacles: with a shadow '.' before spawning, and then create terrain
+TODO generate random enemies during game
+
 TODO items/inventory
 TODO level up
 
@@ -28,3 +31,5 @@ IDEA rhythm - maybe if you press the movement key at the right moment, you can m
 spells:
 1. hit enemies around yourself
 2. hit enemies around target(fireball)
+3. create obstacle
+3. destroy obstacle

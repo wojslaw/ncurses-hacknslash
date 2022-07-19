@@ -1,5 +1,5 @@
-SOURCES=main.cpp entity.cpp vec2d.cpp ncurses.cpp timer.cpp
-HEADERS= Timer.hpp Level.hpp Entity.hpp Vec2d.hpp Ncurses.hpp VisualEntity.hpp CollisionTable.hpp
+SOURCES=main.cpp entity.cpp vec2d.cpp ncurses.cpp timer.cpp baseentity.cpp
+HEADERS= Timer.hpp Level.hpp Entity.hpp Vec2d.hpp Ncurses.hpp VisualEntity.hpp CollisionTable.hpp BaseEntity.hpp
 FLAGS=-Wall -Wextra -Wfatal-errors  -lncursesw
 APPNAME=arena-ncursed-hacknslash
 DIR_INSTALL=~/bin
