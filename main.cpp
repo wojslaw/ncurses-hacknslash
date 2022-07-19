@@ -106,7 +106,7 @@ int main()
 	wrefresh(w_text_player);
 	wrefresh(w_text_target);
 
-	Level LEVEL  = Level(64,128);
+	Level LEVEL  = Level(32,64);
 	LEVEL.ref_player_entity().id_of_target = 1;
 
 
@@ -116,11 +116,12 @@ int main()
 
 	GlobalTimer GLOBALTIMER = GlobalTimer();
 	bool DISPLAY_DEBUG = true;
+	bool DEBUG_PRINT_COLLISION_TABLE = false;
 
 
 
 	int input_character = ERR;
-	int timeout_miliseconds=10;
+	int timeout_miliseconds=100;
 	timeout(timeout_miliseconds);
 	ESCDELAY = 10;
 	int input_digit = -1;
@@ -152,6 +153,8 @@ int main()
 			case 'f': LEVEL.ref_player_entity().flag_follow_target = true; break;
 			case 'F': LEVEL.ref_player_entity().flag_follow_target = false; break;
 			  //
+			case KEY_F(2): DEBUG_PRINT_COLLISION_TABLE = true; break;
+			case KEY_F(3): DEBUG_PRINT_COLLISION_TABLE = false; break;
 			case '\e': {
 						  LEVEL.ref_player_entity().set_direction_persistent(DIRECTION_NONE );
 						  LEVEL.ref_player_entity().reset_targeting();
@@ -199,6 +202,18 @@ int main()
 		//		 getbegy(w_gamewindow)+LEVEL.ncurses_cursor_y_offset_target
 		//		,getbegx(w_gamewindow)+LEVEL.ncurses_cursor_x_offset_target);
 		// border around window
+		// print collision table
+		if(DEBUG_PRINT_COLLISION_TABLE) {
+			erase();
+			for(int y = 0; y < LEVEL.collision_table.size_y ; ++y ) {
+				for(int x = 0; x < LEVEL.collision_table.size_x ; ++x ) {
+					if(LEVEL.collision_table.is_blocked_yx(y,x)) {
+						mvaddch(y,x,'x');
+					}
+				}
+			}
+			refresh();
+		}
 	} // loop
 
 

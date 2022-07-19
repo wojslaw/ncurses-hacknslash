@@ -84,6 +84,8 @@ LevelCell::is_cell_walkable(void) const
 struct Level {
 	int y_max = 1;
 	int x_max = 1;
+	int size_y(void) const {return y_max;}
+	int size_x(void) const {return x_max;}
 
 	double total_seconds = 0.0;
 	CountdownTimer timer_ai = CountdownTimer(2.0); // random number of seconds for countdown
@@ -99,7 +101,7 @@ struct Level {
 	std::vector<Entity> vector_of_entity = std::vector<Entity>();
 	std::vector<VisualEntity> vector_of_visual_entity = std::vector<VisualEntity>();
 	std::vector<size_t> vector_of_entityids_on_screen = std::vector<size_t>();
-	struct CollisionTable collision_table = CollisionTable();
+	struct CollisionTable collision_table = CollisionTable(0,0);
 	void update_collision_table(void);
 
 	Entity & ref_player_entity(void) { return vector_of_entity.at(0); }
@@ -453,6 +455,7 @@ Level::update_time_from_globaltimer(GlobalTimer const & GLOBALTIMER)
 	update_entities();
 	update_entities_direction_planned();
 	update_entity_combat_rounds();
+	update_collision_table();
 }
 
 
@@ -709,11 +712,11 @@ Level::move_decayed_entities(void)
 
 //ctor
 Level::Level(
-		 int const _y_max 
+		int const _y_max 
 		,int const _x_max 
-			)
+		)
+	: collision_table(CollisionTable(_y_max,_x_max))
 {
-	collision_table = CollisionTable(_y_max,_x_max);
 	// player entity:
 	vector_of_entity.resize(8);
 	vector_of_entity.at(0).vec2d_position.y = 8;
@@ -854,5 +857,29 @@ Level::update_vector_of_entityids_on_screen_within_range(
 	void
 Level::update_collision_table(void)
 {
-	
+	move(LINES-2,0);
+	printw("update_collision_table");
+	assert(y_max > 0);
+	assert(x_max > 0);
+	assert(table_of_cells.size() > 0);
+	assert(table_of_cells.at(0).size() > 0);
+	//assert(table_of_cells.size() == (size_t)y_max);
+	//assert(table_of_cells.size() == (size_t)x_max);
+	//
+	collision_table.resize_and_clear(size_y(),size_x());
+	// entities
+	for(Entity const& entity : vector_of_entity ) {
+		printw("!");
+		if(entity.is_blocking()) {
+			collision_table.set_blocked_vec2d(entity.vec2d_position);
+		}
+	}
+	//terrain
+	for(int y = 0; y < y_max; ++y ) {
+		for(int x = 0; x < x_max; ++x ) {
+			if(not table_of_cells.at(y).at(x).is_cell_walkable()) {
+				collision_table.set_blocked_yx(y,x);
+			}
+		}
+	}
 }
