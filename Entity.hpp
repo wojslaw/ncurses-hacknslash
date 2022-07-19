@@ -241,6 +241,7 @@ public:
 	void update_time_from_globaltimer(GlobalTimer const & GLOBALTIMER);
 
 	bool has_planned_movement(void);
+	void consume_food(void);
 
 };
 

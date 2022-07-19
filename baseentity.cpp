@@ -30,9 +30,9 @@ const struct BaseEntity TABLE_BASEENTITY[] = {
 		.seconds_movement = 0.4 ,
 		.flag_has_collision = false,
 	} ,
-	[ID_BaseEntity_goblin] = {
+	[ID_BaseEntity_gthrower] = {
 		.ncurses_symbol = 'g',
-		.name = "goblin" ,
+		.name = "gthrower" ,
 		.level = 1 ,
 		.stat_life_max = 8 ,
 		.attack_base = 0 ,
@@ -40,17 +40,26 @@ const struct BaseEntity TABLE_BASEENTITY[] = {
 		.attack_range = 7,
 		.seconds_movement = 0.35,
 	} ,
-	[ID_BaseEntity_giant] = {
-		.ncurses_symbol = 'G',
-		.name = "giant" ,
-		.level = 4 ,
-		.stat_life_max = 40 ,
+	[ID_BaseEntity_dickev] = {
+		.ncurses_symbol = 'd',
+		.name = "dickev" ,
+		.level = 1 ,
+		.stat_life_max = 8 ,
+		.attack_base = 0 ,
+		.attack_dice = 3 ,
+		.attack_range = 1,
+		.seconds_movement = 0.35,
+	} ,
+	[ID_BaseEntity_orc] = {
+		.ncurses_symbol = 'o',
+		.name = "orc" ,
+		.level = 3 ,
+		.stat_life_max = 8 ,
 		.attack_base = 4 ,
-		.attack_dice = 8 ,
+		.attack_dice = 2 ,
 		.attack_range = 2,
-		.defense_base = 3,
-		.seconds_movement = 0.40 ,
-		.flag_destroys_terrain = true ,
+		.defense_base = 1,
+		.seconds_movement = 0.35,
 	} ,
 	[ID_BaseEntity_rockworm] = {
 		.ncurses_symbol = 'r',
@@ -60,6 +69,18 @@ const struct BaseEntity TABLE_BASEENTITY[] = {
 		.attack_base = 1 ,
 		.attack_dice = 2 ,
 		.attack_range = 2,
+		.seconds_movement = 0.40 ,
+		.flag_destroys_terrain = true ,
+	} ,
+	[ID_BaseEntity_bengalov] = {
+		.ncurses_symbol = 'B',
+		.name = "bengalov" ,
+		.level = 5 ,
+		.stat_life_max = 50 ,
+		.attack_base = 4 ,
+		.attack_dice = 8 ,
+		.attack_range = 2,
+		.defense_base = 3,
 		.seconds_movement = 0.40 ,
 		.flag_destroys_terrain = true ,
 	} ,
@@ -89,14 +110,19 @@ baseentity_ref_from_id(ID_BaseEntity const id)
 
 void check_table_of_baseentity_is_valid(void)
 {
-	/* // TODO ensure no repeats */
-	/* bool has_repeats = false; */
-	/* struct BaseEntity TABLE_BASEENTITY[] = { */
-	/* for(ID_BaseEntity i = 0; i < SIZEOF_TABLE_BASEENTITY; ++i) { */
-	/* 	for(ID_BaseEntity i = 0; i < SIZEOF_TABLE_BASEENTITY; ++i) { */
-	/* 		assert(); */
-	/* 	} */
-	/* } */
+	//bool has_repeats = false;
+	for(ID_BaseEntity i = 1; i < SIZEOF_TABLE_BASEENTITY; ++i) {
+		for(ID_BaseEntity j = 1; j < SIZEOF_TABLE_BASEENTITY; ++j) {
+			if(i == j) {
+				continue;
+			}
+			assert(
+					TABLE_BASEENTITY[i].ncurses_symbol
+					!=
+					TABLE_BASEENTITY[j].ncurses_symbol
+					);
+		}
+	}
 }
 
 

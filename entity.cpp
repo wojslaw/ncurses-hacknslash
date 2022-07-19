@@ -19,6 +19,13 @@ bool is_direction_angled(enum DIRECTION direction)
 
 
 
+Entity::Entity(ID_BaseEntity const _id_of_base_entity)
+	: id_base_entity(_id_of_base_entity)
+{
+	timer_movement = CountdownTimer(ref_base_entity().seconds_movement);
+	timer_wellfed.remaining_seconds  = 20.0;
+	set_life_to_max();
+}
 
 
 
@@ -247,12 +254,20 @@ Entity::order_stop(void)
 
 
 
-
-
-Entity::Entity(ID_BaseEntity const _id_of_base_entity)
-	: id_base_entity(_id_of_base_entity)
+	void
+Entity::consume_food(void)
 {
-	timer_movement = CountdownTimer(ref_base_entity().seconds_movement);
-	timer_wellfed.remaining_seconds  = 20.0;
-	set_life_to_max();
+	timer_wellfed.remaining_seconds += 4.0;
 }
+
+
+
+
+
+
+
+
+
+
+
+

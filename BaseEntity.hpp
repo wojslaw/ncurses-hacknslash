@@ -10,9 +10,11 @@ constexpr ID_BaseEntity ID_BaseEntity_invalid = -1;
 enum ID_BASEENTITY {
 	ID_BaseEntity_human  = 1 ,
 	ID_BaseEntity_wraith = 2 ,
-	ID_BaseEntity_goblin = 3 ,
-	ID_BaseEntity_giant  = 4 ,
-	ID_BaseEntity_rockworm  = 5 ,
+	ID_BaseEntity_gthrower = 3 ,
+	ID_BaseEntity_dickev = 4 ,
+	ID_BaseEntity_orc = 5 ,
+	ID_BaseEntity_rockworm  = 6 ,
+	ID_BaseEntity_bengalov  = 7 ,
 };
 
 

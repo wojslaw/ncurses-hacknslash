@@ -43,6 +43,8 @@
 
 int main()
 {
+	check_table_of_baseentity_is_valid();
+
 
 	initscr();
 	srand(time(NULL));
@@ -125,7 +127,6 @@ int main()
 	int timeout_miliseconds=100;
 	timeout(timeout_miliseconds);
 	ESCDELAY = 10;
-	int input_digit = -1;
 	// loop
 	for(input_character = ERR ;  input_character != 'Z' ; input_character = getch() ) {
 		mvprintw(0,0,"(press Z to quit)");
@@ -156,6 +157,8 @@ int main()
 			case 'S': LEVEL.ref_player_entity().set_direction_persistent(DIRECTION_DOWN ); break;
 			case 'D': LEVEL.ref_player_entity().set_direction_persistent(DIRECTION_RIGHT); break;
 			//
+			case '1': LEVEL.ref_player_entity().consume_food();  break;
+			//
 			case 'f': LEVEL.ref_player_entity().flag_follow_target = true; break;
 			case 'F': LEVEL.ref_player_entity().flag_follow_target = false; break;
 			  //
@@ -170,10 +173,6 @@ int main()
 			//
 			case '\t': LEVEL.player_tab_target(); break;
 			
-		}
-		if(isdigit(input_character)) {
-			input_digit = input_character - '0';
-			LEVEL.player_set_target_to_visibleid_from_digit(input_digit);
 		}
 
 		// timers

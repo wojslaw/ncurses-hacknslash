@@ -1,4 +1,5 @@
 #pragma once
+// TODO prevent stacking of non-collision monsters
 
 #include "Timer.hpp"
 #include "Entity.hpp"
@@ -673,7 +674,7 @@ Level::make_visual_effect_on_target(int const range)
 	const Vec2d & v_base = ref_from_entityid(ref_player_entity().id_of_target).vec2d_position;
 	for(int y = -range ; y < range; ++y) {
 		for(int x = -range ; x < range; ++x) {
-			vector_of_visual_entity.push_back(
+			vector_of_visual_entity.emplace_back(
 					VisualEntity(
 						 'x'
 						,0.25
@@ -811,7 +812,7 @@ Level::update_vector_of_entityids_on_screen_within_range(
 			continue;
 		}
 		if(entity.vec2d_position.is_within_rectangle(y_start,x_start,y_end,x_end)) {
-			vector_of_entityids_on_screen.push_back(id);
+			vector_of_entityids_on_screen.emplace_back(id);
 			if(id == vector_of_entity.at(0).id_of_target) {
 				is_target_on_screen = true;
 			}
@@ -907,36 +908,49 @@ Level::Level(
 	: collision_table(CollisionTable(_y_max,_x_max))
 {
 	// player entity:
-	vector_of_entity.push_back(Entity(ID_BaseEntity_human));
+	vector_of_entity.emplace_back(Entity(ID_BaseEntity_human));
 	ref_player_entity().set_life_to_max();
 	vector_of_entity.at(0).vec2d_position.y = 6;
 	vector_of_entity.at(0).vec2d_position.x = 6;
 	// enemies:
 	// shooters
-	vector_of_entity.push_back(Entity(ID_BaseEntity_goblin));
-	vector_of_entity.at(1).vec2d_position.y = 1;
-	vector_of_entity.at(1).vec2d_position.x = 2;
+	vector_of_entity.emplace_back(Entity(ID_BaseEntity_gthrower));
+	vector_of_entity.back().vec2d_position.y = 1;
+	vector_of_entity.back().vec2d_position.x = 2;
 	// "wraith" - ignores collision with terrain
-	vector_of_entity.push_back(Entity(ID_BaseEntity_wraith));
-	vector_of_entity.at(2).vec2d_position.y = 4;
-	vector_of_entity.at(2).vec2d_position.x = 2;
+	vector_of_entity.emplace_back(Entity(ID_BaseEntity_wraith));
+	vector_of_entity.back().vec2d_position.y = 30;
+	vector_of_entity.back().vec2d_position.x = 30;
 	//
-	vector_of_entity.push_back(Entity(ID_BaseEntity_rockworm));
+	vector_of_entity.emplace_back(Entity(ID_BaseEntity_rockworm));
 	vector_of_entity.back().vec2d_position.y = 2;
 	vector_of_entity.back().vec2d_position.x = 5;
 	// a few giants
-	vector_of_entity.push_back(Entity(ID_BaseEntity_giant));
-	vector_of_entity.back().vec2d_position.y = 24;
-	vector_of_entity.back().vec2d_position.x = 2;
-	vector_of_entity.push_back(Entity(ID_BaseEntity_giant));
-	vector_of_entity.back().vec2d_position.y = 24;
+	vector_of_entity.emplace_back(Entity(ID_BaseEntity_bengalov));
+	vector_of_entity.back().vec2d_position.y = 20;
+	vector_of_entity.back().vec2d_position.x = 31;
+	vector_of_entity.emplace_back(Entity(ID_BaseEntity_bengalov));
+	vector_of_entity.back().vec2d_position.y = 21;
+	vector_of_entity.back().vec2d_position.x = 33;
+	vector_of_entity.emplace_back(Entity(ID_BaseEntity_bengalov));
+	vector_of_entity.back().vec2d_position.y = 22;
+	vector_of_entity.back().vec2d_position.x = 33;
+	// 
+	vector_of_entity.emplace_back(Entity(ID_BaseEntity_dickev));
+	vector_of_entity.back().vec2d_position.y = 19;
+	vector_of_entity.back().vec2d_position.x = 7;
+	vector_of_entity.emplace_back(Entity(ID_BaseEntity_dickev));
+	vector_of_entity.back().vec2d_position.y = 20;
 	vector_of_entity.back().vec2d_position.x = 4;
-	vector_of_entity.push_back(Entity(ID_BaseEntity_giant));
-	vector_of_entity.back().vec2d_position.y = 24;
+	vector_of_entity.emplace_back(Entity(ID_BaseEntity_dickev));
+	vector_of_entity.back().vec2d_position.y = 19;
 	vector_of_entity.back().vec2d_position.x = 6;
-	vector_of_entity.push_back(Entity(ID_BaseEntity_giant));
-	vector_of_entity.back().vec2d_position.y = 24;
-	vector_of_entity.back().vec2d_position.x = 8;
+	vector_of_entity.emplace_back(Entity(ID_BaseEntity_gthrower));
+	vector_of_entity.back().vec2d_position.y = 20;
+	vector_of_entity.back().vec2d_position.x = 6;
+	vector_of_entity.emplace_back(Entity(ID_BaseEntity_gthrower));
+	vector_of_entity.back().vec2d_position.y = 19;
+	vector_of_entity.back().vec2d_position.x = 5;
 
 	y_max = _y_max;
 	x_max = _x_max;
