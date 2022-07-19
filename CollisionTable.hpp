@@ -65,10 +65,14 @@ CollisionTable::is_blocked_vec2d( Vec2d const& v0 ) const
 	void 
 CollisionTable::set_blocked_vec2d( Vec2d const&  v0 )
 {
-	assert(v0.y >= 0);
-	assert(v0.x >= 0);
-	assert(v0.y <= max_y);
-	assert(v0.x <= max_x);
+	if(v0.y < 0) {return;}
+	if(v0.x < 0) {return;}
+	if(v0.y > max_y) {return;}
+	if(v0.x > max_x) {return;}
+	//assert(v0.y >= 0);
+	//assert(v0.x >= 0);
+	//assert(v0.y <= max_y);
+	//assert(v0.x <= max_x);
 
 	vector_of_bool.at(v0.y).at(v0.x) = true;
 }

@@ -117,6 +117,16 @@ struct Level {
 	struct CollisionTable collision_table = CollisionTable(0,0);
 	void update_collision_table(void);
 
+	int get_count_of_living_entities(void) const {
+		int living = 0;
+		for( auto const& entity : vector_of_entity ) {
+			if(entity.is_alive()) {
+				living++;
+			}
+		}
+		return living;
+	}
+
 	Entity & ref_player_entity(void) { return vector_of_entity.at(0); }
 	Entity & ref_from_entityid(size_t const entityid) { return vector_of_entity.at(entityid); }
 	Entity & ref_target(void) { return ref_from_entityid(ref_player_entity().id_of_target); }
@@ -922,7 +932,10 @@ Level::Level(
 	vector_of_entity.back().vec2d_position.y = 30;
 	vector_of_entity.back().vec2d_position.x = 30;
 	//
-	vector_of_entity.emplace_back(Entity(ID_BaseEntity_rockworm));
+	vector_of_entity.emplace_back(Entity(ID_BaseEntity_eater));
+	vector_of_entity.back().vec2d_position.y = 2;
+	vector_of_entity.back().vec2d_position.x = 5;
+	vector_of_entity.emplace_back(Entity(ID_BaseEntity_devourer));
 	vector_of_entity.back().vec2d_position.y = 2;
 	vector_of_entity.back().vec2d_position.x = 5;
 	// a few giants

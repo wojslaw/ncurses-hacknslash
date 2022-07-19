@@ -61,9 +61,9 @@ const struct BaseEntity TABLE_BASEENTITY[] = {
 		.defense_base = 1,
 		.seconds_movement = 0.35,
 	} ,
-	[ID_BaseEntity_rockworm] = {
-		.ncurses_symbol = 'r',
-		.name = "rockworm" ,
+	[ID_BaseEntity_eater] = {
+		.ncurses_symbol = 'e',
+		.name = "eater" ,
 		.level = 2 ,
 		.stat_life_max = 12 ,
 		.attack_base = 1 ,
@@ -71,6 +71,7 @@ const struct BaseEntity TABLE_BASEENTITY[] = {
 		.attack_range = 2,
 		.seconds_movement = 0.40 ,
 		.flag_destroys_terrain = true ,
+		.flag_is_vampiric = true ,
 	} ,
 	[ID_BaseEntity_bengalov] = {
 		.ncurses_symbol = 'B',
@@ -83,6 +84,19 @@ const struct BaseEntity TABLE_BASEENTITY[] = {
 		.defense_base = 3,
 		.seconds_movement = 0.40 ,
 		.flag_destroys_terrain = true ,
+	} ,
+	[ID_BaseEntity_devourer] = {
+		.ncurses_symbol = 'E',
+		.name = "devourer" ,
+		.level = 5 ,
+		.stat_life_max = 30 ,
+		.attack_base = 3 ,
+		.attack_dice = 5 ,
+		.attack_range = 2,
+		.defense_base = 6,
+		.seconds_movement = 0.45 ,
+		.flag_destroys_terrain = true ,
+		.flag_is_vampiric = true ,
 	} ,
 };
 

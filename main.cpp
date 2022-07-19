@@ -130,7 +130,7 @@ int main()
 	// loop
 	for(input_character = ERR ;  input_character != 'Z' ; input_character = getch() ) {
 		mvprintw(0,0,"(press Z to quit)");
-		mvprintw(1,0,"enemies left: %zu" , LEVEL.vector_of_entity.size()-2);
+		mvprintw(1,0,"living combatants: %4d" , LEVEL.get_count_of_living_entities());
 		if(LEVEL.ref_player_entity().is_dead()) {
 			mvprintw(3,0,"[[RIP] - [your ded]]");
 		}

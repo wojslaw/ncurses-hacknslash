@@ -69,7 +69,7 @@ struct Entity {
 	CountdownTimer timer_movement = CountdownTimer(MOVEMENT_TURN_SECONDS);
 	CountdownTimer timer_life = CountdownTimer(0);
 	CountdownTimer timer_regenerate_life = CountdownTimer(WELLFED_SECONDS_PER_REGEN);
-	CountdownTimer timer_wellfed = CountdownTimer(20.0);
+	CountdownTimer timer_wellfed = CountdownTimer(0);
 	CountdownTimer timer_recently_hit = CountdownTimer(0.5);
 	CountdownTimer timer_decay = CountdownTimer(SECONDS_CORPSE_DECAY);
 
@@ -77,8 +77,10 @@ struct Entity {
 	bool flag_skip_update = false;
 	bool has_collision(void) const { return ref_base_entity().flag_has_collision; }
 	bool has_destroyer_of_terrain(void) const { return ref_base_entity().flag_destroys_terrain; }
+	bool is_vampiric(void) const { return ref_base_entity().flag_is_vampiric; }
 	bool flag_follow_target = true;
 	bool flag_stop_on_collision = true;
+
 
 
 	const char * get_name(void) const { return ref_base_entity().name; }
@@ -176,6 +178,12 @@ struct Entity {
 
 	int combat_roll_damage_against_defense(int const defense) {
 		last_combat_attack_damage = combat_roll_damage() - defense;
+		if(
+		        is_vampiric()
+		        &&
+		        last_combat_attack_damage >= 1) {
+			timer_wellfed.remaining_seconds += (double)last_combat_attack_damage;
+		}
 		return last_combat_attack_damage;
 	}
 

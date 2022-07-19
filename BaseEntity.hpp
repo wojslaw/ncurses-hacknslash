@@ -13,8 +13,9 @@ enum ID_BASEENTITY {
 	ID_BaseEntity_gthrower = 3 ,
 	ID_BaseEntity_dickev = 4 ,
 	ID_BaseEntity_orc = 5 ,
-	ID_BaseEntity_rockworm  = 6 ,
+	ID_BaseEntity_eater  = 6 ,
 	ID_BaseEntity_bengalov  = 7 ,
+	ID_BaseEntity_devourer  = 8 ,
 };
 
 
@@ -31,7 +32,9 @@ struct BaseEntity {
 	//
 	bool flag_has_collision = true;
 	bool flag_destroys_terrain = false;
+	bool flag_is_vampiric = false;
 };
+
 
 BaseEntity const& baseentity_ref_from_id(
 		ID_BaseEntity );
