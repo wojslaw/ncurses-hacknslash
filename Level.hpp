@@ -16,7 +16,7 @@ typedef struct LevelCell LevelCell;
 
 
 bool FLAG_PRINT_ENTITYLIST_DEBUG = false;
-
+int DISTANCE_FOLLOW_MAX_BEFORE_TARGET_LOST = 20;
 
 
 
@@ -144,6 +144,7 @@ struct Level {
 	void update_entity_combat_rounds(void);
 	void update_table_of_cells_with_pointers_to_entities(void) ;
 
+	void make_visible_enemies_start_targeting_player(void);
 	void update_vector_of_entityids_on_screen_within_range(
 		 int const y_start
 		,int const x_start
@@ -368,6 +369,7 @@ Level::wprint_range(
 		,x_start
 		,y_end
 		,x_end );
+	make_visible_enemies_start_targeting_player();
 	// end
 	wrefresh(w);
 }
@@ -601,11 +603,23 @@ Level::update_entities_direction_planned(void)
 			continue;
 		}
 		Entity & target = ref_from_entityid(attacker.id_of_target);
-		attacker.vec2d_planned_movement
-			= vec2d_find_direction_vec2d_from_to(
+		int const distance 
+			= vec2d_highest_distance_between(
 					attacker.vec2d_position
 					,target.vec2d_position
 					);
+		if(distance >= attacker.combat_get_range()) {
+			attacker.vec2d_planned_movement
+				= vec2d_find_direction_vec2d_from_to(
+						attacker.vec2d_position
+						,target.vec2d_position
+						);
+		} else {
+			attacker.vec2d_planned_movement.set_zero();
+		}
+		if(distance > DISTANCE_FOLLOW_MAX_BEFORE_TARGET_LOST) { // lose target
+			attacker.reset_targeting();
+		}
 	}
 }
 
@@ -710,67 +724,6 @@ Level::move_decayed_entities(void)
 
 
 
-//ctor
-Level::Level(
-		int const _y_max 
-		,int const _x_max 
-		)
-	: collision_table(CollisionTable(_y_max,_x_max))
-{
-	// player entity:
-	vector_of_entity.resize(8);
-	vector_of_entity.at(0).vec2d_position.y = 8;
-	vector_of_entity.at(0).vec2d_position.x = 8;
-	//
-	vector_of_entity.at(1).ncurses_symbol = 'a';
-	vector_of_entity.at(1).take_damage(100);
-	vector_of_entity.at(2).ncurses_symbol = 'b';
-	vector_of_entity.at(3).ncurses_symbol = 'c';
-	vector_of_entity.at(4).ncurses_symbol = 'd';
-	vector_of_entity.at(5).ncurses_symbol = 'e';
-	vector_of_entity.at(6).ncurses_symbol = 'f';
-	vector_of_entity.at(7).ncurses_symbol = 'g';
-	//
-	vector_of_entity.at(1).vec2d_position.y = 4;
-	vector_of_entity.at(1).vec2d_position.x = 4;
-	vector_of_entity.at(2).vec2d_position.y = 2;
-	vector_of_entity.at(2).vec2d_position.x = 2;
-	vector_of_entity.at(3).vec2d_position.y = 6;
-	vector_of_entity.at(3).vec2d_position.x = 6;
-	//
-	vector_of_entity.at(4).vec2d_position.y = 2;
-	vector_of_entity.at(5).vec2d_position.y = 3;
-	vector_of_entity.at(6).vec2d_position.y = 4;
-	vector_of_entity.at(7).vec2d_position.y = 5;
-	//
-	vector_of_entity.at(1).timer_movement.seconds_countdown = 0.75;
-	vector_of_entity.at(2).timer_movement.seconds_countdown = 0.5;
-	vector_of_entity.at(3).timer_movement.seconds_countdown = 0.5;
-	//
-
-	y_max = _y_max;
-	x_max = _x_max;
-	table_of_cells.resize(y_max);
-	int y = 0;
-	for(auto & row : table_of_cells ) {
-		row.resize(x_max);
-		int x = 0;
-		for(auto & cell : row) {
-			int const is_grass = rand_r(&seed)%0x20 == 0;
-			if(is_grass) {
-				cell.cellterrain = CELLTERRAIN_GRASS;
-			}
-			if(x == 0 || x == x_max-1 || y == 0 || y == y_max-1) {
-				cell.cellterrain = CELLTERRAIN_HASH;
-			}
-			if((x % 5) == 0 && (y % 3) == 0 ) {
-				cell.cellterrain = CELLTERRAIN_HASH;
-			}
-			++x;
-		}
-		++y;
-	}
-}
 
 
 
@@ -787,6 +740,9 @@ Level::update_entities(void) {
 	for(Entity & ref_entity : vector_of_entity ) {
 		if(!(is_vec2d_position_within_bounds_of_level(ref_entity.vec2d_position))) { continue;  } // skip invalidly-placed
 		LevelCell & cell_at_new_position = ref_levelcell_at_vec2d(ref_entity.vec2d_position);
+		if(!ref_entity.flag_has_collision) {  // skip entities without collision
+			continue;
+		}
 		if(cell_at_new_position.is_blocked_cell()) {
 			ref_entity.position_restore_last();
 		}
@@ -853,6 +809,20 @@ Level::update_vector_of_entityids_on_screen_within_range(
 
 
 
+	void
+Level::make_visible_enemies_start_targeting_player(void)
+{
+	for( size_t entityid : vector_of_entityids_on_screen ) {
+		Entity & entity = vector_of_entity.at(entityid);
+		if(&entity == &ref_player_entity()) {
+			continue; 
+		}
+		entity.set_target_to_entityid(0);
+	}
+}
+
+
+
 
 	void
 Level::update_collision_table(void)
@@ -880,5 +850,113 @@ Level::update_collision_table(void)
 				collision_table.set_blocked_yx(y,x);
 			}
 		}
+	}
+}
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+//ctor
+Level::Level(
+		int const _y_max 
+		,int const _x_max 
+		)
+	: collision_table(CollisionTable(_y_max,_x_max))
+{
+	vector_of_entity.resize(8);
+	// player entity:
+	ref_player_entity().set_life_to_max();
+	// enemies:
+	vector_of_entity.at(0).vec2d_position.y = 8;
+	vector_of_entity.at(0).vec2d_position.x = 8;
+	vector_of_entity.at(1).ncurses_symbol = 'c';
+	vector_of_entity.at(2).ncurses_symbol = 'c';
+	// shooters
+	vector_of_entity.at(3).ncurses_symbol = 'g';
+	vector_of_entity.at(3).stat_life_max = 8;
+	vector_of_entity.at(4).ncurses_symbol = 'g';
+	vector_of_entity.at(4).stat_life_max = 8;
+	// "wraith" - ignores collision with terrain
+	vector_of_entity.at(5).ncurses_symbol = 'w';
+	vector_of_entity.at(6).ncurses_symbol = 'w';
+	vector_of_entity.at(7).ncurses_symbol = 'w';
+	vector_of_entity.at(5).flag_has_collision = false;
+	vector_of_entity.at(6).flag_has_collision = false;
+	vector_of_entity.at(7).flag_has_collision = false;
+	//
+	vector_of_entity.at(1).vec2d_position.y = 16;
+	vector_of_entity.at(1).vec2d_position.x = 20;
+	vector_of_entity.at(2).vec2d_position.y = 12;
+	vector_of_entity.at(2).vec2d_position.x = 26;
+	vector_of_entity.at(3).vec2d_position.y = 10;
+	vector_of_entity.at(3).vec2d_position.x = 44;
+	//
+	vector_of_entity.at(4).vec2d_position.y = 25;
+	vector_of_entity.at(4).vec2d_position.x = 20;
+	vector_of_entity.at(5).vec2d_position.y = 25;
+	vector_of_entity.at(5).vec2d_position.x = 30;
+	vector_of_entity.at(6).vec2d_position.y = 25;
+	vector_of_entity.at(6).vec2d_position.x = 40;
+	vector_of_entity.at(7).vec2d_position.y = 25;
+	vector_of_entity.at(7).vec2d_position.x = 40;
+	//
+	vector_of_entity.at(1).timer_movement.seconds_countdown = 0.5 ;
+	vector_of_entity.at(2).timer_movement.seconds_countdown = 0.5 ;
+	vector_of_entity.at(3).timer_movement.seconds_countdown = 0.5 ;
+	vector_of_entity.at(4).timer_movement.seconds_countdown = 0.5 ;
+	vector_of_entity.at(5).timer_movement.seconds_countdown = 0.75;
+	vector_of_entity.at(6).timer_movement.seconds_countdown = 0.75;
+	vector_of_entity.at(7).timer_movement.seconds_countdown = 0.75;
+	//
+
+	y_max = _y_max;
+	x_max = _x_max;
+	table_of_cells.resize(y_max);
+	int y = 0;
+	for(auto & row : table_of_cells ) {
+		row.resize(x_max);
+		int x = 0;
+		for(auto & cell : row) {
+			int const is_grass = rand_r(&seed)%0x20 == 0;
+			if(is_grass) {
+				cell.cellterrain = CELLTERRAIN_GRASS;
+			}
+			if(x == 0 || x == x_max-1 || y == 0 || y == y_max-1) {
+				cell.cellterrain = CELLTERRAIN_HASH;
+			}
+			if((x % 5) == 0 && (y % 3) == 0 ) {
+				cell.cellterrain = CELLTERRAIN_HASH;
+			}
+			++x;
+		}
+		++y;
 	}
 }

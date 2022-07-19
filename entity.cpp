@@ -69,9 +69,9 @@ Entity::wprint_detailed_entity_info(WINDOW * w) const
 	wmove(w,1,1);
 	wprintw(w,"%c  %2d/%2d" , ncurses_symbol , stat_life , stat_life_max);
 	wmove(w,2,1);
-	wprintw(w,"%6.1f" , timer_regenerate_life.remaining_seconds);
+	wprintw(w,"fed:%.1f( %.1f)" ,timer_wellfed.remaining_seconds, timer_regenerate_life.remaining_seconds);
 	wmove(w,3,1);
-	wprintw(w,"%6.1f" , timer_wellfed.remaining_seconds);
+	wprintw(w,"target: %zu" , id_of_target);
 	wmove(w,4,1);
 	wprintw(w,"A:%d-%d , last: %d (rolled %d)"
 			,get_attack_base()

@@ -108,6 +108,7 @@ int main()
 
 	Level LEVEL  = Level(32,64);
 	LEVEL.ref_player_entity().id_of_target = 1;
+	LEVEL.ref_player_entity().flag_follow_target = false;
 
 
 
@@ -127,8 +128,11 @@ int main()
 	int input_digit = -1;
 	// loop
 	for(input_character = ERR ;  input_character != 'Z' ; input_character = getch() ) {
-		move(0,0);
-		printw("(press Z to quit)");
+		mvprintw(0,0,"(press Z to quit)");
+		mvprintw(1,0,"enemies left: %zu" , LEVEL.vector_of_entity.size()-2);
+		if(LEVEL.ref_player_entity().is_dead()) {
+			mvprintw(3,0,"[[RIP] - [your ded]]");
+		}
 
 		switch(input_character) {
 			case 'x': LEVEL.make_visual_effect_on_target(5); break;
@@ -156,7 +160,7 @@ int main()
 			case 'F': LEVEL.ref_player_entity().flag_follow_target = false; break;
 			  //
 			case KEY_F(3): DEBUG_PRINT_COLLISION_TABLE = true; break;
-			case KEY_F(4): DEBUG_PRINT_COLLISION_TABLE = false; break;
+			case KEY_F(4): DEBUG_PRINT_COLLISION_TABLE = false; clear(); break;
 			case KEY_F(5): LEVEL.ref_player_entity().flag_stop_on_collision = true; break;
 			case KEY_F(6): LEVEL.ref_player_entity().flag_stop_on_collision = false; break;
 			case '\e': {

@@ -2,6 +2,16 @@ CollisionTable - pass a const& for entity when moving
 TODO stop persistent movement when you try to go in the other way
 IDEA show something better on border of map?
 IDEA wraparound: go to y=y_max, get teleported to y=0
+TODO make enemies wander slowly by default - random seconds of delay before they move in a random direction
+
+TODO level up
+TODO items/inventory
+TODO items/inventory
+
+TODO enemy that ignores collision
+TODO enemy that destroys terrain
+
+TODO don't move when next to target
 
 
 TODO cleaner angled-movement - when you press them quickly enough, you will get moved in the angled direction

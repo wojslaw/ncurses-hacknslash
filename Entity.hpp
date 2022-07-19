@@ -71,7 +71,7 @@ struct Entity {
 
 	//
 	bool flag_skip_update = false;
-	bool has_collision = true;
+	bool flag_has_collision = true;
 	bool is_timed_life = false;
 	bool flag_follow_target = true;
 	bool flag_stop_on_collision = true;
@@ -109,8 +109,9 @@ struct Entity {
 	// combat-things
 	unsigned randomness_seed_combat = 0;
 
-	int stat_life_max = 8;
-	int stat_life = 1;
+	int stat_life_max = 20;
+	int stat_life = 12;
+	void set_life_to_max(void) { stat_life = stat_life_max; }
 
 
 	int get_defense() const { return 1; }
@@ -152,6 +153,12 @@ struct Entity {
 	int combat_get_range(void) const {
 		if(ncurses_symbol == '@') {
 			return 6;
+		}
+		if(ncurses_symbol == 'g') {
+			return 8;
+		}
+		if(ncurses_symbol == 'w') {
+			return 1;
 		}
 		return 2;
 	} // just a random given number for now
@@ -208,7 +215,7 @@ struct Entity {
 // general
 
 	bool is_blocking(void) const { 
-		if(!has_collision) {
+		if(!flag_has_collision) {
 			return false;
 		}
 		if(is_dead()) {
