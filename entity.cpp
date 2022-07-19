@@ -96,7 +96,12 @@ Entity::wprint_detailed_entity_info(WINDOW * w) const
 
 
 
-
+	void
+Entity::set_direction_persistent(enum DIRECTION const dir)
+{
+	direction_persistent = dir;
+	vec2d_planned_movement = DIRECTION_VECTOR[dir];
+}
 
 
 	void
@@ -188,6 +193,14 @@ Entity::position_restore_last(void) {
 	void
 Entity::update_movement_from_planned_movement(void)
 {
+	move(LINES-3,0);
+	printw("update_movement_from_planned_movement %p @[%2d , %2d]  >[%2d , %2d]"
+			, this
+			, vec2d_position.y
+			, vec2d_position.x
+			, vec2d_planned_movement.y
+			, vec2d_planned_movement.x
+		  );
 	assert(
 			(vec2d_planned_movement.y != 0)
 			||
@@ -195,10 +208,14 @@ Entity::update_movement_from_planned_movement(void)
 			);
 	// 1. prepare vector of current movement
 	Vec2d const vec2d_of_movement = vec2d_planned_movement.as_normalized();
+	printw("m[%2d , %2d]"
+			,vec2d_of_movement.y
+			,vec2d_of_movement.x
+			);
 	// 2. perform movement
 	vec2d_position.add_vec2d(vec2d_of_movement);
 	// 3. modify planned direction
-	vec2d_position.subtract_vec2d(vec2d_of_movement);
+	vec2d_planned_movement.subtract_vec2d(vec2d_of_movement); // I had "vec2d_position" here and was wondering why movement doesn't work...
 	// 4. overwrite last movement
 	vec2d_last_movement = vec2d_of_movement;
 }
@@ -248,7 +265,6 @@ Entity::update_movement(void)
 	// 5. try to move from planned:
 	if(has_planned_movement()) {
 		update_movement_from_planned_movement();
-		return;
 	}
 
 }
