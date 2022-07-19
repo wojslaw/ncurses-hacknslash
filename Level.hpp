@@ -5,6 +5,7 @@
 #include "VisualEntity.hpp"
 #include "Vec2d.hpp"
 #include "Ncurses.hpp"
+#include "CollisionTable.hpp"
 
 #include <assert.h>
 #include <vector>
@@ -98,6 +99,8 @@ struct Level {
 	std::vector<Entity> vector_of_entity = std::vector<Entity>();
 	std::vector<VisualEntity> vector_of_visual_entity = std::vector<VisualEntity>();
 	std::vector<size_t> vector_of_entityids_on_screen = std::vector<size_t>();
+	struct CollisionTable collision_table = CollisionTable();
+	void update_collision_table(void);
 
 	Entity & ref_player_entity(void) { return vector_of_entity.at(0); }
 	Entity & ref_from_entityid(size_t const entityid) { return vector_of_entity.at(entityid); }
@@ -710,6 +713,7 @@ Level::Level(
 		,int const _x_max 
 			)
 {
+	collision_table = CollisionTable(_y_max,_x_max);
 	// player entity:
 	vector_of_entity.resize(8);
 	vector_of_entity.at(0).vec2d_position.y = 8;
@@ -842,4 +846,13 @@ Level::update_vector_of_entityids_on_screen_within_range(
 	if(!is_target_on_screen) {
 		ref_player_entity().reset_targeting();
 	}
+}
+
+
+
+
+	void
+Level::update_collision_table(void)
+{
+	
 }
