@@ -200,28 +200,29 @@ Entity::update_movement(void)
 	}
 	// 1 save last position
 	vec2d_position_last = vec2d_position;
-	// and clear direction
+	// and clear last movement
 	vec2d_last_movement.set_zero();
 
-	// 2 consume a movement tick
-	assert(timer_movement.remaining_seconds <= 0);
-	timer_movement.consume_tick();
-	timer_movement.reset();
-
-	// 3. check if has persistent order
+	// 2. check if has persistent order
 	if(direction_persistent != DIRECTION_NONE) {
 		vec2d_planned_movement.add_vec2d(DIRECTION_VECTOR[direction_persistent]);
 	}
 
-	// 4. add order, if applicable
+	// 3. add order, if applicable
 	if(direction != DIRECTION_NONE) {
 		vec2d_planned_movement.add_vec2d(DIRECTION_VECTOR[direction]);
 		direction = DIRECTION_NONE;
 	}
 
-	// 5. try to move from planned:
+	// 4. try to move from planned:
 	if(has_planned_movement()) {
 		update_movement_from_planned_movement();
+	}
+
+	// 5 consume a movement tick
+	if(was_moved_recently()) {
+		timer_movement.consume_tick();
+		timer_movement.reset();
 	}
 
 }

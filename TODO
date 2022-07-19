@@ -1,5 +1,7 @@
 CollisionTable - pass a const& for entity when moving
 TODO stop persistent movement when you try to go in the other way
+IDEA show something better on border of map?
+IDEA wraparound: go to y=y_max, get teleported to y=0
 
 
 TODO cleaner angled-movement - when you press them quickly enough, you will get moved in the angled direction

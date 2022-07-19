@@ -869,7 +869,6 @@ Level::update_collision_table(void)
 	collision_table.resize_and_clear(size_y(),size_x());
 	// entities
 	for(Entity const& entity : vector_of_entity ) {
-		printw("!");
 		if(entity.is_blocking()) {
 			collision_table.set_blocked_vec2d(entity.vec2d_position);
 		}

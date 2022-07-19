@@ -127,6 +127,8 @@ int main()
 	int input_digit = -1;
 	// loop
 	for(input_character = ERR ;  input_character != 'Z' ; input_character = getch() ) {
+		move(0,0);
+		printw("(press Z to quit)");
 
 		switch(input_character) {
 			case 'x': LEVEL.make_visual_effect_on_target(5); break;
@@ -199,11 +201,6 @@ int main()
 		LEVEL.ref_target().wprint_detailed_entity_info(w_text_target);
 		wrefresh(w_gamewindow);
 		wrefresh(w_text_entitylist);
-		//move(
-		//		 getbegy(w_gamewindow)+LEVEL.ncurses_cursor_y_offset_target
-		//		,getbegx(w_gamewindow)+LEVEL.ncurses_cursor_x_offset_target);
-		// border around window
-		// print collision table
 		if(DEBUG_PRINT_COLLISION_TABLE) {
 			erase();
 			for(int y = 0; y < LEVEL.collision_table.size_y ; ++y ) {

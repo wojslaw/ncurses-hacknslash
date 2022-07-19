@@ -50,6 +50,13 @@ struct Entity {
 	Vec2d vec2d_position_last = Vec2d(1,1);
 	Vec2d vec2d_planned_movement = Vec2d(0,0);
 	Vec2d vec2d_last_movement = Vec2d(0,0);
+	bool was_moved_recently(void) const {
+		return
+			(vec2d_last_movement.y != 0)
+			||
+			(vec2d_last_movement.x != 0)
+			;
+	}
 	bool flag_moved_last_turn = false;
 
 	//
