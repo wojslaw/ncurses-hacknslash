@@ -67,6 +67,7 @@ struct Entity {
 	bool has_collision = true;
 	bool is_timed_life = false;
 	bool flag_follow_target = true;
+	bool flag_stop_on_collision = true;
 
 
 
@@ -225,7 +226,8 @@ public:
 	enum DIRECTION direction_persistent_ai = DIRECTION_NONE;
 	void set_direction_persistent(enum DIRECTION const dir);
 	void set_direction_order(enum DIRECTION const dir) ;
-	void set_direction_order_old(enum DIRECTION const dir) ;
+
+	void order_stop(void);
 
 	void update_movement_from_planned_movement(void);
 

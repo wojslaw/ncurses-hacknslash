@@ -128,76 +128,6 @@ Entity::set_direction_order(enum DIRECTION const dir)
 
 
 
-	void
-Entity::set_direction_order_old(enum DIRECTION const dir) 
-{
-	Vec2d const & vec2d_direction_order = DIRECTION_VECTOR[dir];
-	vec2d_planned_movement.add_vec2d(vec2d_direction_order);
-	vec2d_planned_movement.normalize();
-	// set angled
-	if(direction == DIRECTION_NONE) {
-		direction = dir;
-		return;
-	}
-	if(direction == dir) {
-		direction_persistent = dir;
-		return;
-	}
-	direction_persistent = DIRECTION_NONE;
-	// combine angled direction
-	if( direction == DIRECTION_UP ) {
-		if(dir == DIRECTION_LEFT) {
-			direction = DIRECTION_ANGLED_UP_LEFT;
-			return;
-		}
-		if(dir == DIRECTION_RIGHT) {
-			direction = DIRECTION_ANGLED_UP_RIGHT;
-			return;
-		}
-	}
-	if( direction == DIRECTION_DOWN ) {
-		if(dir == DIRECTION_LEFT) {
-			direction = DIRECTION_ANGLED_DOWN_LEFT;
-			return;
-		}
-		if(dir == DIRECTION_RIGHT) {
-			direction = DIRECTION_ANGLED_DOWN_RIGHT;
-			return;
-		}
-	}
-	if( direction == DIRECTION_LEFT ) {
-		if(dir == DIRECTION_UP) {
-			direction = DIRECTION_ANGLED_UP_LEFT;
-			return;
-		}
-		if(dir == DIRECTION_DOWN) {
-			direction = DIRECTION_ANGLED_DOWN_LEFT;
-			return;
-		}
-	}
-	if( direction == DIRECTION_LEFT ) {
-		if(dir == DIRECTION_UP) {
-			direction = DIRECTION_ANGLED_UP_LEFT;
-			return;
-		}
-		if(dir == DIRECTION_DOWN) {
-			direction = DIRECTION_ANGLED_DOWN_LEFT;
-			return;
-		}
-	}
-	if( direction == DIRECTION_RIGHT ) {
-		if(dir == DIRECTION_UP) {
-			direction = DIRECTION_ANGLED_UP_RIGHT;
-			return;
-		}
-		if(dir == DIRECTION_DOWN) {
-			direction = DIRECTION_ANGLED_DOWN_RIGHT;
-			return;
-		}
-	}
-	// or just set
-	direction = dir;
-}
 
 
 
@@ -206,9 +136,11 @@ Entity::set_direction_order_old(enum DIRECTION const dir)
 	void
 Entity::position_restore_last(void) {
 	vec2d_position = vec2d_position_last;
-	direction = DIRECTION_NONE;
-	direction_persistent = DIRECTION_NONE;
-	vec2d_planned_movement = DIRECTION_VECTOR[DIRECTION_NONE];
+	if(flag_stop_on_collision) {
+		direction = DIRECTION_NONE;
+		direction_persistent = DIRECTION_NONE;
+		vec2d_planned_movement = DIRECTION_VECTOR[DIRECTION_NONE];
+	}
 }
 
 
@@ -292,4 +224,17 @@ Entity::update_movement(void)
 		update_movement_from_planned_movement();
 	}
 
+}
+
+
+
+
+
+
+
+	void
+Entity::order_stop(void)
+{
+	set_direction_persistent(DIRECTION_NONE );
+	reset_targeting();
 }
