@@ -79,12 +79,18 @@ Entity::wprint_detailed_entity_info(WINDOW * w) const
 			,last_combat_attack_damage
 			,last_combat_attack_roll );
 	wmove(w,5,1);
-	wprintw(w,"[%2d , %2d] %d %d %d"
+	wprintw(w,"@[%2d , %2d]  >[%2d , %2d] %d %d %d"
+			,vec2d_position.y
+			,vec2d_position.x
 			,vec2d_planned_movement.y
 			,vec2d_planned_movement.x
 			,direction
 			,direction_persistent
 			,direction_persistent_ai
+			);
+	wmove(w,6,1);
+	wprintw(w,"timer_move: %.1f"
+			,timer_movement.remaining_seconds
 			);
 	wrefresh(w);
 }
@@ -104,8 +110,26 @@ Entity::set_direction_persistent(enum DIRECTION const dir)
 }
 
 
+
+
+
+
+
 	void
 Entity::set_direction_order(enum DIRECTION const dir) 
+{
+	Vec2d const & vec2d_direction_order = DIRECTION_VECTOR[dir];
+	vec2d_planned_movement.add_vec2d(vec2d_direction_order);
+	vec2d_planned_movement.normalize();
+}
+
+
+
+
+
+
+	void
+Entity::set_direction_order_old(enum DIRECTION const dir) 
 {
 	Vec2d const & vec2d_direction_order = DIRECTION_VECTOR[dir];
 	vec2d_planned_movement.add_vec2d(vec2d_direction_order);
@@ -250,6 +274,7 @@ Entity::update_movement(void)
 	// 2 consume a movement tick
 	assert(timer_movement.remaining_seconds <= 0);
 	timer_movement.consume_tick();
+	timer_movement.reset();
 
 	// 3. check if has persistent order
 	if(direction_persistent != DIRECTION_NONE) {

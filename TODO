@@ -1,15 +1,14 @@
-fix movement xD
-CollisionTable - calculate in level, then pass a const& for entity when moving
+CollisionTable - pass a const& for entity when moving
+
 
 TODO cleaner angled-movement - when you press them quickly enough, you will get moved in the angled direction
-TODO refactor that huge mess of angled-movement in setting temporary direction somehow
 TODO a simple combat log, show komunikat/errmsg/stuff
 
 TODO sort sidelist of visible enemies
 
 TODO mouse, convert to level-coordinates
 
-TODO AI: move towards player
+TODO AI: move towards player (partly done - has functionality to follow, but AI not yet set)
 
 
 

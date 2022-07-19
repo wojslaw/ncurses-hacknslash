@@ -225,6 +225,7 @@ public:
 	enum DIRECTION direction_persistent_ai = DIRECTION_NONE;
 	void set_direction_persistent(enum DIRECTION const dir);
 	void set_direction_order(enum DIRECTION const dir) ;
+	void set_direction_order_old(enum DIRECTION const dir) ;
 
 	void update_movement_from_planned_movement(void);
 
