@@ -94,6 +94,17 @@ Vec2d::add_vec2d(Vec2d const & v0)
 
 
 
+
+	void
+Vec2d::subtract_vec2d(Vec2d const & v0)
+{
+	y -= v0.y;
+	x -= v0.x;
+}
+
+
+
+
 	void
 Vec2d::normalize(void)
 {
@@ -107,7 +118,7 @@ Vec2d::normalize(void)
 
 
 	Vec2d
-Vec2d::as_normalized(void)
+Vec2d::as_normalized(void) const
 {
 	Vec2d v = *this;
 	v.normalize();

@@ -8,10 +8,17 @@ struct Vec2d {
 	int y = 0;
 	int x = 0;
 
-	Vec2d(int const _y, int const _x) {
-		y = _y;
-		x = _x;
-	}
+	Vec2d(int const _y, int const _x):y(_y),x(_x) {}
+
+
+	// mutating methods
+	void add_vec2d(Vec2d const & v0);
+	void subtract_vec2d(Vec2d const & v0);
+	void normalize(void);
+	void set_zero(void) { y = 0; x = 0; }
+
+	// const methods
+	Vec2d as_normalized(void) const;
 
 	bool is_within_rectangle(
 			int const y_start
@@ -19,13 +26,6 @@ struct Vec2d {
 			,int const y_max
 			,int const x_max
 			) const;
-
-	void add_vec2d(Vec2d const & v0);
-	void normalize(void);
-
-	Vec2d as_normalized(void);
-	void set_zero(void) { y = 0; x = 0; }
-
 };
 
 

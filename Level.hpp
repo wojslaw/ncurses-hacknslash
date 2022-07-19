@@ -595,7 +595,7 @@ Level::update_entities_direction_planned(void)
 			continue;
 		}
 		Entity & target = ref_from_entityid(attacker.id_of_target);
-		attacker.vec2d_direction_planned
+		attacker.vec2d_planned_movement
 			= vec2d_find_direction_vec2d_from_to(
 					attacker.vec2d_position
 					,target.vec2d_position
@@ -728,8 +728,8 @@ Level::Level(
 	vector_of_entity.at(1).vec2d_position.x = 4;
 	vector_of_entity.at(2).vec2d_position.y = 2;
 	vector_of_entity.at(2).vec2d_position.x = 2;
-	vector_of_entity.at(3).vec2d_position.y = 8;
-	vector_of_entity.at(3).vec2d_position.x = 8;
+	vector_of_entity.at(3).vec2d_position.y = 6;
+	vector_of_entity.at(3).vec2d_position.x = 6;
 	//
 	vector_of_entity.at(4).vec2d_position.y = 2;
 	vector_of_entity.at(5).vec2d_position.y = 3;

@@ -79,9 +79,13 @@ Entity::wprint_detailed_entity_info(WINDOW * w) const
 			,last_combat_attack_damage
 			,last_combat_attack_roll );
 	wmove(w,5,1);
-	wprintw(w,"[%2d , %2d]"
-			,vec2d_direction_planned.y
-			,vec2d_direction_planned.x );
+	wprintw(w,"[%2d , %2d] %d %d %d"
+			,vec2d_planned_movement.y
+			,vec2d_planned_movement.x
+			,direction
+			,direction_persistent
+			,direction_persistent_ai
+			);
 	wrefresh(w);
 }
 
@@ -96,11 +100,11 @@ Entity::wprint_detailed_entity_info(WINDOW * w) const
 
 
 	void
-Entity::set_direction_temporary(enum DIRECTION const dir) 
+Entity::set_direction_order(enum DIRECTION const dir) 
 {
-	Vec2d const & vec2d_direction = DIRECTION_VECTOR[dir];
-	vec2d_direction_planned.add_vec2d(vec2d_direction);
-	vec2d_direction_planned.normalize();
+	Vec2d const & vec2d_direction_order = DIRECTION_VECTOR[dir];
+	vec2d_planned_movement.add_vec2d(vec2d_direction_order);
+	vec2d_planned_movement.normalize();
 	// set angled
 	if(direction == DIRECTION_NONE) {
 		direction = dir;
@@ -175,27 +179,28 @@ Entity::position_restore_last(void) {
 	vec2d_position = vec2d_position_last;
 	direction = DIRECTION_NONE;
 	direction_persistent = DIRECTION_NONE;
-	vec2d_direction_planned = DIRECTION_VECTOR[DIRECTION_NONE];
+	vec2d_planned_movement = DIRECTION_VECTOR[DIRECTION_NONE];
 }
 
 
 
 
 	void
-Entity::update_movement_from_planned_direction(void)
+Entity::update_movement_from_planned_movement(void)
 {
 	assert(
-			(vec2d_direction_planned.y != 0)
+			(vec2d_planned_movement.y != 0)
 			||
-			(vec2d_direction_planned.x != 0)
+			(vec2d_planned_movement.x != 0)
 			);
-	// 1. prepare vector
-	Vec2d direction_vector = vec2d_direction_planned;
-	direction_vector.normalize();
+	// 1. prepare vector of current movement
+	Vec2d const vec2d_of_movement = vec2d_planned_movement.as_normalized();
 	// 2. perform movement
-	vec2d_position.add_vec2d(direction_vector);
-	// 3. overwrite movement vector of last movement
-	vec2d_direction_last_movement = direction_vector;
+	vec2d_position.add_vec2d(vec2d_of_movement);
+	// 3. modify planned direction
+	vec2d_position.subtract_vec2d(vec2d_of_movement);
+	// 4. overwrite last movement
+	vec2d_last_movement = vec2d_of_movement;
 }
 
 
@@ -203,12 +208,12 @@ Entity::update_movement_from_planned_direction(void)
 
 
 	bool 
-Entity::has_direction_planned(void)
+Entity::has_planned_movement(void)
 {
 	return
-	        (vec2d_direction_planned.y != 0)
+	        (vec2d_planned_movement.y != 0)
 	         ||                            
-	        (vec2d_direction_planned.x != 0);
+	        (vec2d_planned_movement.x != 0);
 }
 
 
@@ -223,47 +228,27 @@ Entity::update_movement(void)
 	// 1 save last position
 	vec2d_position_last = vec2d_position;
 	// and clear direction
-	vec2d_direction_last_movement.set_zero();
+	vec2d_last_movement.set_zero();
 
 	// 2 consume a movement tick
 	assert(timer_movement.remaining_seconds <= 0);
 	timer_movement.consume_tick();
 
+	// 3. check if has persistent order
+	if(direction_persistent != DIRECTION_NONE) {
+		vec2d_planned_movement.add_vec2d(DIRECTION_VECTOR[direction_persistent]);
+	}
 
-	// 2. try to move from planned:
-	if(has_direction_planned()) {
-		update_movement_from_planned_direction();
+	// 4. add order, if applicable
+	if(direction != DIRECTION_NONE) {
+		vec2d_planned_movement.add_vec2d(DIRECTION_VECTOR[direction]);
+		direction = DIRECTION_NONE;
+	}
+
+	// 5. try to move from planned:
+	if(has_planned_movement()) {
+		update_movement_from_planned_movement();
 		return;
 	}
 
-	vec2d_position_last = vec2d_position;
-	// movement
-	if(direction_persistent_ai != DIRECTION_NONE) {
-		direction_persistent = direction_persistent_ai;
-	}
-	if(direction_persistent != DIRECTION_NONE) {
-		direction = direction_persistent;
-		vec2d_direction_planned = DIRECTION_VECTOR[direction_persistent];
-	}
-	if(direction != DIRECTION_NONE) {
-		int const tick_movement = timer_movement.consume_tick();
-		if(tick_movement >= 1) {
-			update_movement();
-		}
-	}
-
-
-	if(direction_persistent != DIRECTION_NONE) {
-		direction = direction_persistent;
-	}
-	vec2d_position_last = vec2d_position;
-	// TODO only update if ready to move
-	timer_movement.reset_countdown();
-	//
-	Vec2d const & direction_vector = DIRECTION_VECTOR[direction];
-	vec2d_position.add_vec2d(direction_vector);
-	if(is_direction_angled(direction)) {
-		timer_movement.remaining_seconds *= 2;
-	}
-	direction = direction_persistent;
 }

@@ -48,8 +48,8 @@ typedef struct Entity Entity;
 struct Entity {
 	Vec2d vec2d_position = Vec2d(1,1);
 	Vec2d vec2d_position_last = Vec2d(1,1);
-	Vec2d vec2d_direction_planned = Vec2d(0,0);
-	Vec2d vec2d_direction_last_movement = Vec2d(0,0);
+	Vec2d vec2d_planned_movement = Vec2d(0,0);
+	Vec2d vec2d_last_movement = Vec2d(0,0);
 	bool flag_moved_last_turn = false;
 
 	//
@@ -224,9 +224,9 @@ private:
 public:
 	enum DIRECTION direction_persistent_ai = DIRECTION_NONE;
 	void set_direction_persistent(enum DIRECTION const dir) { direction_persistent = dir; }
-	void set_direction_temporary(enum DIRECTION const dir) ;
+	void set_direction_order(enum DIRECTION const dir) ;
 
-	void update_movement_from_planned_direction(void);
+	void update_movement_from_planned_movement(void);
 
 	void update_movement(void);
 
@@ -234,7 +234,7 @@ public:
 
 	void update_time_from_globaltimer(GlobalTimer const & GLOBALTIMER);
 
-	bool has_direction_planned(void);
+	bool has_planned_movement(void);
 
 };
 

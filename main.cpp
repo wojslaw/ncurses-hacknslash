@@ -130,14 +130,19 @@ int main()
 		switch(input_character) {
 			case 'x': LEVEL.make_visual_effect_on_target(5); break;
 			//
-			case 'w': LEVEL.ref_player_entity().set_direction_temporary(DIRECTION_UP   ); break;
-			case 'a': LEVEL.ref_player_entity().set_direction_temporary(DIRECTION_LEFT ); break;
-			case 's': LEVEL.ref_player_entity().set_direction_temporary(DIRECTION_DOWN ); break;
-			case 'd': LEVEL.ref_player_entity().set_direction_temporary(DIRECTION_RIGHT); break;
-			case 'c': LEVEL.ref_player_entity().set_direction_temporary(DIRECTION_ANGLED_DOWN_RIGHT); break;
-			case 'z': LEVEL.ref_player_entity().set_direction_temporary(DIRECTION_ANGLED_DOWN_LEFT ); break;
-			case 'e': LEVEL.ref_player_entity().set_direction_temporary(DIRECTION_ANGLED_UP_RIGHT  ); break;
-			case 'q': LEVEL.ref_player_entity().set_direction_temporary(DIRECTION_ANGLED_UP_LEFT   ); break;
+			case 'h': LEVEL.ref_player_entity().vec2d_planned_movement = DIRECTION_VECTOR[DIRECTION_LEFT]; break;
+			case 'j': LEVEL.ref_player_entity().vec2d_planned_movement = DIRECTION_VECTOR[DIRECTION_DOWN]; break;
+			case 'k': LEVEL.ref_player_entity().vec2d_planned_movement = DIRECTION_VECTOR[DIRECTION_UP]; break;
+			case 'l': LEVEL.ref_player_entity().vec2d_planned_movement = DIRECTION_VECTOR[DIRECTION_RIGHT]; break;
+			//
+			case 'w': LEVEL.ref_player_entity().set_direction_order(DIRECTION_UP   ); break;
+			case 'a': LEVEL.ref_player_entity().set_direction_order(DIRECTION_LEFT ); break;
+			case 's': LEVEL.ref_player_entity().set_direction_order(DIRECTION_DOWN ); break;
+			case 'd': LEVEL.ref_player_entity().set_direction_order(DIRECTION_RIGHT); break;
+			case 'c': LEVEL.ref_player_entity().set_direction_order(DIRECTION_ANGLED_DOWN_RIGHT); break;
+			case 'z': LEVEL.ref_player_entity().set_direction_order(DIRECTION_ANGLED_DOWN_LEFT ); break;
+			case 'e': LEVEL.ref_player_entity().set_direction_order(DIRECTION_ANGLED_UP_RIGHT  ); break;
+			case 'q': LEVEL.ref_player_entity().set_direction_order(DIRECTION_ANGLED_UP_LEFT   ); break;
 			//
 			case 'W': LEVEL.ref_player_entity().set_direction_persistent(DIRECTION_UP   ); break;
 			case 'A': LEVEL.ref_player_entity().set_direction_persistent(DIRECTION_LEFT ); break;
