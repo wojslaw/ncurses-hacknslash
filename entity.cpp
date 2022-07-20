@@ -1,5 +1,6 @@
 #include "Entity.hpp"
 
+#define DEBUG_SHOW_POSITION_OF_ENTITY false
 
 	int
 Entity::fprint_as_tsv_row(FILE * f)
@@ -44,10 +45,6 @@ Entity::Entity(ID_BaseEntity const _id_of_base_entity)
 	timer_movement = CountdownTimer(ref_base_entity().seconds_movement);
 	timer_regenerate_life = CountdownTimer(ref_base_entity().seconds_regen);
 	set_life_to_max();
-	vector_of_abilities.emplace_back(Ability());
-	vector_of_abilities.back().is_ability_healing = true;
-	vector_of_abilities.back().stat_heal_base = 1;
-	vector_of_abilities.back().stat_heal_dice = 3;
 }
 
 
@@ -131,6 +128,7 @@ Entity::update_time_from_globaltimer(GlobalTimer const & GLOBALTIMER)
 	timer_life.update_time_from_globaltimer(GLOBALTIMER);
 	timer_recently_hit.update_time_from_globaltimer(GLOBALTIMER);
 	timer_recently_healed.update_time_from_globaltimer(GLOBALTIMER);
+	timer_ability.update_time_from_globaltimer(GLOBALTIMER);
 	timer_is_in_battle.update_time_from_globaltimer(GLOBALTIMER);
 
 	if(is_dead()) {
@@ -177,7 +175,20 @@ Entity::wprint_detailed_entity_info(WINDOW * w) const
 	
 	werase(w);
 	box(w,0,0);
-	wmove(w,1,1);
+	if(DEBUG_SHOW_POSITION_OF_ENTITY) {
+		wmove(w,getcury(w)+1,1);
+		wprintw(w,"@[%2d , %2d]  >[%2d , %2d] %d %d %d"
+				,vec2d_position.y
+				,vec2d_position.x
+				,vec2d_planned_movement.y
+				,vec2d_planned_movement.x
+				,direction
+				,direction_persistent
+				,direction_persistent_ai
+				);
+	}
+
+	wmove(w,getcury(w)+1,1);
 	wprintw(w,"%c"
 			, ncurses_get_symbol()
 			);
@@ -204,11 +215,11 @@ Entity::wprint_detailed_entity_info(WINDOW * w) const
 
 
 
-	wmove(w,2,1);
+	/* wmove(w,3,1); */
+	/* wprintw(w,"target: %zu" , id_of_target); */
+	wmove(w,getcury(w)+1,1);
 	wprintw(w,"fed:%.1f( %.1f)" ,timer_wellfed.remaining_seconds, timer_regenerate_life.remaining_seconds);
-	wmove(w,3,1);
-	wprintw(w,"target: %zu" , id_of_target);
-	wmove(w,4,1);
+	wmove(w,getcury(w)+1,1);
 	wprintw(w,"A:%d-%d"
 			,get_attack_base()
 			,get_attack_maximum() );
@@ -217,25 +228,21 @@ Entity::wprint_detailed_entity_info(WINDOW * w) const
 				,last_combat_attack_damage
 				,last_combat_attack_roll );
 	}
-	wmove(w,5,1);
-	wprintw(w,"@[%2d , %2d]  >[%2d , %2d] %d %d %d"
-			,vec2d_position.y
-			,vec2d_position.x
-			,vec2d_planned_movement.y
-			,vec2d_planned_movement.x
-			,direction
-			,direction_persistent
-			,direction_persistent_ai
+	wmove(w,getcury(w)+1,1);
+	wprintw(w,"cooldown: %.1f"
+			,timer_ability.remaining_seconds
 			);
-	wmove(w,6,1);
-	wprintw(w,"timer_move: %.1f"
-			,timer_movement.remaining_seconds
-			);
-	wmove(w,7,1);
-	wprintw(w,"a1:");
-	vector_of_abilities.at(0).wprint(w);
-			
-	wmove(w,8,1);
+
+	{ // abilities 
+	int ability_number = 1;
+	for(Ability const& ability : vector_of_abilities ) {
+		wmove(w,getcury(w)+1,1);
+		wprintw(w,"a%d " , ability_number);
+		ability.wprint(w);
+		++ability_number;
+	}
+	}//abilities 
+
 	wrefresh(w);
 }
 
@@ -619,3 +626,9 @@ Entity::take_damage_as_fraction_of_max(
 
 
 
+
+	bool
+Entity::is_ready_to_cast_ability(void) const
+{
+	return timer_ability.is_countdown_finished();
+}

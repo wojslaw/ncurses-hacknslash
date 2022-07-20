@@ -354,6 +354,9 @@ Level::wprint_render_centered_on_player_entity_fill_window(
 	void
 Level::make_player_use_ability_number(int const number)
 {
+	if(not ref_player_entity().is_ready_to_cast_ability()) {
+		return;
+	}
 	assert(number >= 1);
 	size_t const id_ability = number-1;
 	assert(id_ability < ref_player_entity().vector_of_abilities.size());
@@ -1138,10 +1141,10 @@ Level::Level(
 
 	//level_create_terrain_messy_hall();
 	level_create_terrain_open_field(
-			  4	// int const rock_amount
-			, 3	// int const rock_size_base
-			, 3	// int const rock_size_dice
-			,20	// int const rubble_dice
+			  8	// int const rock_amount
+			, 4	// int const rock_size_base
+			, 2	// int const rock_size_dice
+			,40	// int const rubble_dice
 			, 0	// unsigned randomness_seed 
 			);
 

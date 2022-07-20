@@ -112,6 +112,19 @@ int main()
 	LEVEL.ref_player_entity().id_of_target = 1;
 	LEVEL.ref_player_entity().flag_follow_target = false;
 
+	LEVEL.ref_player_entity().vector_of_abilities.emplace_back(Ability());
+	LEVEL.ref_player_entity().vector_of_abilities.back().is_ability_healing = true;
+	LEVEL.ref_player_entity().vector_of_abilities.back().stack_max = 8;
+	LEVEL.ref_player_entity().vector_of_abilities.back().timer_stack = CountdownTimer(8.0);
+	LEVEL.ref_player_entity().vector_of_abilities.back().stat_heal_base = 1;
+	LEVEL.ref_player_entity().vector_of_abilities.back().stat_heal_dice = 3;
+
+	LEVEL.ref_player_entity().vector_of_abilities.emplace_back(Ability());
+	LEVEL.ref_player_entity().vector_of_abilities.back().is_ability_damage = true;
+	LEVEL.ref_player_entity().vector_of_abilities.back().stack_max = 3;
+	LEVEL.ref_player_entity().vector_of_abilities.back().timer_stack = CountdownTimer(15.0);
+	LEVEL.ref_player_entity().vector_of_abilities.back().stat_damage_base = 4;
+	LEVEL.ref_player_entity().vector_of_abilities.back().stat_damage_dice = 5;
 
 	{
 		FILE * file_savefile = fopen("save.out","r");
@@ -128,6 +141,7 @@ int main()
 	GlobalTimer GLOBALTIMER = GlobalTimer();
 	bool DISPLAY_DEBUG = true;
 	bool DEBUG_PRINT_COLLISION_TABLE = false;
+	bool IS_GAME_PAUSED = false;
 
 
 
@@ -175,6 +189,8 @@ int main()
 			case KEY_F(11): DEBUG_PRINT_COLLISION_TABLE = false; clear(); break;
 			case KEY_F(5): LEVEL.ref_player_entity().flag_stop_on_collision = true; break;
 			case KEY_F(6): LEVEL.ref_player_entity().flag_stop_on_collision = false; break;
+			case KEY_F(9):  IS_GAME_PAUSED = true;  break;
+			case KEY_F(10): IS_GAME_PAUSED = false;  break;
 			case '\e': {
 						  LEVEL.ref_player_entity().order_stop();
 						  break;
@@ -188,6 +204,9 @@ int main()
 		GLOBALTIMER.update_auto();
 		if(MULTIPLY_TIME > 1.0) {
 			GLOBALTIMER.deltatime_seconds *= MULTIPLY_TIME;
+		}
+		if(IS_GAME_PAUSED) {
+			GLOBALTIMER.deltatime_seconds = 0;
 		}
 
 		mvprintw(LINES-2,0,"update_time_from_globaltimer\n");

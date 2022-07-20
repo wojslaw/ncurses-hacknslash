@@ -116,6 +116,7 @@ struct Entity {
 	CountdownTimer timer_is_in_battle = CountdownTimer(8.0);
 	CountdownTimer timer_decay = CountdownTimer(SECONDS_CORPSE_DECAY);
 	CountdownTimer timer_recently_healed = CountdownTimer(0.75);;
+	CountdownTimer timer_ability  = CountdownTimer(0.5);;
 
 	//
 	bool flag_skip_update = false;
@@ -162,6 +163,7 @@ struct Entity {
 	void modify_life(int const delta_life);
 
 	bool is_ready_to_move(void) const ;
+	bool is_ready_to_cast_ability(void) const ;
 	bool is_alive(void) const ;
 	bool is_dead(void) const ;
 	bool is_fully_decayed(void) const ;
@@ -219,10 +221,12 @@ public:
 
 	void make_entity_use_healing_ability_id(size_t const id)
 	{
+		assert(is_ready_to_cast_ability());
 		assert(id < vector_of_abilities.size());
 		Ability& ref_ability = vector_of_abilities.at(id);
 		int const deltalife = ref_ability.roll_heal_if_ready();
 		modify_life(deltalife);
+		timer_ability.reset();
 	}
 };
 

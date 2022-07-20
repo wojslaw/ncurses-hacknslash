@@ -15,6 +15,8 @@ struct Ability {
 	int stat_heal_dice = 1;
 	int last_roll_heal = 0;
 
+	bool flag_display_ability_stack_timer = false;
+
 	int stack_max = 3;
 	int stack_current = 1;
 	CountdownTimer timer_stack = CountdownTimer(20.0);
@@ -72,12 +74,6 @@ struct Ability {
 		if(is_ability_ready()) {
 			wattron(w,ATTR_ABILITY_READY);
 		}
-		wprintw(w
-		        ,"%d /%d(%4.1f) : "
-		        ,stack_current
-		        ,stack_max
-		        ,timer_stack.remaining_seconds
-		        );
 		if(is_ability_healing) {
 			wprintw(w
 			        ,"heal %d+d%d "
@@ -85,18 +81,36 @@ struct Ability {
 			        ,stat_heal_dice );
 		} else {
 			wprintw(w
-			        ,"dmg %d+d%d range %d"
+			        ,"DMG %d+d%d RNG %d"
 			        ,stat_damage_base
 			        ,stat_damage_dice 
 			        ,stat_damage_range );
 			if(is_ability_targetable) {
-				wprintw(w," (target)");
+				wprintw(w," target");
 			} else {
-				wprintw(w," (around)");
+				wprintw(w," around");
 			}
+		}
+		if(flag_display_ability_stack_timer) {
+			wprintw(w
+			        ,"%d/%d(%.1f)"
+			        ,stack_current
+			        ,stack_max
+			        ,timer_stack.remaining_seconds
+			        );
 		}
 		if(is_ability_ready()) {
 			wattroff(w,ATTR_ABILITY_READY);
+		}
+		// also, display number of stacks:
+		wattron(w,ATTR_ABILITY_STACK);
+		int const start_x = (getmaxx(w)-1-stack_max);
+		for(int i = 0; i < stack_current; ++i ) {
+			mvwaddch(w,getcury(w),start_x+i,' ');
+		}
+		wattroff(w,ATTR_ABILITY_STACK);
+		for(int i = stack_current; i < stack_max; ++i ) {
+			mvwaddch(w,getcury(w),start_x+i,'_');
 		}
 	}
 };
