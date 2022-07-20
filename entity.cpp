@@ -44,6 +44,8 @@ Entity::Entity(ID_BaseEntity const _id_of_base_entity)
 	timer_movement = CountdownTimer(ref_base_entity().seconds_movement);
 	timer_regenerate_life = CountdownTimer(ref_base_entity().seconds_regen);
 	set_life_to_max();
+	vector_of_abilities.emplace_back(Ability());
+	vector_of_abilities.back().is_ability_healing = true;
 }
 
 
@@ -137,6 +139,12 @@ Entity::update_time_from_globaltimer(GlobalTimer const & GLOBALTIMER)
 	}
 
 
+	// ability cooldowns
+	for(Ability &ability : vector_of_abilities) {
+		ability.update_time_from_globaltimer(GLOBALTIMER);
+	}
+
+
 	// wellfed/life regen
 	timer_regenerate_life.update_time_from_globaltimer(GLOBALTIMER);
 	timer_wellfed.update_time_from_globaltimer(GLOBALTIMER);
@@ -203,6 +211,11 @@ Entity::wprint_detailed_entity_info(WINDOW * w) const
 	wprintw(w,"timer_move: %.1f"
 			,timer_movement.remaining_seconds
 			);
+	wmove(w,7,1);
+	wprintw(w,"a0:");
+	vector_of_abilities.at(0).wprint(w);
+			
+	wmove(w,8,1);
 	wrefresh(w);
 }
 
@@ -260,14 +273,6 @@ Entity::position_restore_last(void) {
 	void
 Entity::update_movement_from_planned_movement(void)
 {
-	move(LINES-3,0);
-	printw("update_movement_from_planned_movement %p @[%2d , %2d]  >[%2d , %2d]"
-			, this
-			, vec2d_position.y
-			, vec2d_position.x
-			, vec2d_planned_movement.y
-			, vec2d_planned_movement.x
-		  );
 	assert(
 			(vec2d_planned_movement.y != 0)
 			||
@@ -275,10 +280,6 @@ Entity::update_movement_from_planned_movement(void)
 			);
 	// 1. prepare vector of current movement
 	Vec2d const vec2d_of_movement = vec2d_planned_movement.as_normalized();
-	printw("m[%2d , %2d]"
-			,vec2d_of_movement.y
-			,vec2d_of_movement.x
-			);
 	// 2. perform movement
 	vec2d_position.add_vec2d(vec2d_of_movement);
 	// 3. modify planned direction

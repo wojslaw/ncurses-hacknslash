@@ -273,11 +273,6 @@ Level::wprint_render_from_position_fill_window(
 
 	{ // 1 SFX
 		for(VisualEntity const& visual_entity_rendered : vector_of_visual_entity ) {
-			move(3,0);
-			printw("[%2d,%2d]"
-					,visual_entity_rendered.vec2d_position.y
-					,visual_entity_rendered.vec2d_position.x
-					);
 			if(is_vec2d_position_within_rectangle(
 						 visual_entity_rendered.vec2d_position
 						,pos_inlevel_start_y
@@ -285,7 +280,6 @@ Level::wprint_render_from_position_fill_window(
 						,pos_inlevel_last_y
 						,pos_inlevel_last_x
 						)) {
-				printw(" Y ");
 				int const pos_window_y = visual_entity_rendered.vec2d_position.y - pos_inlevel_start_y;
 				int const pos_window_x = visual_entity_rendered.vec2d_position.x - pos_inlevel_start_x;
 				wmove(w,pos_window_y,pos_window_x);
@@ -297,12 +291,6 @@ Level::wprint_render_from_position_fill_window(
 	{ // 4 entities
 		size_t entityid_being_rendered = 0;
 		for(Entity const& entity_rendered : vector_of_entity ) {
-			move(0,0);
-			printw("in level: [%2d , %2d],[%2d , %2d]\n"
-					,pos_inlevel_start_y
-					,pos_inlevel_start_x
-					,pos_inlevel_last_y
-					,pos_inlevel_last_x );
 			if(is_vec2d_position_within_rectangle(
 						 entity_rendered.vec2d_position
 						,pos_inlevel_start_y
@@ -324,7 +312,7 @@ Level::wprint_render_from_position_fill_window(
 	} //entities
 
 	// TODO decouple calculations from rendering
-	update_vector_of_entityids_on_screen_within_range(
+	update_vector_of_entityids_with_entities_within_rectangle(
 		 pos_inlevel_start_y
 		,pos_inlevel_start_x
 		,pos_inlevel_last_y
@@ -394,26 +382,21 @@ Level::update_time_from_globaltimer(GlobalTimer const & GLOBALTIMER)
 //		}
 //	}
 	// visual entities
-	mvprintw(LINES-2,0,"visual entities update_time_from_globaltimer\n");
 	for(VisualEntity & visual_entity : vector_of_visual_entity) {
 		visual_entity.update_time_from_globaltimer(GLOBALTIMER);
 		// TODO delete useless visual entities
 	}
 
-	mvprintw(LINES-2,0,"move_decayed_entities\n");
 	move_decayed_entities();
 	// remove_decayed_entities();
 
 	// entities
-	mvprintw(LINES-2,0,"entities update_time_from_globaltimer\n");
 	for(Entity & entity : vector_of_entity) {
 		entity.update_time_from_globaltimer(GLOBALTIMER);
 		// remove decayed
 	}
 	// 
-	mvprintw(LINES-2,0,"update_table_of_cells_with_pointers_to_entities\n");
 	update_table_of_cells_with_pointers_to_entities();
-	mvprintw(LINES-2,0,"update_entities\n");
 	update_entities();
 	update_entities_direction_planned();
 	update_entity_combat_rounds();
@@ -761,7 +744,7 @@ Level::update_entities(void) {
 
 
 	void
-Level::update_vector_of_entityids_on_screen_within_range(
+Level::update_vector_of_entityids_with_entities_within_rectangle(
 		int const y_start
 		,int const x_start
 		,int const y_end
@@ -785,6 +768,41 @@ Level::update_vector_of_entityids_on_screen_within_range(
 		ref_player_entity().reset_targeting();
 	}
 }
+
+
+
+
+	void
+Level::update_vector_of_entityids_with_entities_within_range_of_player(int const range_of_search)
+{
+	vector_of_entityids_on_screen.resize(0);
+	bool is_target_on_screen = false;
+	for(size_t id = 0; id < vector_of_entity.size(); ++id) {
+		Entity const& entity = vector_of_entity.at(id);
+		if(entity.is_dead()) { //don't show corpses
+			continue;
+		}
+		//
+		int const distance
+			= vec2d_highest_distance_between(
+					 ref_player_entity().vec2d_position
+					,entity.vec2d_position
+					);
+		if(distance <= range_of_search) {
+			vector_of_entityids_on_screen.emplace_back(id);
+			if(id == vector_of_entity.at(0).id_of_target) {
+				is_target_on_screen = true;
+			}
+		}
+	}
+	if(!is_target_on_screen) {
+		ref_player_entity().reset_targeting();
+	}
+}
+
+
+
+
 
 
 
@@ -834,8 +852,6 @@ Level::get_count_of_living_entities(void) const
 	void
 Level::update_collision_table(void)
 {
-	move(LINES-2,0);
-	printw("update_collision_table");
 	assert(y_max > 0);
 	assert(x_max > 0);
 	assert(table_of_cells.size() > 0);

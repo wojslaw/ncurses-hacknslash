@@ -69,6 +69,8 @@ struct Entity {
 	// combat-things stats
 	int stat_life = 12;
 
+	std::vector<Ability> vector_of_abilities = std::vector<Ability>();
+
 	// position/movement
 	Vec2d vec2d_position = Vec2d(1,1);
 	Vec2d vec2d_position_last = Vec2d(1,1);

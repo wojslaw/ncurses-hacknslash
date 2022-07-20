@@ -24,7 +24,7 @@
 #define WINDOW_ENTITYLIST_SIZE_Y 12
 #define WINDOW_ENTITYLIST_SIZE_X 24
 
-#define WINDOW_DETAILS_SIZE_Y 8
+#define WINDOW_DETAILS_SIZE_Y 12
 #define WINDOW_DETAILS_SIZE_X 40
 
 #define MULTIPLY_TIME 1.0
@@ -170,8 +170,8 @@ int main()
 			case 'f': LEVEL.ref_player_entity().flag_follow_target = true; break;
 			case 'F': LEVEL.ref_player_entity().flag_follow_target = false; break;
 			  //
-			case KEY_F(3): DEBUG_PRINT_COLLISION_TABLE = true; break;
-			case KEY_F(4): DEBUG_PRINT_COLLISION_TABLE = false; clear(); break;
+			case KEY_F(12): DEBUG_PRINT_COLLISION_TABLE = true; break;
+			case KEY_F(11): DEBUG_PRINT_COLLISION_TABLE = false; clear(); break;
 			case KEY_F(5): LEVEL.ref_player_entity().flag_stop_on_collision = true; break;
 			case KEY_F(6): LEVEL.ref_player_entity().flag_stop_on_collision = false; break;
 			case '\e': {

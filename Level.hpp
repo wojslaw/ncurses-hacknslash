@@ -180,11 +180,13 @@ struct Level {
 
 	void stop_targeting_if_player_is_dead(void);
 	void make_visible_enemies_start_targeting_player(void);
-	void update_vector_of_entityids_on_screen_within_range(
+	void update_vector_of_entityids_with_entities_within_rectangle(
 		 int const y_start
 		,int const x_start
 		,int const y_end
 		,int const x_end );
+
+	void update_vector_of_entityids_with_entities_within_range_of_player(int const range_of_search);
 
 
 //public:

@@ -8,8 +8,8 @@ typedef struct VisualEntity VisualEntity;
 struct VisualEntity {
 	Vec2d vec2d_position = Vec2d(1,1);
 	double total_seconds = 0.0;
-	CountdownTimer timer_life = CountdownTimer(0.40);
-	CountdownTimer timer_bold = CountdownTimer(0.25);
+	CountdownTimer timer_life = CountdownTimer(0.35);
+	CountdownTimer timer_bold = CountdownTimer(0.22);
 	int ncurses_symbol = 'x';
 	// bool flag_is_on_top = true; // I'd have to loop the visual effects twice
 	int ncurses_attrs = ATTR_RECENTLY_HIT;

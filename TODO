@@ -42,3 +42,6 @@ spells:
 2. hit enemies around target(fireball)
 3. create obstacle
 3. destroy obstacle
+
+
+I was thinking about making the SFX for attack spells show briefly on, but that won't be needed - there is already feedback that something was hit :)
