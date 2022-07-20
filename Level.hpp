@@ -226,6 +226,7 @@ struct Level {
 
 
 	void make_visual_effect_on_target(int const range);
+	void make_visual_effect_on_player(int const range);
 }; // struct Level
 
 

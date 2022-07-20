@@ -429,9 +429,7 @@ Entity::is_blocking(void) const
 		return false;
 	}
 	if(is_dead()) {
-		if(timer_decay.remaining_seconds <= 0) {
-			return false;
-		}
+		return false;
 	}
 	return true;
 }

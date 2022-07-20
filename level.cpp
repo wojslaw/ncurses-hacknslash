@@ -2,6 +2,7 @@
 
 #define SQUISH_FEATURES_WHEN_TOO_BIG true
 
+#define MAKE_ENEMIES true
 
 
 	bool 
@@ -251,6 +252,7 @@ Level::wprint_render_from_position_fill_window(
 	// 0 prepare window
 	werase(w);
 
+
 	{ // 2 terrain
 		for(int pos_window_y = 0; pos_window_y < getmaxy(w); ++pos_window_y ) {
 			for(int pos_window_x = 0; pos_window_x < getmaxx(w); ++pos_window_x ) {
@@ -268,6 +270,29 @@ Level::wprint_render_from_position_fill_window(
 			}
 		}
 	} //terrain
+
+	{ // 1 SFX
+		for(VisualEntity const& visual_entity_rendered : vector_of_visual_entity ) {
+			move(3,0);
+			printw("[%2d,%2d]"
+					,visual_entity_rendered.vec2d_position.y
+					,visual_entity_rendered.vec2d_position.x
+					);
+			if(is_vec2d_position_within_rectangle(
+						 visual_entity_rendered.vec2d_position
+						,pos_inlevel_start_y
+						,pos_inlevel_start_x
+						,pos_inlevel_last_y
+						,pos_inlevel_last_x
+						)) {
+				printw(" Y ");
+				int const pos_window_y = visual_entity_rendered.vec2d_position.y - pos_inlevel_start_y;
+				int const pos_window_x = visual_entity_rendered.vec2d_position.x - pos_inlevel_start_x;
+				wmove(w,pos_window_y,pos_window_x);
+				visual_entity_rendered.wprint(w);
+			}
+		}
+	} //SFX
 
 	{ // 4 entities
 		size_t entityid_being_rendered = 0;
@@ -743,18 +768,31 @@ Level::make_visual_effect_on_target(int const range)
 {
 	assert(range >= 1);
 	const Vec2d & v_base = ref_from_entityid(ref_player_entity().id_of_target).vec2d_position;
-	for(int y = -range ; y < range; ++y) {
-		for(int x = -range ; x < range; ++x) {
+	for(int y = -range ; y <= range; ++y) {
+		for(int x = -range ; x <= range; ++x) {
 			vector_of_visual_entity.emplace_back(
 					VisualEntity(
-						 'x'
-						,0.25
-						,v_base.y+y
+						 v_base.y+y
 						,v_base.x+x) );
 		}
 	}
 }
 
+
+	void
+Level::make_visual_effect_on_player(int const range)
+{
+	assert(range >= 1);
+	const Vec2d & v_base = ref_player_entity().vec2d_position;
+	for(int y = -range ; y <= range; ++y) {
+		for(int x = -range ; x <= range; ++x) {
+			vector_of_visual_entity.emplace_back(
+					VisualEntity(
+						 v_base.y+y
+						,v_base.x+x) );
+		}
+	}
+}
 
 
 
@@ -1229,38 +1267,38 @@ Level::Level(
 
 
 
-	return;
-
-	// enemies:
-	// shooters
-	vector_of_entity.emplace_back(Entity(ID_BaseEntity_gthrower));
-	vector_of_entity.back().force_set_position_yx(1,2);
-	// "wraith" - ignores collision with terrain
-	vector_of_entity.emplace_back(Entity(ID_BaseEntity_wraith));
-	vector_of_entity.back().force_set_position_yx(30,30);
-	//
-	vector_of_entity.emplace_back(Entity(ID_BaseEntity_eater));
-	vector_of_entity.back().force_set_position_yx(2,5);
-	vector_of_entity.emplace_back(Entity(ID_BaseEntity_devourer));
-	vector_of_entity.back().force_set_position_yx(20,5);
-	// a few giants
-	vector_of_entity.emplace_back(Entity(ID_BaseEntity_bengalov));
-	vector_of_entity.back().force_set_position_yx(20,31);
-	vector_of_entity.emplace_back(Entity(ID_BaseEntity_bengalov));
-	vector_of_entity.back().force_set_position_yx(21,33);
-	vector_of_entity.emplace_back(Entity(ID_BaseEntity_bengalov));
-	vector_of_entity.back().force_set_position_yx(19,36);
-	// 
-	vector_of_entity.emplace_back(Entity(ID_BaseEntity_dickev));
-	vector_of_entity.back().force_set_position_yx(19,7);
-	vector_of_entity.emplace_back(Entity(ID_BaseEntity_dickev));
-	vector_of_entity.back().force_set_position_yx(20,4);
-	vector_of_entity.emplace_back(Entity(ID_BaseEntity_dickev));
-	vector_of_entity.back().force_set_position_yx(20,5);
-	vector_of_entity.emplace_back(Entity(ID_BaseEntity_gthrower));
-	vector_of_entity.back().force_set_position_yx(20,6);
-	vector_of_entity.emplace_back(Entity(ID_BaseEntity_gthrower));
-	vector_of_entity.back().force_set_position_yx(19,5);
+	if(MAKE_ENEMIES) {
+		// enemies:
+		// shooters
+		vector_of_entity.emplace_back(Entity(ID_BaseEntity_gthrower));
+		vector_of_entity.back().force_set_position_yx(1,2);
+		// "wraith" - ignores collision with terrain
+		vector_of_entity.emplace_back(Entity(ID_BaseEntity_wraith));
+		vector_of_entity.back().force_set_position_yx(30,30);
+		//
+		vector_of_entity.emplace_back(Entity(ID_BaseEntity_eater));
+		vector_of_entity.back().force_set_position_yx(2,5);
+		vector_of_entity.emplace_back(Entity(ID_BaseEntity_devourer));
+		vector_of_entity.back().force_set_position_yx(20,5);
+		// a few giants
+		vector_of_entity.emplace_back(Entity(ID_BaseEntity_bengalov));
+		vector_of_entity.back().force_set_position_yx(20,31);
+		vector_of_entity.emplace_back(Entity(ID_BaseEntity_bengalov));
+		vector_of_entity.back().force_set_position_yx(21,33);
+		vector_of_entity.emplace_back(Entity(ID_BaseEntity_bengalov));
+		vector_of_entity.back().force_set_position_yx(19,36);
+		// 
+		vector_of_entity.emplace_back(Entity(ID_BaseEntity_dickev));
+		vector_of_entity.back().force_set_position_yx(19,7);
+		vector_of_entity.emplace_back(Entity(ID_BaseEntity_dickev));
+		vector_of_entity.back().force_set_position_yx(20,4);
+		vector_of_entity.emplace_back(Entity(ID_BaseEntity_dickev));
+		vector_of_entity.back().force_set_position_yx(20,5);
+		vector_of_entity.emplace_back(Entity(ID_BaseEntity_gthrower));
+		vector_of_entity.back().force_set_position_yx(20,6);
+		vector_of_entity.emplace_back(Entity(ID_BaseEntity_gthrower));
+		vector_of_entity.back().force_set_position_yx(19,5);
+	}
 
 
 }

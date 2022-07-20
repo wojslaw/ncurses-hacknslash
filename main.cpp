@@ -108,7 +108,7 @@ int main()
 	wrefresh(w_text_player);
 	wrefresh(w_text_target);
 
-	Level LEVEL  = Level(32,16);
+	Level LEVEL  = Level(40,40);
 	LEVEL.ref_player_entity().id_of_target = 1;
 	LEVEL.ref_player_entity().flag_follow_target = false;
 
@@ -144,7 +144,8 @@ int main()
 		}
 
 		switch(input_character) {
-			case 'x': LEVEL.make_visual_effect_on_target(5); break;
+			case '2': LEVEL.make_visual_effect_on_player(1); break;
+			case '3': LEVEL.make_visual_effect_on_target(3); break;
 			//
 			case 'h': LEVEL.ref_player_entity().vec2d_planned_movement = DIRECTION_VECTOR[DIRECTION_LEFT]; break;
 			case 'j': LEVEL.ref_player_entity().vec2d_planned_movement = DIRECTION_VECTOR[DIRECTION_DOWN]; break;
