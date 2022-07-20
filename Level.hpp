@@ -169,6 +169,7 @@ struct Level {
 			,unsigned randomness_seed 
 			);
 
+	void make_player_use_ability_number(int const number);
 
 //private:
 	void remove_decayed_entities(void);

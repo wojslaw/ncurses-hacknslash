@@ -144,9 +144,10 @@ int main()
 		}
 
 		switch(input_character) {
-			case '1': LEVEL.ref_player_entity().consume_food();  break;
-			case '2': LEVEL.make_visual_effect_on_player(1); break;
-			case '3': LEVEL.make_visual_effect_on_target(3); break;
+			case '1': LEVEL.make_player_use_ability_number(1); break;
+			case '2': LEVEL.make_visual_effect_on_target(2); break;
+			case '3': LEVEL.make_visual_effect_on_player(2); break;
+			case '4': LEVEL.ref_player_entity().consume_food();  break;
 			//
 			case 'h': LEVEL.ref_player_entity().vec2d_planned_movement = DIRECTION_VECTOR[DIRECTION_LEFT]; break;
 			case 'j': LEVEL.ref_player_entity().vec2d_planned_movement = DIRECTION_VECTOR[DIRECTION_DOWN]; break;

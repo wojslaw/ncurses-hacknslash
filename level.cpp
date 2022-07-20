@@ -350,6 +350,19 @@ Level::wprint_render_centered_on_player_entity_fill_window(
 
 
 
+	void
+Level::make_player_use_ability_number(int const number)
+{
+	assert(number >= 1);
+	size_t const id_ability = number-1;
+	assert(id_ability < ref_player_entity().vector_of_abilities.size());
+	Ability& ref_ability = ref_player_entity().vector_of_abilities.at(id_ability);
+	if(ref_ability.is_ability_healing) {
+		ref_player_entity().make_entity_use_healing_ability_id(id_ability);
+	}
+
+	// TODO damage spells
+}
 
 
 

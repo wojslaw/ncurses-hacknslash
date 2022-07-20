@@ -158,7 +158,7 @@ struct Entity {
 	void take_damage(int const damage_to_take);
 	void take_damage_as_fraction_of_current(int const multiply ,int const divide);
 	void take_damage_as_fraction_of_max(int const multiply ,int const divide);
-	void regen_life(int const delta_life);
+	void modify_life(int const delta_life);
 
 	bool is_ready_to_move(void) const ;
 	bool is_alive(void) const ;
@@ -215,6 +215,14 @@ public:
 
 	int fprint_as_tsv_row(FILE * f);
 	int fscan_as_tsv_row(FILE * f);
+
+	void make_entity_use_healing_ability_id(size_t const id)
+	{
+		assert(id < vector_of_abilities.size());
+		Ability& ref_ability = vector_of_abilities.at(id);
+		int const deltalife = ref_ability.roll_heal();
+		modify_life(deltalife);
+	}
 };
 
 

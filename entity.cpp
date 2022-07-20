@@ -154,7 +154,7 @@ Entity::update_time_from_globaltimer(GlobalTimer const & GLOBALTIMER)
 		}
 	}
 	if(timer_regenerate_life.consume_tick()) {
-		regen_life(1);
+		modify_life(1);
 		timer_regenerate_life.reset_countdown();
 		if(timer_wellfed.remaining_seconds > 0) {
 			timer_regenerate_life.remaining_seconds = REGEN_SECONDS_WELLFED;
@@ -212,7 +212,7 @@ Entity::wprint_detailed_entity_info(WINDOW * w) const
 			,timer_movement.remaining_seconds
 			);
 	wmove(w,7,1);
-	wprintw(w,"a0:");
+	wprintw(w,"a1:");
 	vector_of_abilities.at(0).wprint(w);
 			
 	wmove(w,8,1);
@@ -515,7 +515,7 @@ Entity::take_damage(int const damage_to_take)
 
 
 	void
-Entity::regen_life(int const delta_life)
+Entity::modify_life(int const delta_life)
 {
 	if(is_dead()) {
 		return;

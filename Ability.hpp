@@ -21,10 +21,25 @@ struct Ability {
 
 	unsigned randomness_seed = 0;
 
+	bool consume_stack(void) {
+		if(!is_ability_ready()) {
+			return false;
+		}
+		--stack_current;
+		if(timer_stack.is_countdown_finished()) {
+			timer_stack.reset();
+		}
+		return true;
+	}
+
 	int roll_heal(void)
 	{
-		last_roll_heal = rand_r(&randomness_seed) % (1+stat_heal_dice);
-		return(stat_heal_base + last_roll_heal);
+		bool const bool_perform_heal = consume_stack();
+		if(bool_perform_heal) {
+			last_roll_heal = rand_r(&randomness_seed) % (1+stat_heal_dice);
+			return(stat_heal_base + last_roll_heal);
+		}
+		return 0;
 	}
 
 	int roll_damage(void)
@@ -36,16 +51,6 @@ struct Ability {
 	bool is_ability_ready(void) const { return stack_current >= 1; }
 	bool is_ability_full(void) const { return stack_current >= stack_max; }
 
-	bool consume_stack(void) {
-		if(!is_ability_ready()) {
-			return false;
-		}
-		--stack_current;
-		if(timer_stack.is_countdown_finished()) {
-			timer_stack.reset();
-		}
-		return true;
-	}
 
 
 	void update_time_from_globaltimer(GlobalTimer const& GLOBALTIMER)
