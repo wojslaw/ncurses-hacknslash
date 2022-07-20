@@ -1,7 +1,8 @@
 #include "Entity.hpp"
 
 #define DEBUG_SHOW_POSITION_OF_ENTITY false
-#define MAX_LIFE_STEPS_TO_DISPLAY  8
+#define MAX_LIFE_STEPS_TO_DISPLAY  12
+#define THRESHOLD_HEAVILY_DAMAGED 4
 
 
 
@@ -77,6 +78,13 @@ Entity::is_alive(void) const {
 	bool
 Entity::is_dead(void) const {
 	return stat_life <= 0;
+}
+
+
+bool
+Entity::is_heavily_damaged(void) const
+{
+	return (stat_life < (get_life_max()/THRESHOLD_HEAVILY_DAMAGED) );
 }
 
 
@@ -206,11 +214,19 @@ Entity::wprint_detailed_entity_info(WINDOW * w) const
 				, stat_life
 				, get_life_max()
 			   );
+		int const max_life_steps_to_display
+			= std::min(
+					MAX_LIFE_STEPS_TO_DISPLAY
+					,getmaxx(w)
+					);
 		int const life_steps_to_display
 			= (stat_life
 			   *
-			   MAX_LIFE_STEPS_TO_DISPLAY)
+			   max_life_steps_to_display)
 			/ get_life_max();
+		wmove(w
+		      ,getcury(w)
+			  ,getmaxx(w)-1-max_life_steps_to_display );
 		for(int i = 0; i < life_steps_to_display; ++i) {
 			wattron(w,WA_REVERSE);
 			waddch(w,' ');
@@ -477,6 +493,9 @@ Entity::ncurses_get_attr_life(void) const
 	}
 	if(!timer_recently_hit.is_countdown_finished()) {
 		return ATTR_RECENTLY_HIT;
+	}
+	if(is_heavily_damaged()) {
+		return ATTR_HEAVILY_DAMAGED;
 	}
 
 	return 0;

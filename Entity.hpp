@@ -171,6 +171,7 @@ struct Entity {
 	int  ncurses_get_symbol(void) const ;
 	int ncurses_get_attr_life(void) const ;
 	bool is_renderable(void) const ;
+	bool is_heavily_damaged(void) const ;
 
 
 	int wprint_with_additional_attrs(
