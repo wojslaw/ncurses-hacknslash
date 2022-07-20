@@ -58,10 +58,10 @@ Vec2d::is_within_rectangle(
 	if(x < x_start) {
 		return false;
 	}
-	if(y >= y_max) {
+	if(y > y_max) {
 		return false;
 	}
-	if(x >= x_max) {
+	if(x > x_max) {
 		return false;
 	}
 	return true;

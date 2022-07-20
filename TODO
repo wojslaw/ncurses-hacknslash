@@ -1,10 +1,17 @@
 CollisionTable - pass a const& for entity when moving
+CollisionTable - fix the debug display with huge maps
+
+TODO deal damage to entities out-of-bounds
+DONE double wait time after moving on angle
+TODO show feedback that enemy out of range
+
 TODO stop persistent movement when you try to go in the other way
 TODO show something on the border of map
 IDEA wraparound: go to y=y_max, get teleported to y=0
 TODO make enemies wander slowly by default - random seconds of delay before they move in a random direction
 TODO destroy corpses
 TODO eat corpses
+
 
 
 IDEA create new obstacles during gameplay: with a shadow '.' before spawning, and then create terrain

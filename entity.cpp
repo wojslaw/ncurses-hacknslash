@@ -87,6 +87,19 @@ Entity::is_corpse(void) const {
 }
 
 
+	bool
+Entity::is_renderable(void) const
+{
+	if(is_alive()) {
+		return true;
+	}
+	if(is_corpse()) {
+		return true;
+	}
+	return false;
+}
+
+
 
 
 
@@ -113,6 +126,7 @@ Entity::update_time_from_globaltimer(GlobalTimer const & GLOBALTIMER)
 	timer_movement.update_time_from_globaltimer(GLOBALTIMER);
 	timer_life.update_time_from_globaltimer(GLOBALTIMER);
 	timer_recently_hit.update_time_from_globaltimer(GLOBALTIMER);
+	timer_is_in_battle.update_time_from_globaltimer(GLOBALTIMER);
 
 	if(is_dead()) {
 		timer_decay.update_time_from_globaltimer(GLOBALTIMER);
@@ -167,11 +181,14 @@ Entity::wprint_detailed_entity_info(WINDOW * w) const
 	wmove(w,3,1);
 	wprintw(w,"target: %zu" , id_of_target);
 	wmove(w,4,1);
-	wprintw(w,"A:%d-%d , last: %d (rolled %d)"
+	wprintw(w,"A:%d-%d"
 			,get_attack_base()
-			,get_attack_maximum()
-			,last_combat_attack_damage
-			,last_combat_attack_roll );
+			,get_attack_maximum() );
+	if(timer_is_in_battle.remaining_seconds > 0) {
+		wprintw(w," last: %d (rolled %d)"
+				,last_combat_attack_damage
+				,last_combat_attack_roll );
+	}
 	wmove(w,5,1);
 	wprintw(w,"@[%2d , %2d]  >[%2d , %2d] %d %d %d"
 			,vec2d_position.y
@@ -317,6 +334,7 @@ Entity::update_movement(void)
 	if(is_recently_moved()) {
 		timer_movement.consume_tick();
 		timer_movement.reset();
+		timer_movement.remaining_seconds *= (double)vec2d_last_movement.get_length_taxicab();
 	}
 
 }
@@ -469,11 +487,12 @@ Entity::combat_roll_damage(void)
 	int
 Entity::combat_roll_damage_against_defense(int const defense)
 {
+	timer_is_in_battle.reset_countdown();
 	last_combat_attack_damage = combat_roll_damage() - defense;
-	if(
-			is_vampiric()
-			&&
-			last_combat_attack_damage >= 1) {
+	if(last_combat_attack_damage <= 0) {
+		return 0;
+	}
+	if( is_vampiric() ) {
 		timer_wellfed.remaining_seconds += (double)last_combat_attack_damage;
 	}
 	return last_combat_attack_damage;
@@ -485,6 +504,7 @@ Entity::combat_roll_damage_against_defense(int const defense)
 	void
 Entity::take_damage(int const damage_to_take)
 {
+	timer_is_in_battle.reset();
 	if(damage_to_take <= 0) {
 		return;
 	}
@@ -513,6 +533,23 @@ Entity::regen_life(int const delta_life)
 
 
 
+	int
+Entity::wprint_with_additional_attrs(
+		 WINDOW * w
+		,int const attrs_additional
+		) const {
+	assert(w);
+	if(!is_renderable()) {
+		return ERR;
+	}
+	int const attrs = ncurses_get_attrs() | attrs_additional;
+	int const symbol = ncurses_get_symbol();
+	if(attrs != 0) { wattron(w, attrs);}
+	waddch(w,symbol);
+	if(attrs != 0) { wattroff(w,attrs);}
+	return OK;
+}
+
 
 
 
@@ -537,10 +574,24 @@ Entity::ncurses_get_symbol(void) const {
 
 
 
+	void
+Entity::take_damage_as_fraction_of_current(
+		 int const multiply
+		,int const divide)
+{
+	take_damage((stat_life*multiply)/divide);
+}
 
 
 
 
+	void
+Entity::take_damage_as_fraction_of_max(
+		 int const multiply
+		,int const divide)
+{
+	take_damage((get_life_max()*multiply)/divide);
+}
 
 
 

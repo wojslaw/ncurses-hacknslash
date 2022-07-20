@@ -153,14 +153,42 @@ Level::is_vec2d_position_within_bounds_of_level(Vec2d const & v) const
 	if(v.x < 0) {
 		return false;
 	}
-	if(v.x >= x_max) {
+	if(v.x > get_highest_y()) {
 		return false;
 	}
-	if(v.y >= y_max) {
+	if(v.y > get_highest_x()) {
 		return false;
 	}
 	return true;
 }
+
+
+	bool
+Level::is_vec2d_position_within_rectangle(
+			Vec2d const & v
+			,int const y_start
+			,int const x_start
+			,int const y_max
+			,int const x_max
+			) const
+{
+	
+	if(v.y < y_start) { return false; }
+	if(v.x < x_start) { return false; }
+	if(v.x > x_max) { return false; }
+	if(v.y > y_max) { return false; }
+	return true;
+}
+
+
+
+
+
+
+
+
+
+
 
 
 	bool
@@ -192,18 +220,11 @@ Level::ensure_vec2d_position_is_within_bounds(Vec2d * v)
 	if(!v) {
 		return;
 	}
-	if(v->y < 0) {
-		v->y = 0;
-	}
-	if(v->x < 0) {
-		v->x = 0;
-	}
-	if(v->y >= y_max) {
-		v->y = y_max-1;
-	}
-	if(v->x >= x_max) {
-		v->x = x_max-1;
-	}
+	v->y = std::max(v->y,0);
+	v->x = std::max(v->x,0);
+
+	v->y = std::min(get_highest_y(),v->y);
+	v->x = std::min(get_highest_x(),v->x);
 }
 
 
@@ -229,25 +250,53 @@ Level::wprint_render_from_position_fill_window(
 
 	// 0 prepare window
 	werase(w);
-	box(w,0,0);
-	wmove(w,1,1);
 
-	// 2 terrain
-	for(int pos_window_y = 0; pos_window_y < getmaxy(w); ++pos_window_y ) {
-		for(int pos_window_x = 0; pos_window_x < getmaxx(w); ++pos_window_x ) {
-			wmove(w,pos_window_y,pos_window_x);
-			int const pos_level_y = pos_inlevel_start_y + pos_window_y;
-			int const pos_level_x = pos_inlevel_start_x + pos_window_x;
-			// out-of-map border
-			if(!is_position_within_bounds_of_level_yx(pos_level_y,pos_level_x)) {
-				wattron(w ,WA_REVERSE);
-				waddch(w,' ');
-				wattroff(w,WA_REVERSE);
-				continue; // prevent fatal error(trying to read beyond vector's size
+	{ // 2 terrain
+		for(int pos_window_y = 0; pos_window_y < getmaxy(w); ++pos_window_y ) {
+			for(int pos_window_x = 0; pos_window_x < getmaxx(w); ++pos_window_x ) {
+				wmove(w,pos_window_y,pos_window_x);
+				int const pos_level_y = pos_inlevel_start_y + pos_window_y;
+				int const pos_level_x = pos_inlevel_start_x + pos_window_x;
+				// out-of-map border
+				if(!is_position_within_bounds_of_level_yx(pos_level_y,pos_level_x)) {
+					wattron(w ,ATTR_OUT_OF_MAP_BOUNDS);
+					waddch(w,' ');
+					wattroff(w,ATTR_OUT_OF_MAP_BOUNDS);
+					continue; // prevent fatal error(trying to read beyond vector's size
+				}
+				ref_levelcell_at_yx(pos_level_y,pos_level_x).wprint(w);
 			}
-			ref_levelcell_at_yx(pos_level_y,pos_level_x).wprint(w);
 		}
-	}
+	} //terrain
+
+	{ // 4 entities
+		size_t entityid_being_rendered = 0;
+		for(Entity const& entity_rendered : vector_of_entity ) {
+			move(0,0);
+			printw("in level: [%2d , %2d],[%2d , %2d]\n"
+					,pos_inlevel_start_y
+					,pos_inlevel_start_x
+					,pos_inlevel_last_y
+					,pos_inlevel_last_x );
+			if(is_vec2d_position_within_rectangle(
+						 entity_rendered.vec2d_position
+						,pos_inlevel_start_y
+						,pos_inlevel_start_x
+						,pos_inlevel_last_y
+						,pos_inlevel_last_x
+						)) {
+				int const pos_window_y = entity_rendered.vec2d_position.y - pos_inlevel_start_y;
+				int const pos_window_x = entity_rendered.vec2d_position.x - pos_inlevel_start_x;
+				wmove(w,pos_window_y,pos_window_x);
+				int const attrs_additional
+					= (entityid_being_rendered == ref_player_entity().id_of_target)
+					? ATTR_TARGET
+					: 0;
+				entity_rendered.wprint_with_additional_attrs(w,attrs_additional);
+			}
+			++entityid_being_rendered;
+		}
+	} //entities
 
 	// TODO decouple calculations from rendering
 	update_vector_of_entityids_on_screen_within_range(
@@ -441,29 +490,30 @@ Level::wprint_render_centered_on_player_entity_fill_window(
 Level::update_time_from_globaltimer(GlobalTimer const & GLOBALTIMER)
 {
 	total_seconds += GLOBALTIMER.deltatime_seconds;
-	// AI timer
-	timer_ai.update_time_from_globaltimer(GLOBALTIMER);
-	int const ai_tick = timer_ai.consume_all_ticks();
-	if(ai_tick > 0){
-		// change direction
-		for(size_t id = 1 ; id <= 3; ++ id ) {
-			Entity & entity = vector_of_entity.at(id);
-			switch(entity.direction_persistent_ai) {
-				case DIRECTION_UP:
-					entity.direction_persistent_ai = DIRECTION_RIGHT;
-					break;
-				case DIRECTION_RIGHT:
-					entity.direction_persistent_ai = DIRECTION_DOWN;
-					break;
-				case DIRECTION_DOWN:
-					entity.direction_persistent_ai = DIRECTION_LEFT;
-					break;
-				default:
-					entity.direction_persistent_ai = DIRECTION_UP;
-					break;
-			}
-		}
-	}
+	// TODO AI AI timer
+	//
+//	timer_ai.update_time_from_globaltimer(GLOBALTIMER);
+//	int const ai_tick = timer_ai.consume_all_ticks();
+//	if(ai_tick > 0){
+//		// change direction
+//		for(size_t id = 1 ; id <= 3; ++ id ) {
+//			Entity & entity = vector_of_entity.at(id);
+//			switch(entity.direction_persistent_ai) {
+//				case DIRECTION_UP:
+//					entity.direction_persistent_ai = DIRECTION_RIGHT;
+//					break;
+//				case DIRECTION_RIGHT:
+//					entity.direction_persistent_ai = DIRECTION_DOWN;
+//					break;
+//				case DIRECTION_DOWN:
+//					entity.direction_persistent_ai = DIRECTION_LEFT;
+//					break;
+//				default:
+//					entity.direction_persistent_ai = DIRECTION_UP;
+//					break;
+//			}
+//		}
+//	}
 	// visual entities
 	mvprintw(LINES-2,0,"visual entities update_time_from_globaltimer\n");
 	for(VisualEntity & visual_entity : vector_of_visual_entity) {
@@ -679,6 +729,9 @@ Level::update_entity_combat_rounds(void)
 		}
 		// finally 
 		target.take_damage(attacker.combat_roll_damage_against_defense(target.get_defense()));
+		if(target.is_dead()) {
+			attacker.reset_targeting();
+		}
 	}
 }
 
@@ -794,7 +847,7 @@ Level::update_entities(void) {
 	}
 	return;
 	//
-	for(auto & ref_entity : vector_of_entity ) {
+	for(Entity & ref_entity : vector_of_entity ) {
 		//ref_entity.update_position();
 		ensure_vec2d_position_is_within_bounds(&(ref_entity.vec2d_position));
 	}
@@ -1132,6 +1185,11 @@ Level::level_terrain_clear_around_player(void) {
 
 
 
+
+
+
+
+
 //ctor
 Level::Level(
 		int const _y_max 
@@ -1154,8 +1212,25 @@ Level::Level(
 	// player entity:
 	vector_of_entity.emplace_back(Entity(ID_BaseEntity_human));
 	ref_player_entity().set_life_to_max();
-	//vector_of_entity.back().force_set_position_yx(8,8);
-	vector_of_entity.back().force_set_position_yx(get_highest_y()-3,get_highest_x()-3);
+	vector_of_entity.back().force_set_position_yx(8,8);
+	//vector_of_entity.back().force_set_position_yx(get_highest_y()-3,get_highest_x()-3);
+
+	//level_create_terrain_messy_hall();
+	level_create_terrain_open_field(
+			  4	// int const rock_amount
+			, 3	// int const rock_size_base
+			, 3	// int const rock_size_dice
+			,20	// int const rubble_dice
+			, 0	// unsigned randomness_seed 
+			);
+
+	level_terrain_clear_around_player();
+
+
+
+
+	return;
+
 	// enemies:
 	// shooters
 	vector_of_entity.emplace_back(Entity(ID_BaseEntity_gthrower));
@@ -1188,15 +1263,4 @@ Level::Level(
 	vector_of_entity.back().force_set_position_yx(19,5);
 
 
-
-	//level_create_terrain_messy_hall();
-	level_create_terrain_open_field(
-			  4	// int const rock_amount
-			, 3	// int const rock_size_base
-			, 3	// int const rock_size_dice
-			,20	// int const rubble_dice
-			, 0	// unsigned randomness_seed 
-			);
-
-	level_terrain_clear_around_player();
 }

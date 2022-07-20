@@ -20,6 +20,8 @@ struct Vec2d {
 	// const methods
 	Vec2d as_normalized(void) const;
 
+	int get_length_taxicab(void) const { return std::abs(y) + std::abs(x); }
+
 	bool is_within_rectangle(
 			int const y_start
 			,int const x_start

@@ -110,7 +110,8 @@ struct Entity {
 	CountdownTimer timer_life = CountdownTimer(0);
 	CountdownTimer timer_regenerate_life = CountdownTimer(REGEN_SECONDS_NORMAL);
 	CountdownTimer timer_wellfed = CountdownTimer(0);
-	CountdownTimer timer_recently_hit = CountdownTimer(0.5);
+	CountdownTimer timer_recently_hit = CountdownTimer(0.75);
+	CountdownTimer timer_is_in_battle = CountdownTimer(8.0);
 	CountdownTimer timer_decay = CountdownTimer(SECONDS_CORPSE_DECAY);
 
 	//
@@ -153,6 +154,8 @@ struct Entity {
 	int combat_roll_damage(void);
 	int combat_roll_damage_against_defense(int const defense);
 	void take_damage(int const damage_to_take);
+	void take_damage_as_fraction_of_current(int const multiply ,int const divide);
+	void take_damage_as_fraction_of_max(int const multiply ,int const divide);
 	void regen_life(int const delta_life);
 
 	bool is_ready_to_move(void) const ;
@@ -161,6 +164,13 @@ struct Entity {
 	bool is_fully_decayed(void) const ;
 	bool is_corpse(void) const ;
 	int  ncurses_get_symbol(void) const ;
+	bool is_renderable(void) const ;
+
+
+	int wprint_with_additional_attrs(
+		 WINDOW * w
+		,int const attrs_additional
+		) const;
 
 
 // timer

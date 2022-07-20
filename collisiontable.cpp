@@ -64,8 +64,8 @@ CollisionTable::set_blocked_yx( int const y ,  int const x)
 	void
 CollisionTable::resize_and_clear(int const _size_y , int const _size_x)
 {
-	int max_y = _size_y;
-	int max_x = _size_x;
+	max_y = _size_y;
+	max_x = _size_x;
 	vector_of_bool.resize(max_y);
 	for(auto & row : vector_of_bool)  {
 		row.resize(max_x);
