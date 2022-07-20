@@ -734,7 +734,6 @@ Level::update_entities(void) {
 			}
 		}
 	}
-	return;
 	//
 	for(Entity & ref_entity : vector_of_entity ) {
 		//ref_entity.update_position();
