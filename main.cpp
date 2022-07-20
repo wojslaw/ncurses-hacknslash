@@ -144,6 +144,7 @@ int main()
 		}
 
 		switch(input_character) {
+			case '1': LEVEL.ref_player_entity().consume_food();  break;
 			case '2': LEVEL.make_visual_effect_on_player(1); break;
 			case '3': LEVEL.make_visual_effect_on_target(3); break;
 			//
@@ -165,8 +166,6 @@ int main()
 			case 'A': LEVEL.ref_player_entity().set_direction_persistent(DIRECTION_LEFT ); break;
 			case 'S': LEVEL.ref_player_entity().set_direction_persistent(DIRECTION_DOWN ); break;
 			case 'D': LEVEL.ref_player_entity().set_direction_persistent(DIRECTION_RIGHT); break;
-			//
-			case '1': LEVEL.ref_player_entity().consume_food();  break;
 			//
 			case 'f': LEVEL.ref_player_entity().flag_follow_target = true; break;
 			case 'F': LEVEL.ref_player_entity().flag_follow_target = false; break;
