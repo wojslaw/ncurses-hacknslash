@@ -47,7 +47,8 @@ spells:
 1. hit enemies around yourself
 2. hit enemies around target(fireball)
 3. create obstacle
-3. destroy obstacle
+4. destroy obstacle
+5. buff: increased speed and no collision with walls
 
 
 I was thinking about making the SFX for attack spells show briefly on, but that won't be needed - there is already feedback that something was hit :)

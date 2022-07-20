@@ -1,8 +1,9 @@
 #include "Entity.hpp"
 
 #define DEBUG_SHOW_POSITION_OF_ENTITY false
-#define MAX_LIFE_STEPS_TO_DISPLAY  12
+#define MAX_LIFE_STEPS_TO_DISPLAY  40
 #define THRESHOLD_HEAVILY_DAMAGED 4
+#define DIVISOR_HEAVILY_DAMAGED_ROLL_DAMAGE 2
 
 
 
@@ -217,7 +218,7 @@ Entity::wprint_detailed_entity_info(WINDOW * w) const
 		int const max_life_steps_to_display
 			= std::min(
 					MAX_LIFE_STEPS_TO_DISPLAY
-					,getmaxx(w)
+					,getmaxx(w)-8
 					);
 		int const life_steps_to_display
 			= (stat_life
@@ -481,6 +482,9 @@ Entity::ncurses_get_attrs(void) const
 	if(timer_recently_hit.remaining_seconds > 0.0) {
 		return ATTR_RECENTLY_HIT;
 	}
+	if(is_heavily_damaged()) {
+		return ATTR_HEAVILY_DAMAGED_SYMBOL;
+	}
 	return 0;
 }
 
@@ -495,7 +499,7 @@ Entity::ncurses_get_attr_life(void) const
 		return ATTR_RECENTLY_HIT;
 	}
 	if(is_heavily_damaged()) {
-		return ATTR_HEAVILY_DAMAGED;
+		return ATTR_HEAVILY_DAMAGED_BAR;
 	}
 
 	return 0;
@@ -556,6 +560,9 @@ Entity::combat_roll_damage(void)
 	last_combat_attack_roll = rand_r(&randomness_seed_combat) % (1+get_attack_dice());
 	int const damage_rolled = last_combat_attack_roll + get_attack_base();
 	if(damage_rolled > 0) {
+		if(is_heavily_damaged()) {
+			return damage_rolled/DIVISOR_HEAVILY_DAMAGED_ROLL_DAMAGE;
+		}
 		return damage_rolled;
 	}
 	return 0;
@@ -624,6 +631,12 @@ Entity::wprint_with_additional_attrs(
 	assert(w);
 	if(!is_renderable()) {
 		return ERR;
+	}
+	// only render corpses if nothing is written in the character
+	if(is_dead()) {
+		if((winch(w) & A_CHARTEXT) != ' ') {
+			return ERR;
+		}
 	}
 	int const attrs = ncurses_get_attrs() | attrs_additional;
 	int const symbol = ncurses_get_symbol();

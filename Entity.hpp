@@ -116,7 +116,7 @@ struct Entity {
 	CountdownTimer timer_is_in_battle = CountdownTimer(8.0);
 	CountdownTimer timer_decay = CountdownTimer(SECONDS_CORPSE_DECAY);
 	CountdownTimer timer_recently_healed = CountdownTimer(0.75);;
-	CountdownTimer timer_ability  = CountdownTimer(0.5);;
+	CountdownTimer timer_ability  = CountdownTimer(1.0);;
 
 	//
 	bool flag_skip_update = false;
