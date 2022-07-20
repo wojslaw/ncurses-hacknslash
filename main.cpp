@@ -113,6 +113,14 @@ int main()
 	LEVEL.ref_player_entity().flag_follow_target = false;
 
 
+	{
+		FILE * file_savefile = fopen("save.out","r");
+		if(file_savefile != nullptr) {
+			LEVEL.ref_player_entity().fscan_as_tsv_row(file_savefile);
+			fclose(file_savefile);
+		}
+	}
+
 
 
 
@@ -218,7 +226,12 @@ int main()
 	} // loop
 
 
-	printw("\n goodbye \n");
 
 	endwin();
+
+	{
+		FILE * file_savefile = fopen("save.out","w");
+		LEVEL.ref_player_entity().fprint_as_tsv_row(file_savefile);
+		fclose(file_savefile);
+	}
 }

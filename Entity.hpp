@@ -45,16 +45,34 @@ const Vec2d DIRECTION_VECTOR[DIRECTION_COUNT] = {
 
 typedef struct Entity Entity;
 
+
 struct Entity {
-	Entity(ID_BaseEntity const id_of_base_entity);
+	// ctor
+	Entity(ID_BaseEntity const _id_of_base_entity);
+
+	// base entity
 	ID_BaseEntity id_base_entity = ID_BaseEntity_none;
 	BaseEntity const& ref_base_entity(void) const { return baseentity_ref_from_id(id_base_entity); }
-	//
+
+	// resources and persistent state
+	int resource_food = 0;
+	int resource_money = 0;
+	int explevel_level = 0;
+	int explevel_points = 0;
+
+	int explevel_points_for_next_level(void) const {
+		return 10+(explevel_level*5);
+	}
+
+	// combat-things stats
+	int stat_life = 12;
+
+	// position/movement
 	Vec2d vec2d_position = Vec2d(1,1);
 	Vec2d vec2d_position_last = Vec2d(1,1);
 	Vec2d vec2d_planned_movement = Vec2d(0,0);
 	Vec2d vec2d_last_movement = Vec2d(0,0);
-	bool was_moved_recently(void) const {
+	bool is_recently_moved(void) const {
 		return
 			(vec2d_last_movement.y != 0)
 			||
@@ -63,8 +81,17 @@ struct Entity {
 	}
 	bool flag_moved_last_turn = false;
 
-	//
+
+
+	// misc combat-things stats
+	unsigned randomness_seed_combat = 0;
+	bool has_selected_target = false;
+	size_t id_of_target = 0;
+
+
+	// time
 	double total_seconds= 0.0;
+
 	CountdownTimer timer_combat_turn = CountdownTimer(COMBAT_TURN_SECONDS);
 	CountdownTimer timer_movement = CountdownTimer(MOVEMENT_TURN_SECONDS);
 	CountdownTimer timer_life = CountdownTimer(0);
@@ -83,41 +110,18 @@ struct Entity {
 
 
 
-	const char * get_name(void) const { return ref_base_entity().name; }
-
-	int ncurses_get_attrs(void) const {
-		if(timer_recently_hit.remaining_seconds > 0.0) {
-			return ATTR_RECENTLY_HIT;
-		}
-		return 0;
-	}
 
 
-	bool has_selected_target = false;
-	size_t id_of_target = 0;
-	void reset_targeting(void) {
-		id_of_target = 0 ;
-		has_selected_target = false;
-	}
-	void set_target_to_entityid(size_t const entityid) { 
-		id_of_target = entityid ; 
-		has_selected_target = true;
-	}
 
-	bool is_ready_to_attack(void) const {
-		if(is_dead()) {
-			return false;
-		}
-		return timer_combat_turn.remaining_seconds <= 0;
-	}
+	//
+	//
+	void reset_targeting(void);
+	void set_target_to_entityid(size_t const entityid);
+	bool is_ready_to_attack(void) const;
 
-	// combat-things
-	unsigned randomness_seed_combat = 0;
 
-	int get_life_max() const {
-		return ref_base_entity().stat_life_max;
-	}
-	int stat_life = 12;
+
+	int get_life_max() const { return ref_base_entity().stat_life_max; }
 	void set_life_to_max(void) { stat_life = get_life_max(); }
 
 
@@ -129,80 +133,21 @@ struct Entity {
 	int last_combat_attack_roll = -1;
 	int last_combat_attack_damage = -1;
 
-	bool is_ready_to_move(void) const {
-		return (timer_movement.remaining_seconds <= 0.0);
-	}
 
 
-	bool is_alive(void) const {
-		return stat_life >= 0;
-	}
-	bool is_dead(void) const {
-		return stat_life < 0;
-	}
-	bool is_fully_decayed(void) const {
-		return is_dead() && timer_decay.remaining_seconds <= 0;
-	}
-	bool is_corpse(void) const {
-		return is_dead() && timer_decay.remaining_seconds > 0;
-	}
-	int ncurses_get_symbol(void) const {
-		if(is_dead()) {
-			if(timer_decay.remaining_seconds > 0) {
-				return '%';
-			}
-			return 0;
-		}
-		return ref_base_entity().ncurses_symbol;
-	}
+	// combat
+	int combat_get_range(void) const;
+	int combat_roll_damage(void);
+	int combat_roll_damage_against_defense(int const defense);
+	void take_damage(int const damage_to_take);
+	void regen_life(int const delta_life);
 
-
-	int combat_get_range(void) const {
-		return ref_base_entity().attack_range;
-	} // just a random given number for now
-	int combat_roll_damage(void) {
-		if(is_dead()) {
-			return 0;
-		}
-		if(timer_combat_turn.remaining_seconds > 0.0) {
-			return 0;
-		}
-		timer_combat_turn.reset();
-		last_combat_attack_roll = rand_r(&randomness_seed_combat) % (1+get_attack_dice());
-		int const damage_rolled = last_combat_attack_roll + get_attack_base();
-		if(damage_rolled > 0) {
-			return damage_rolled;
-		}
-		return 0;
-	}
-
-	int combat_roll_damage_against_defense(int const defense) {
-		last_combat_attack_damage = combat_roll_damage() - defense;
-		if(
-		        is_vampiric()
-		        &&
-		        last_combat_attack_damage >= 1) {
-			timer_wellfed.remaining_seconds += (double)last_combat_attack_damage;
-		}
-		return last_combat_attack_damage;
-	}
-
-	void take_damage(int const damage_to_take) {
-		if(damage_to_take <= 0) {
-			return;
-		}
-		stat_life -= damage_to_take;
-		timer_recently_hit.reset();
-	}
-	void regen_life(int const delta_life) {
-		if(is_dead()) {
-			return;
-		}
-		stat_life += delta_life;
-		if(stat_life > get_life_max()) {
-			stat_life = get_life_max();
-		}
-	}
+	bool is_ready_to_move(void) const ;
+	bool is_alive(void) const ;
+	bool is_dead(void) const ;
+	bool is_fully_decayed(void) const ;
+	bool is_corpse(void) const ;
+	int  ncurses_get_symbol(void) const ;
 
 
 // timer
@@ -211,21 +156,8 @@ struct Entity {
 
 // general
 
-	bool is_blocking(void) const { 
-		if(!has_collision()) {
-			return false;
-		}
-		if(is_dead()) {
-			if(timer_decay.remaining_seconds <= 0) {
-				return false;
-			}
-		}
-		return true;
-	}
+	bool is_blocking(void) const;
 
-
-	// ncurses
-	void wprint_detailed_entity_info(WINDOW * w) const;
 
 
 	// movement
@@ -238,6 +170,10 @@ public:
 	void set_direction_persistent(enum DIRECTION const dir);
 	void set_direction_order(enum DIRECTION const dir) ;
 
+	// ncurses ui
+	void wprint_detailed_entity_info(WINDOW * w) const;
+	char const * get_name(void) const;
+	int ncurses_get_attrs(void) const;
 	void order_stop(void);
 
 	void update_movement_from_planned_movement(void);
@@ -251,6 +187,9 @@ public:
 	bool has_planned_movement(void);
 	void consume_food(void);
 
+
+	int fprint_as_tsv_row(FILE * f);
+	int fscan_as_tsv_row(FILE * f);
 };
 
 

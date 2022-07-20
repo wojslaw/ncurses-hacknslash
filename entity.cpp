@@ -1,21 +1,39 @@
 #include "Entity.hpp"
 
 
-bool is_direction_angled(enum DIRECTION direction)
+	int
+Entity::fprint_as_tsv_row(FILE * f)
 {
-	return
-		direction == DIRECTION_ANGLED_DOWN_RIGHT
-		||
-		direction == DIRECTION_ANGLED_DOWN_LEFT 
-		||
-		direction == DIRECTION_ANGLED_UP_RIGHT  
-		||
-		direction == DIRECTION_ANGLED_UP_LEFT   
-		;
+	assert(f);
+	if(f==0) { return -1; }
+	return fprintf(f
+			,"%zu\t%d\t%d\t%d\t%d\t%lf\t%lf\n"
+			,id_base_entity
+			,resource_food
+			,resource_money
+			,explevel_level
+			,explevel_points
+			,total_seconds
+			,timer_wellfed.remaining_seconds
+		   );
 }
 
-
-
+	int
+Entity::fscan_as_tsv_row(FILE * f)
+{
+	assert(f);
+	if(f==0) { return -1; }
+	return fscanf(f
+			,"%zu\t%d\t%d\t%d\t%d\t%lf\t%lf\n"
+			,&id_base_entity
+			,&resource_food
+			,&resource_money
+			,&explevel_level
+			,&explevel_points
+			,&total_seconds
+			,&timer_wellfed.remaining_seconds
+		   );
+}
 
 
 
@@ -26,7 +44,6 @@ Entity::Entity(ID_BaseEntity const _id_of_base_entity)
 	timer_wellfed.remaining_seconds  = 20.0;
 	set_life_to_max();
 }
-
 
 
 
@@ -74,7 +91,15 @@ Entity::wprint_detailed_entity_info(WINDOW * w) const
 	werase(w);
 	box(w,0,0);
 	wmove(w,1,1);
-	wprintw(w,"%c  %2d/%2d  %s" , ncurses_get_symbol() , stat_life , get_life_max() , get_name() );
+	wprintw(w,"%c  %2d/%2d  %s  lvl %d (%d /%d)"
+			, ncurses_get_symbol()
+			, stat_life
+			, get_life_max()
+			, get_name()
+			, explevel_level
+			, explevel_points
+			, explevel_points_for_next_level()
+			);
 	wmove(w,2,1);
 	wprintw(w,"fed:%.1f( %.1f)" ,timer_wellfed.remaining_seconds, timer_regenerate_life.remaining_seconds);
 	wmove(w,3,1);
@@ -227,7 +252,7 @@ Entity::update_movement(void)
 	}
 
 	// 5 consume a movement tick
-	if(was_moved_recently()) {
+	if(is_recently_moved()) {
 		timer_movement.consume_tick();
 		timer_movement.reset();
 	}
@@ -257,8 +282,237 @@ Entity::order_stop(void)
 	void
 Entity::consume_food(void)
 {
-	timer_wellfed.remaining_seconds += 4.0;
+	if(resource_food >= 1) {
+		timer_wellfed.remaining_seconds += 4.0;
+		--resource_food;
+	}
 }
+
+
+
+
+
+
+	void
+Entity::reset_targeting(void)
+{
+	id_of_target = 0 ;
+	has_selected_target = false;
+}
+
+
+
+	void
+Entity::set_target_to_entityid(size_t const entityid)
+{ 
+	id_of_target = entityid ; 
+	has_selected_target = true;
+}
+
+
+
+
+bool
+Entity::is_ready_to_attack(void) const
+{
+	if(is_dead()) {
+		return false;
+	}
+	return timer_combat_turn.remaining_seconds <= 0;
+}
+
+
+
+char const *
+Entity::get_name(void) const
+{
+	return ref_base_entity().name;
+}
+
+int
+Entity::ncurses_get_attrs(void) const
+{
+	if(timer_recently_hit.remaining_seconds > 0.0) {
+		return ATTR_RECENTLY_HIT;
+	}
+	return 0;
+}
+
+
+
+
+
+	bool
+Entity::is_blocking(void) const
+{ 
+	if(!has_collision()) {
+		return false;
+	}
+	if(is_dead()) {
+		if(timer_decay.remaining_seconds <= 0) {
+			return false;
+		}
+	}
+	return true;
+}
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+	int
+Entity::combat_get_range(void) const
+{
+	return ref_base_entity().attack_range;
+}
+
+
+
+
+	int
+Entity::combat_roll_damage(void)
+{
+	if(is_dead()) {
+		return 0;
+	}
+	if(timer_combat_turn.remaining_seconds > 0.0) {
+		return 0;
+	}
+	timer_combat_turn.reset();
+	last_combat_attack_roll = rand_r(&randomness_seed_combat) % (1+get_attack_dice());
+	int const damage_rolled = last_combat_attack_roll + get_attack_base();
+	if(damage_rolled > 0) {
+		return damage_rolled;
+	}
+	return 0;
+}
+
+
+
+
+	int
+Entity::combat_roll_damage_against_defense(int const defense)
+{
+	last_combat_attack_damage = combat_roll_damage() - defense;
+	if(
+			is_vampiric()
+			&&
+			last_combat_attack_damage >= 1) {
+		timer_wellfed.remaining_seconds += (double)last_combat_attack_damage;
+	}
+	return last_combat_attack_damage;
+}
+
+
+
+
+	void
+Entity::take_damage(int const damage_to_take)
+{
+	if(damage_to_take <= 0) {
+		return;
+	}
+	stat_life -= damage_to_take;
+	timer_recently_hit.reset();
+}
+
+
+
+
+	void
+Entity::regen_life(int const delta_life)
+{
+	if(is_dead()) {
+		return;
+	}
+	stat_life += delta_life;
+	if(stat_life > get_life_max()) {
+		stat_life = get_life_max();
+	}
+}
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+	bool
+Entity::is_ready_to_move(void) const {
+	return (timer_movement.remaining_seconds <= 0.0);
+}
+
+
+
+
+	bool
+Entity::is_alive(void) const {
+	return stat_life >= 0;
+}
+
+
+
+
+	bool
+Entity::is_dead(void) const {
+	return stat_life < 0;
+}
+
+
+
+
+	bool
+Entity::is_fully_decayed(void) const {
+	return is_dead() && timer_decay.remaining_seconds <= 0;
+}
+
+
+
+
+	bool
+Entity::is_corpse(void) const {
+	return is_dead() && timer_decay.remaining_seconds > 0;
+}
+
+
+
+
+	int
+Entity::ncurses_get_symbol(void) const {
+	if(is_dead()) {
+		if(timer_decay.remaining_seconds > 0) {
+			return '%';
+		}
+		return 0;
+	}
+	return ref_base_entity().ncurses_symbol;
+}
+
+
+
+
+
 
 
 
