@@ -1,6 +1,14 @@
 #include "Entity.hpp"
 
 #define DEBUG_SHOW_POSITION_OF_ENTITY false
+#define MAX_LIFE_STEPS_TO_DISPLAY  8
+
+
+
+
+
+
+
 
 	int
 Entity::fprint_as_tsv_row(FILE * f)
@@ -188,21 +196,35 @@ Entity::wprint_detailed_entity_info(WINDOW * w) const
 				);
 	}
 
+	{ // life
+		wmove(w,getcury(w)+1,1);
+		int const attr = ncurses_get_attr_life();
+		if(attr) {
+			wattron(w,attr);
+		}
+		wprintw(w,"%2d/%2d"
+				, stat_life
+				, get_life_max()
+			   );
+		int const life_steps_to_display
+			= (stat_life
+			   *
+			   MAX_LIFE_STEPS_TO_DISPLAY)
+			/ get_life_max();
+		for(int i = 0; i < life_steps_to_display; ++i) {
+			wattron(w,WA_REVERSE);
+			waddch(w,' ');
+			wattroff(w,WA_REVERSE);
+		}
+		if(attr) {
+			wattroff(w,attr);
+		}
+	} //life
+
 	wmove(w,getcury(w)+1,1);
 	wprintw(w,"%c"
 			, ncurses_get_symbol()
 			);
-	if(!timer_recently_healed.is_countdown_finished()) {
-		wattron(w,ATTR_RECENTLY_HEALED);
-	}
-	wprintw(w,"%2d/%2d"
-			, stat_life
-			, get_life_max()
-			);
-	if(!timer_recently_healed.is_countdown_finished()) {
-		wattroff(w,ATTR_RECENTLY_HEALED);
-	}
-
 	wprintw(w," %s  lvl %d (%d /%d)"
 			, get_name()
 			, explevel_level
@@ -446,6 +468,19 @@ Entity::ncurses_get_attrs(void) const
 	return 0;
 }
 
+
+	int
+Entity::ncurses_get_attr_life(void) const
+{
+	if(!timer_recently_healed.is_countdown_finished()) {
+		return ATTR_RECENTLY_HEALED;
+	}
+	if(!timer_recently_hit.is_countdown_finished()) {
+		return ATTR_RECENTLY_HIT;
+	}
+
+	return 0;
+}
 
 
 

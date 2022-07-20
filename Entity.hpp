@@ -169,6 +169,7 @@ struct Entity {
 	bool is_fully_decayed(void) const ;
 	bool is_corpse(void) const ;
 	int  ncurses_get_symbol(void) const ;
+	int ncurses_get_attr_life(void) const ;
 	bool is_renderable(void) const ;
 
 
