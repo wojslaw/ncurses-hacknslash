@@ -194,21 +194,6 @@ struct Level {
 	void update_entities(void) ;
 	void update_entities_direction_planned(void) ;
 
-	void
-		wprint_range(
-				WINDOW * w
-				,int const y_start
-				,int const x_start
-				,int const y_end
-				,int const x_end
-				) ;
-
-	void
-		wprint_centered_on_player_entity_with_window_halfsize(
-		 WINDOW * w
-		,int y_halfsize
-		,int x_halfsize
-		) ;
 
 	void wprint_render_from_position_fill_window(
 			WINDOW * w
