@@ -115,6 +115,7 @@ struct Entity {
 	CountdownTimer timer_recently_hit = CountdownTimer(0.75);
 	CountdownTimer timer_is_in_battle = CountdownTimer(8.0);
 	CountdownTimer timer_decay = CountdownTimer(SECONDS_CORPSE_DECAY);
+	CountdownTimer timer_recently_healed = CountdownTimer(0.75);;
 
 	//
 	bool flag_skip_update = false;
@@ -220,7 +221,7 @@ public:
 	{
 		assert(id < vector_of_abilities.size());
 		Ability& ref_ability = vector_of_abilities.at(id);
-		int const deltalife = ref_ability.roll_heal();
+		int const deltalife = ref_ability.roll_heal_if_ready();
 		modify_life(deltalife);
 	}
 };

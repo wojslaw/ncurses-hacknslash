@@ -5,12 +5,12 @@ void init_colorpairs(void)
 	start_color();
 
 	init_pair(
-			ENUM_COLORPAIR_RECENTLY_HIT
+			ENUM_COLORPAIR_RED
 			,COLOR_RED
 			,COLOR_BLACK);
 
 	init_pair(
-			ENUM_COLORPAIR_TERRAIN
+			ENUM_COLORPAIR_BLUE
 			,COLOR_BLUE
 			,COLOR_BLACK);
 
@@ -20,7 +20,7 @@ void init_colorpairs(void)
 			,COLOR_BLACK);
 
 	init_pair(
-			ENUM_COLORPAIR_OUT_OF_MAP_BOUNDS
+			ENUM_COLORPAIR_WHITE_ON_BLUE
 			,COLOR_WHITE
 			,COLOR_BLUE);
 }

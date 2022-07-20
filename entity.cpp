@@ -46,6 +46,8 @@ Entity::Entity(ID_BaseEntity const _id_of_base_entity)
 	set_life_to_max();
 	vector_of_abilities.emplace_back(Ability());
 	vector_of_abilities.back().is_ability_healing = true;
+	vector_of_abilities.back().stat_heal_base = 1;
+	vector_of_abilities.back().stat_heal_dice = 3;
 }
 
 
@@ -128,6 +130,7 @@ Entity::update_time_from_globaltimer(GlobalTimer const & GLOBALTIMER)
 	timer_movement.update_time_from_globaltimer(GLOBALTIMER);
 	timer_life.update_time_from_globaltimer(GLOBALTIMER);
 	timer_recently_hit.update_time_from_globaltimer(GLOBALTIMER);
+	timer_recently_healed.update_time_from_globaltimer(GLOBALTIMER);
 	timer_is_in_battle.update_time_from_globaltimer(GLOBALTIMER);
 
 	if(is_dead()) {
@@ -175,15 +178,32 @@ Entity::wprint_detailed_entity_info(WINDOW * w) const
 	werase(w);
 	box(w,0,0);
 	wmove(w,1,1);
-	wprintw(w,"%c  %2d/%2d  %s  lvl %d (%d /%d)"
+	wprintw(w,"%c"
 			, ncurses_get_symbol()
+			);
+	if(!timer_recently_healed.is_countdown_finished()) {
+		wattron(w,ATTR_RECENTLY_HEALED);
+	}
+	wprintw(w,"%2d/%2d"
 			, stat_life
 			, get_life_max()
+			);
+	if(!timer_recently_healed.is_countdown_finished()) {
+		wattroff(w,ATTR_RECENTLY_HEALED);
+	}
+
+	wprintw(w," %s  lvl %d (%d /%d)"
 			, get_name()
 			, explevel_level
 			, explevel_points
 			, explevel_points_for_next_level()
 			);
+
+
+
+
+
+
 	wmove(w,2,1);
 	wprintw(w,"fed:%.1f( %.1f)" ,timer_wellfed.remaining_seconds, timer_regenerate_life.remaining_seconds);
 	wmove(w,3,1);
@@ -523,6 +543,9 @@ Entity::modify_life(int const delta_life)
 	stat_life += delta_life;
 	if(stat_life > get_life_max()) {
 		stat_life = get_life_max();
+	}
+	if(delta_life > 0) {
+		timer_recently_healed.reset();
 	}
 }
 

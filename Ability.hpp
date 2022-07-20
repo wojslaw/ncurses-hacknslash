@@ -32,7 +32,7 @@ struct Ability {
 		return true;
 	}
 
-	int roll_heal(void)
+	int roll_heal_if_ready(void)
 	{
 		bool const bool_perform_heal = consume_stack();
 		if(bool_perform_heal) {

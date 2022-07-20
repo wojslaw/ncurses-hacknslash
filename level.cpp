@@ -233,6 +233,7 @@ Level::ensure_vec2d_position_is_within_bounds(Vec2d * v)
 
 
 
+
 	void
 Level::wprint_render_from_position_fill_window(
 		 WINDOW * w
