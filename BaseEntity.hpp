@@ -29,6 +29,7 @@ struct BaseEntity {
 	int attack_range = 0;
 	int defense_base = 0;
 	double seconds_movement = 0.0;
+	double seconds_regen = 60.0;
 	//
 	bool flag_has_collision = true;
 	bool flag_destroys_terrain = false;

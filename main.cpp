@@ -206,10 +206,14 @@ int main()
 		}
 		move(0,0);
 		// only render if enough time moved
-		LEVEL.wprint_centered_on_player_entity_with_window_halfsize(w_gamewindow,WINDOW_HALFSIZE_Y,WINDOW_HALFSIZE_X);
+		LEVEL.wprint_render_centered_on_player_entity_fill_window(w_gamewindow);
 		LEVEL.wprint_entitylist(w_text_entitylist);
 		LEVEL.ref_player_entity().wprint_detailed_entity_info(w_text_player);
-		LEVEL.ref_target().wprint_detailed_entity_info(w_text_target);
+		if(LEVEL.ref_player_entity().has_selected_target) {
+			LEVEL.ref_target().wprint_detailed_entity_info(w_text_target);
+		} else {
+			werase(w_text_target);
+		}
 		wrefresh(w_gamewindow);
 		wrefresh(w_text_entitylist);
 		if(DEBUG_PRINT_COLLISION_TABLE) {

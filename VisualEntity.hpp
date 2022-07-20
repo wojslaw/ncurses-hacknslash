@@ -69,7 +69,11 @@ struct VisualEntity {
 	}
 	// end: ctor
 
-	void update_time_from_globaltimer(GlobalTimer const & GLOBALTIMER);
+	void update_time_from_globaltimer(GlobalTimer const & GLOBALTIMER)
+	{
+		total_seconds += GLOBALTIMER.deltatime_seconds;
+		timer_life.update_time_from_globaltimer(GLOBALTIMER);
+	}
 };
 
 
@@ -79,9 +83,3 @@ struct VisualEntity {
 
 
 
-	void
-VisualEntity::update_time_from_globaltimer(GlobalTimer const & GLOBALTIMER)
-{
-	total_seconds += GLOBALTIMER.deltatime_seconds;
-	timer_life.update_time_from_globaltimer(GLOBALTIMER);
-}

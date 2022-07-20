@@ -1,11 +1,13 @@
 CollisionTable - pass a const& for entity when moving
 TODO stop persistent movement when you try to go in the other way
-IDEA show something better on border of map?
+TODO show something on the border of map
 IDEA wraparound: go to y=y_max, get teleported to y=0
 TODO make enemies wander slowly by default - random seconds of delay before they move in a random direction
 TODO destroy corpses
+TODO eat corpses
 
-IDEA create new obstacles: with a shadow '.' before spawning, and then create terrain
+
+IDEA create new obstacles during gameplay: with a shadow '.' before spawning, and then create terrain
 TODO generate random enemies during game
 
 TODO items/inventory

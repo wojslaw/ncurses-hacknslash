@@ -3,12 +3,14 @@
 #include "Timer.hpp"
 #include "Ncurses.hpp"
 #include "BaseEntity.hpp"
+#include "Ability.hpp"
 
 #define COMBAT_TURN_SECONDS 2.0
 #define MOVEMENT_TURN_SECONDS 0.25
 #define SECONDS_CORPSE_DECAY 8.0
 
-constexpr double WELLFED_SECONDS_PER_REGEN = 3.0;
+constexpr double REGEN_SECONDS_WELLFED =  3.0;
+constexpr double REGEN_SECONDS_NORMAL  = 12.0;
 
 
 enum DIRECTION {
@@ -61,7 +63,7 @@ struct Entity {
 	int explevel_points = 0;
 
 	int explevel_points_for_next_level(void) const {
-		return 10+(explevel_level*5);
+		return 10+(explevel_level*2);
 	}
 
 	// combat-things stats
@@ -81,6 +83,17 @@ struct Entity {
 	}
 	bool flag_moved_last_turn = false;
 
+	void force_set_position_yx(int const y , int const x) {
+		vec2d_position.y = y;
+		vec2d_position.x = x;
+		vec2d_position_last.y = y;
+		vec2d_position_last.x = x;
+		vec2d_planned_movement.y = 0;
+		vec2d_planned_movement.x = 0;
+		vec2d_last_movement.y = 0;
+		vec2d_last_movement.x = 0;
+	}
+
 
 
 	// misc combat-things stats
@@ -95,7 +108,7 @@ struct Entity {
 	CountdownTimer timer_combat_turn = CountdownTimer(COMBAT_TURN_SECONDS);
 	CountdownTimer timer_movement = CountdownTimer(MOVEMENT_TURN_SECONDS);
 	CountdownTimer timer_life = CountdownTimer(0);
-	CountdownTimer timer_regenerate_life = CountdownTimer(WELLFED_SECONDS_PER_REGEN);
+	CountdownTimer timer_regenerate_life = CountdownTimer(REGEN_SECONDS_NORMAL);
 	CountdownTimer timer_wellfed = CountdownTimer(0);
 	CountdownTimer timer_recently_hit = CountdownTimer(0.5);
 	CountdownTimer timer_decay = CountdownTimer(SECONDS_CORPSE_DECAY);

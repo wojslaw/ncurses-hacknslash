@@ -37,13 +37,69 @@ Entity::fscan_as_tsv_row(FILE * f)
 
 
 
+
 Entity::Entity(ID_BaseEntity const _id_of_base_entity)
 	: id_base_entity(_id_of_base_entity)
 {
 	timer_movement = CountdownTimer(ref_base_entity().seconds_movement);
-	timer_wellfed.remaining_seconds  = 20.0;
+	timer_regenerate_life = CountdownTimer(ref_base_entity().seconds_regen);
 	set_life_to_max();
 }
+
+
+
+
+	bool
+Entity::is_ready_to_move(void) const {
+	return (timer_movement.remaining_seconds <= 0.0);
+}
+
+
+
+
+	bool
+Entity::is_alive(void) const {
+	return stat_life > 0;
+}
+
+
+
+
+	bool
+Entity::is_dead(void) const {
+	return stat_life <= 0;
+}
+
+
+
+
+	bool
+Entity::is_fully_decayed(void) const {
+	return is_dead() && timer_decay.remaining_seconds <= 0;
+}
+
+
+
+
+	bool
+Entity::is_corpse(void) const {
+	return is_dead() && timer_decay.remaining_seconds > 0;
+}
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 
@@ -71,9 +127,15 @@ Entity::update_time_from_globaltimer(GlobalTimer const & GLOBALTIMER)
 	timer_regenerate_life.update_time_from_globaltimer(GLOBALTIMER);
 	timer_wellfed.update_time_from_globaltimer(GLOBALTIMER);
 	if(timer_wellfed.remaining_seconds > 0) {
-		if(timer_regenerate_life.consume_tick()) {
-			regen_life(1);
-			timer_regenerate_life.reset_countdown();
+		if(timer_regenerate_life.remaining_seconds >= REGEN_SECONDS_WELLFED) {
+			timer_regenerate_life.remaining_seconds = REGEN_SECONDS_WELLFED;
+		}
+	}
+	if(timer_regenerate_life.consume_tick()) {
+		regen_life(1);
+		timer_regenerate_life.reset_countdown();
+		if(timer_wellfed.remaining_seconds > 0) {
+			timer_regenerate_life.remaining_seconds = REGEN_SECONDS_WELLFED;
 		}
 	}
 
@@ -453,47 +515,6 @@ Entity::regen_life(int const delta_life)
 
 
 
-
-
-
-
-
-	bool
-Entity::is_ready_to_move(void) const {
-	return (timer_movement.remaining_seconds <= 0.0);
-}
-
-
-
-
-	bool
-Entity::is_alive(void) const {
-	return stat_life >= 0;
-}
-
-
-
-
-	bool
-Entity::is_dead(void) const {
-	return stat_life < 0;
-}
-
-
-
-
-	bool
-Entity::is_fully_decayed(void) const {
-	return is_dead() && timer_decay.remaining_seconds <= 0;
-}
-
-
-
-
-	bool
-Entity::is_corpse(void) const {
-	return is_dead() && timer_decay.remaining_seconds > 0;
-}
 
 
 
