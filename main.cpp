@@ -130,7 +130,7 @@ int main()
 	LEVEL.ref_player_entity().vector_of_abilities.back().abilitytype = ABILITYTYPE_ATTACK_AOE_TARGET;
 	LEVEL.ref_player_entity().vector_of_abilities.back().stack_max = 4;
 	LEVEL.ref_player_entity().vector_of_abilities.back().timer_stack = CountdownTimer(12.0);
-	LEVEL.ref_player_entity().vector_of_abilities.back().stat_roll_base = 1;
+	LEVEL.ref_player_entity().vector_of_abilities.back().stat_roll_base = 2;
 	LEVEL.ref_player_entity().vector_of_abilities.back().stat_roll_dice = 3;
 	LEVEL.ref_player_entity().vector_of_abilities.back().stat_range = 2;
 
@@ -169,7 +169,7 @@ int main()
 	for(input_character = ERR ;  input_character != 'Z' ; input_character = getch() ) {
 		move(0,0);
 		mvprintw(getcury(stdscr)+1,0,"(press Z to quit)");
-		mvprintw(getcury(stdscr)+1,0,"living combatants: %4d" , LEVEL.get_count_of_living_entities());
+		mvprintw(getcury(stdscr)+1,0,"living: %4d (total: %4zu)" , LEVEL.get_count_of_living_entities() , LEVEL.vector_of_entity.size()-1 );
 		if(LEVEL.ref_player_entity().is_dead()) {
 			mvprintw(getcury(stdscr)+1,0,"[[RIP] - [your ded]]" );
 			mvprintw(getcury(stdscr)+1,0,"died after %f seconds" , total_gameplay_seconds);
@@ -217,6 +217,17 @@ int main()
 			case KEY_F(6): LEVEL.ref_player_entity().flag_stop_on_collision = false; break;
 			case KEY_F(9):  IS_GAME_PAUSED = true;  break;
 			case KEY_F(10): IS_GAME_PAUSED = false;  break;
+			// godmode
+			case KEY_F(8):
+				{
+					LEVEL.ref_player_entity().defense_bonus = 100;
+					for(Ability & ability : LEVEL.ref_player_entity().vector_of_abilities) {
+						ability.stat_roll_base = 100;
+						ability.stat_range = 100;
+						ability.stack_current = 100;
+					}
+					break;
+				}
 			case '\e': {
 						  LEVEL.ref_player_entity().order_stop();
 						  break;
@@ -231,13 +242,12 @@ int main()
 		if(MULTIPLY_TIME > 1.0) {
 			GLOBALTIMER.deltatime_seconds *= MULTIPLY_TIME;
 		}
-		if(IS_GAME_PAUSED) {
-			GLOBALTIMER.deltatime_seconds = 0;
-		}
 
-		LEVEL.update_time_from_globaltimer(GLOBALTIMER);
-		if(LEVEL.ref_player_entity().is_alive()) {
-			total_gameplay_seconds += GLOBALTIMER.deltatime_seconds;
+		if(!IS_GAME_PAUSED) {
+			LEVEL.update_time_from_globaltimer(GLOBALTIMER);
+			if(LEVEL.ref_player_entity().is_alive()) {
+				total_gameplay_seconds += GLOBALTIMER.deltatime_seconds;
+			}
 		}
 
 
@@ -250,7 +260,6 @@ int main()
 			mvprintw(getcury(stdscr)+1,0, "SFX: %4zu" , LEVEL.vector_of_visual_entity.size() );
 		}
 		move(0,0);
-		// only render if enough time moved
 		LEVEL.wprint_render_centered_on_player_entity_fill_window(w_gamewindow);
 		LEVEL.wprint_entitylist(w_text_entitylist);
 		LEVEL.ref_player_entity().wprint_detailed_entity_info(w_text_player);

@@ -443,30 +443,6 @@ Level::make_player_use_ability_number(int const number)
 Level::update_time_from_globaltimer(GlobalTimer const & GLOBALTIMER)
 {
 	total_seconds += GLOBALTIMER.deltatime_seconds;
-	// TODO AI AI timer
-	//
-//	timer_ai.update_time_from_globaltimer(GLOBALTIMER);
-//	int const ai_tick = timer_ai.consume_all_ticks();
-//	if(ai_tick > 0){
-//		// change direction
-//		for(size_t id = 1 ; id <= 3; ++ id ) {
-//			Entity & entity = vector_of_entity.at(id);
-//			switch(entity.direction_persistent_ai) {
-//				case DIRECTION_UP:
-//					entity.direction_persistent_ai = DIRECTION_RIGHT;
-//					break;
-//				case DIRECTION_RIGHT:
-//					entity.direction_persistent_ai = DIRECTION_DOWN;
-//					break;
-//				case DIRECTION_DOWN:
-//					entity.direction_persistent_ai = DIRECTION_LEFT;
-//					break;
-//				default:
-//					entity.direction_persistent_ai = DIRECTION_UP;
-//					break;
-//			}
-//		}
-//	}
 
 	timer_create_new_enemy.update_time_from_globaltimer(GLOBALTIMER);
 	if(timer_create_new_enemy.is_countdown_finished()) {
@@ -487,13 +463,9 @@ Level::update_time_from_globaltimer(GlobalTimer const & GLOBALTIMER)
 		}
 	}
 
-	//move_decayed_entities();
-	// remove_decayed_entities();
-
 	// entities
 	for(Entity & entity : vector_of_entity) {
 		entity.update_time_from_globaltimer(GLOBALTIMER);
-		// remove decayed
 	}
 	// 
 	update_table_of_cells_with_pointers_to_entities();
@@ -765,7 +737,25 @@ Level::move_decayed_entities(void)
 
 
 
+	void
+Level::delete_decayed_entities_if_player_has_no_target(void)
+{
+	if(ref_player_entity().has_selected_target) {
+		return;
+	}
 
+	if(vector_of_entity.size() < 2) {
+		return;
+	}
+
+	// go from end to start
+	for(size_t i = vector_of_entity.size()-1; i > 1; --i ) {
+		Entity const& entity = vector_of_entity.at(i);
+		if(entity.flag_marked_for_deletion) {
+			vector_of_entity.erase(vector_of_entity.begin() + i);
+		}
+	}
+}
 
 
 
@@ -775,6 +765,10 @@ Level::move_decayed_entities(void)
 
 	void
 Level::update_entities(void) {
+	// delete decayed stuff if it should be safe so
+	delete_decayed_entities_if_player_has_no_target();
+
+	//
 	update_table_of_cells_with_pointers_to_entities();
 	for(Entity & ref_entity : vector_of_entity ) {
 		if(!(is_vec2d_position_within_bounds_of_level(ref_entity.vec2d_position))) { continue;  } // skip invalidly-placed

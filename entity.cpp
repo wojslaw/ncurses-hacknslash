@@ -138,6 +138,12 @@ Entity::is_renderable(void) const
 
 
 
+	void
+Entity::revive(void)
+{
+	flag_skip_update = false;
+	set_life_to_max();
+}
 
 
 
@@ -148,6 +154,11 @@ Entity::is_renderable(void) const
 	void
 Entity::update_time_from_globaltimer(GlobalTimer const & GLOBALTIMER)
 {
+	if(flag_skip_update) {
+		flag_marked_for_deletion = true;
+		return;
+	}
+
 	total_seconds += GLOBALTIMER.deltatime_seconds;
 
 	timer_combat_turn.update_time_from_globaltimer(GLOBALTIMER);
@@ -162,6 +173,9 @@ Entity::update_time_from_globaltimer(GlobalTimer const & GLOBALTIMER)
 
 	if(is_dead()) {
 		timer_decay.update_time_from_globaltimer(GLOBALTIMER);
+		if(timer_decay.is_countdown_finished()) {
+			flag_skip_update = true;
+		}
 	}
 
 	if(is_ready_to_move()) {

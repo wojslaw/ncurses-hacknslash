@@ -83,7 +83,7 @@ struct Level {
 
 	double total_seconds = 0.0;
 	CountdownTimer timer_ai = CountdownTimer(2.0); // random number of seconds for countdown
-	CountdownTimer timer_create_new_enemy = CountdownTimer(30.0);
+	CountdownTimer timer_create_new_enemy = CountdownTimer(20.0);
 
 	unsigned seed = 0;
 
@@ -202,6 +202,8 @@ struct Level {
 
 	void update_entities(void) ;
 	void update_entities_direction_planned(void) ;
+
+	void delete_decayed_entities_if_player_has_no_target(void);
 
 
 	void wprint_render_from_position_fill_window(

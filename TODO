@@ -9,6 +9,7 @@ Features I want to have before I consider this a "release candidate":
 
 
 
+
 Then, further complexity:
 1. pick map size
 2. pick map type(cave/maze)
@@ -73,3 +74,8 @@ spells:
 
 
 I was thinking about making the SFX for attack spells show briefly on, but that won't be needed - there is already feedback that something was hit :)
+
+
+
+2022-07-21T17:31:17+0200
+around 1000 entities the game starts slowing down, and at 2k it gets really slow

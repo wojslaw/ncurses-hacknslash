@@ -125,11 +125,15 @@ struct Entity {
 
 	//
 	bool flag_skip_update = false;
+	bool flag_marked_for_deletion = false;
 	bool has_collision(void) const { return ref_base_entity().flag_has_collision; }
 	bool has_destroyer_of_terrain(void) const { return ref_base_entity().flag_destroys_terrain; }
 	bool is_vampiric(void) const { return ref_base_entity().flag_is_vampiric; }
 	bool flag_follow_target = true;
 	bool flag_stop_on_collision = true;
+
+
+	void revive(void);
 
 
 
@@ -148,7 +152,8 @@ struct Entity {
 	void set_life_to_max(void) { stat_life = get_life_max(); }
 
 
-	int get_defense() const { return 1; }
+	int defense_bonus = 0;
+	int get_defense() const { return(ref_base_entity().defense_base + defense_bonus); }
 	int get_attack_base() const    { return ref_base_entity().attack_base; }
 	int get_attack_dice() const    { return ref_base_entity().attack_dice; }
 	int get_attack_maximum() const { return get_attack_base()+(1+get_attack_dice()); }

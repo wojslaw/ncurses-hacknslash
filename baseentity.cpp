@@ -17,6 +17,7 @@ const struct BaseEntity TABLE_BASEENTITY[] = {
 		.attack_base = 2 ,
 		.attack_dice = 4 ,
 		.attack_range= 6,
+		.defense_base = 1,
 		.seconds_movement = 0.25 ,
 	} ,
 	[ID_BaseEntity_wraith] = {
