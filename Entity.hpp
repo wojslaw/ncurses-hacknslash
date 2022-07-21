@@ -10,7 +10,8 @@
 #define MOVEMENT_TURN_SECONDS 0.25
 #define SECONDS_CORPSE_DECAY 8.0
 
-constexpr double REGEN_SECONDS_WELLFED =  3.0;
+constexpr double REGEN_SECONDS_WELLFED =  4.0;
+constexpr double REGEN_SECONDS_WELLFED_VAMPIRIC =  1.0;
 constexpr double REGEN_SECONDS_NORMAL  = 12.0;
 
 

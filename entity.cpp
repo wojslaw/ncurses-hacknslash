@@ -196,6 +196,12 @@ Entity::update_time_from_globaltimer(GlobalTimer const & GLOBALTIMER)
 		if(timer_regenerate_life.remaining_seconds >= REGEN_SECONDS_WELLFED) {
 			timer_regenerate_life.remaining_seconds = REGEN_SECONDS_WELLFED;
 		}
+		if(is_vampiric()) {
+			timer_regenerate_life.remaining_seconds
+				= std::min(REGEN_SECONDS_WELLFED
+						,timer_regenerate_life.remaining_seconds
+						);
+		}
 	}
 	if(timer_regenerate_life.consume_tick()) {
 		modify_life(1);
