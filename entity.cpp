@@ -146,6 +146,7 @@ Entity::update_time_from_globaltimer(GlobalTimer const & GLOBALTIMER)
 	timer_recently_hit.update_time_from_globaltimer(GLOBALTIMER);
 	timer_recently_healed.update_time_from_globaltimer(GLOBALTIMER);
 	timer_ability.update_time_from_globaltimer(GLOBALTIMER);
+	timer_last_message.update_time_from_globaltimer(GLOBALTIMER);
 	timer_is_in_battle.update_time_from_globaltimer(GLOBALTIMER);
 
 	if(is_dead()) {
@@ -259,18 +260,23 @@ Entity::wprint_detailed_entity_info(WINDOW * w) const
 	wmove(w,getcury(w)+1,1);
 	wprintw(w,"fed:%.1f( %.1f)" ,timer_wellfed.remaining_seconds, timer_regenerate_life.remaining_seconds);
 	wmove(w,getcury(w)+1,1);
-	wprintw(w,"A:%d-%d"
+	wprintw(w,"DEF %d  ATK:%d-%d  range %d"
+			,get_defense()
 			,get_attack_base()
-			,get_attack_maximum() );
+			,get_attack_maximum() 
+			,combat_get_range()) ;
+	wmove(w,getcury(w)+1,1);
 	if(timer_is_in_battle.remaining_seconds > 0) {
-		wprintw(w," last: %d (rolled %d)"
+		wprintw(w," last %d, roll %d"
 				,last_combat_attack_damage
 				,last_combat_attack_roll );
 	}
 	wmove(w,getcury(w)+1,1);
-	wprintw(w,"cooldown: %.1f"
-			,timer_ability.remaining_seconds
-			);
+	if(timer_ability.remaining_seconds > 0) {
+		wprintw(w,"cooldown: %.1f"
+				,timer_ability.remaining_seconds
+				);
+	}
 
 	{ // abilities 
 	int ability_number = 1;
@@ -697,6 +703,9 @@ Entity::take_damage_as_fraction_of_max(
 	bool
 Entity::is_ready_to_cast_ability(void) const
 {
+	if(is_dead()) {
+		return false;
+	}
 	return timer_ability.is_countdown_finished();
 }
 
@@ -770,7 +779,7 @@ Entity::wprint_lifebar_at_the_rightmost(
 Entity::wprint_detailed_entity_info_enemy(WINDOW * w) const
 {
 	assert(w);
-	
+
 	werase(w);
 	box(w,0,0);
 
@@ -817,12 +826,34 @@ Entity::wprint_detailed_entity_info_enemy(WINDOW * w) const
 	/* wmove(w,3,1); */
 	/* wprintw(w,"target: %zu" , id_of_target); */
 	wmove(w,getcury(w)+1,1);
-	wprintw(w,"ATK:%d-%d  "
+	wprintw(w,"ATK:%d-%d , range: %d"
 			,get_attack_base()
-			,get_attack_maximum() );
+			,get_attack_maximum()
+			,combat_get_range());
 	wmove(w,getcury(w)+1,1);
 	wprintw(w,"DEF:%d"
 			,get_defense() );
 
+	if(!has_collision()) {
+		wmove(w,getcury(w)+1,1);
+		wprintw(w,"ghost (no collision)");
+	}
+
+	if(is_vampiric()) {
+		wmove(w,getcury(w)+1,1);
+		wprintw(w,"vampiric (regens dealing damage)");
+	}
+
+	if(has_destroyer_of_terrain()) {
+		wmove(w,getcury(w)+1,1);
+		wprintw(w,"destroyer (destroys obstacles)");
+	}
+
 	wrefresh(w);
 }
+
+
+
+
+
+

@@ -367,17 +367,61 @@ Level::wprint_render_centered_on_player_entity_fill_window(
 Level::make_player_use_ability_number(int const number)
 {
 	if(not ref_player_entity().is_ready_to_cast_ability()) {
+		// TODO notify not ready
 		return;
 	}
 	assert(number >= 1);
 	size_t const id_ability = number-1;
 	assert(id_ability < ref_player_entity().vector_of_abilities.size());
 	Ability& ref_ability = ref_player_entity().vector_of_abilities.at(id_ability);
-	if(ref_ability.is_ability_self_heal()) {
-		ref_player_entity().make_entity_use_healing_ability_id(id_ability);
+	if(!ref_ability.is_ability_ready()) {
+		// TODO notify not ready
+		return;
 	}
 
-	// TODO damage spells
+	std::vector<IDEntity> vector_identity_of_picked_targets;
+
+	switch(ref_ability.abilitytype) {
+		case ABILITYTYPE_SELF_HEAL:
+			{
+				ref_player_entity().make_entity_use_healing_ability_id(id_ability);
+				break;
+			}
+		case ABILITYTYPE_ATTACK_AOE_TARGET:
+			{
+				make_visual_effect_on_target(ref_ability.stat_range);
+				vector_identity_of_picked_targets
+					= get_targetable_entities_around_point_with_range_skip_player(
+							ref_target().vec2d_position
+							,ref_ability.stat_range
+							);
+				break;
+			}
+		case ABILITYTYPE_ATTACK_AOE_SELF:
+			{
+				make_visual_effect_on_player(ref_ability.stat_range);
+				vector_identity_of_picked_targets
+					= get_targetable_entities_around_point_with_range_skip_player(
+							ref_target().vec2d_position
+							,ref_ability.stat_range
+							);
+				break;
+			}
+		default:
+			{
+				move(0,0);
+				printw("invalid ability type %d" , ref_ability.abilitytype);
+				fprintf(stderr,"invalid ability type %d", ref_ability.abilitytype);
+			}
+	}
+
+	if(vector_identity_of_picked_targets.size() > 0) {
+		int const damage_to_deal = ref_player_entity().make_entity_roll_ability_id(id_ability);
+		for(IDEntity identity : vector_identity_of_picked_targets ) {
+			Entity & ref_entity = ref_from_entityid(identity);
+			ref_entity.take_damage(damage_to_deal);
+		}
+	}
 }
 
 
@@ -1105,7 +1149,7 @@ Level::level_terrain_clear_around_player(void) {
 	void
 Level::create_random_enemy_group(void)
 {
-	int const enemy_group_type = rand_r(&seed)%3;
+	int const enemy_group_type = rand_r(&seed)%4;
 	// pick some random empty spot
 	// TODO pick an empty cell
 	int const y = rand_r(&seed)%get_highest_y();
@@ -1140,6 +1184,20 @@ Level::create_random_enemy_group(void)
 		vector_of_entity.back().force_set_position_yx(y+2,x+2);
 	}
 
+	if(enemy_group_type == 3) { // more dickevs and gthrowers
+		vector_of_entity.emplace_back(Entity(ID_BaseEntity_dickev));
+		vector_of_entity.back().force_set_position_yx(y,x);
+		vector_of_entity.emplace_back(Entity(ID_BaseEntity_dickev));
+		vector_of_entity.back().force_set_position_yx(y,x+1);
+		vector_of_entity.emplace_back(Entity(ID_BaseEntity_dickev));
+		vector_of_entity.back().force_set_position_yx(y,x+2);
+		vector_of_entity.emplace_back(Entity(ID_BaseEntity_dickev));
+		vector_of_entity.back().force_set_position_yx(y,x+3);
+		vector_of_entity.emplace_back(Entity(ID_BaseEntity_gthrower));
+		vector_of_entity.back().force_set_position_yx(y-1,x);
+		vector_of_entity.emplace_back(Entity(ID_BaseEntity_gthrower));
+		vector_of_entity.back().force_set_position_yx(y-2,x);
+	}
 }
 
 
@@ -1147,16 +1205,24 @@ Level::create_random_enemy_group(void)
 
 	std::vector<IDEntity> 
 Level::get_targetable_entities_around_point_with_range_skip_player(
-			 Vec2d const& point
-			,int const range
+		Vec2d const& point
+		,int const range
 		) const
 {
+	assert(range >= 0);
+	assert(vector_of_entity.size() > 0);
 	std::vector<IDEntity> vec;
 	for(IDEntity id = 1; id < vector_of_entity.size(); ++id) {
 		Entity const& entity = vector_of_entity.at(id);
-		vec.push_back(id);
+		int const distance 
+			= vec2d_highest_distance_between(
+					point
+					,entity.vec2d_position
+					);
+		if(distance <= range) {
+			vec.push_back(id);
+		}
 	}
-	assert(range >= 0);
 	return(vec);
 }
 

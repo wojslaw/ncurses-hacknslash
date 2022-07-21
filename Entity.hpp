@@ -1,4 +1,5 @@
 #pragma once
+#include <string>
 #include "Vec2d.hpp"
 #include "Timer.hpp"
 #include "Ncurses.hpp"
@@ -118,6 +119,9 @@ struct Entity {
 	CountdownTimer timer_recently_healed = CountdownTimer(0.75);;
 	CountdownTimer timer_ability  = CountdownTimer(1.0);;
 
+	CountdownTimer timer_last_message = CountdownTimer(2.0);
+	std::string last_message;
+
 	//
 	bool flag_skip_update = false;
 	bool has_collision(void) const { return ref_base_entity().flag_has_collision; }
@@ -229,6 +233,15 @@ public:
 		int const deltalife = ref_ability.roll_and_consume();
 		modify_life(deltalife);
 		timer_ability.reset();
+	}
+
+	int make_entity_roll_ability_id(size_t const id)
+	{
+		assert(is_ready_to_cast_ability());
+		assert(id < vector_of_abilities.size());
+		Ability& ref_ability = vector_of_abilities.at(id);
+		timer_ability.reset();
+		return(ref_ability.roll_and_consume());
 	}
 
 	void wprint_entitylist_row(WINDOW * w,bool const is_target) const;

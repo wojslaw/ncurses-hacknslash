@@ -108,7 +108,7 @@ int main()
 	wrefresh(w_text_player);
 	wrefresh(w_text_target);
 
-	Level LEVEL  = Level(40,40);
+	Level LEVEL  = Level(64,64); // FIXME collision is broken on non-square maps
 	LEVEL.ref_player_entity().id_of_target = 1;
 	LEVEL.ref_player_entity().flag_follow_target = false;
 
@@ -116,8 +116,8 @@ int main()
 	LEVEL.ref_player_entity().vector_of_abilities.back().abilitytype = ABILITYTYPE_SELF_HEAL;
 	LEVEL.ref_player_entity().vector_of_abilities.back().stack_max = 8;
 	LEVEL.ref_player_entity().vector_of_abilities.back().timer_stack = CountdownTimer(8.0);
-	LEVEL.ref_player_entity().vector_of_abilities.back().stat_roll_base = 1;
-	LEVEL.ref_player_entity().vector_of_abilities.back().stat_roll_dice = 3;
+	LEVEL.ref_player_entity().vector_of_abilities.back().stat_roll_base = 2;
+	LEVEL.ref_player_entity().vector_of_abilities.back().stat_roll_dice = 4;
 
 	LEVEL.ref_player_entity().vector_of_abilities.emplace_back(Ability());
 	LEVEL.ref_player_entity().vector_of_abilities.back().abilitytype = ABILITYTYPE_ATTACK_AOE_SELF;
@@ -132,6 +132,7 @@ int main()
 	LEVEL.ref_player_entity().vector_of_abilities.back().timer_stack = CountdownTimer(20.0);
 	LEVEL.ref_player_entity().vector_of_abilities.back().stat_roll_base = 1;
 	LEVEL.ref_player_entity().vector_of_abilities.back().stat_roll_dice = 3;
+	LEVEL.ref_player_entity().vector_of_abilities.back().stat_range = 2;
 
 	{
 		FILE * file_savefile = fopen("save.out","r");
@@ -153,21 +154,24 @@ int main()
 
 
 	int input_character = ERR;
-	int timeout_miliseconds=100;
+	int timeout_miliseconds=20;
 	timeout(timeout_miliseconds);
 	ESCDELAY = 10;
 	// loop
 	for(input_character = ERR ;  input_character != 'Z' ; input_character = getch() ) {
-		mvprintw(0,0,"(press Z to quit)");
-		mvprintw(1,0,"living combatants: %4d" , LEVEL.get_count_of_living_entities());
+		mvprintw(1,0,"(press Z to quit)");
+		mvprintw(2,0,"living combatants: %4d" , LEVEL.get_count_of_living_entities());
 		if(LEVEL.ref_player_entity().is_dead()) {
 			mvprintw(3,0,"[[RIP] - [your ded]]");
+		}
+		if(IS_GAME_PAUSED) {
+			mvprintw(4,0,"[[PAUSED]]");
 		}
 
 		switch(input_character) {
 			case '1': LEVEL.make_player_use_ability_number(1); break;
-			case '2': LEVEL.make_visual_effect_on_target(2); break;
-			case '3': LEVEL.make_visual_effect_on_player(2); break;
+			case '2': LEVEL.make_player_use_ability_number(2); break;
+			case '3': LEVEL.make_player_use_ability_number(3); break;
 			case '4': LEVEL.ref_player_entity().consume_food();  break;
 			//
 			case 'h': LEVEL.ref_player_entity().vec2d_planned_movement = DIRECTION_VECTOR[DIRECTION_LEFT]; break;
@@ -236,11 +240,14 @@ int main()
 		LEVEL.wprint_render_centered_on_player_entity_fill_window(w_gamewindow);
 		LEVEL.wprint_entitylist(w_text_entitylist);
 		LEVEL.ref_player_entity().wprint_detailed_entity_info(w_text_player);
-		if(LEVEL.ref_player_entity().has_selected_target) {
+		werase(w_text_target);
+		if( (LEVEL.ref_player_entity().has_selected_target)
+		    &&
+			(LEVEL.ref_player_entity().id_of_target > 0)
+				) {
 			LEVEL.ref_target().wprint_detailed_entity_info_enemy(w_text_target);
-		} else {
-			werase(w_text_target);
 		}
+		wrefresh(w_text_target);
 		wrefresh(w_gamewindow);
 		wrefresh(w_text_entitylist);
 		if(DEBUG_PRINT_COLLISION_TABLE) {

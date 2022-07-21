@@ -22,6 +22,7 @@ enum ID_BASEENTITY {
 struct BaseEntity {
 	int ncurses_symbol = 0;
 	const char * name = 0;
+	const char * description = 0;
 	int level = 0;
 	int stat_life_max = 0;
 	int attack_base = 0;
