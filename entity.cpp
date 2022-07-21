@@ -759,3 +759,70 @@ Entity::wprint_lifebar_at_the_rightmost(
 		wattroff(w,attr);
 	}
 }
+
+
+
+
+
+
+
+	void
+Entity::wprint_detailed_entity_info_enemy(WINDOW * w) const
+{
+	assert(w);
+	
+	werase(w);
+	box(w,0,0);
+
+	{ // life
+		wmove(w,getcury(w)+1,1);
+		int const attr = ncurses_get_attr_life();
+		if(attr) {
+			wattron(w,attr);
+		}
+		wprintw(w,"%2d/%2d"
+				, stat_life
+				, get_life_max()
+			   );
+		// TODO lifebar()
+		int const max_life_steps_to_display
+			= std::min(
+					MAX_LIFE_STEPS_TO_DISPLAY
+					,getmaxx(w)-8
+					);
+		int const life_steps_to_display
+			= (stat_life
+			   *
+			   max_life_steps_to_display)
+			/ get_life_max();
+		wmove(w
+		      ,getcury(w)
+			  ,getmaxx(w)-1-max_life_steps_to_display );
+		for(int i = 0; i < life_steps_to_display; ++i) {
+			wattron(w,WA_REVERSE);
+			waddch(w,' ');
+			wattroff(w,WA_REVERSE);
+		}
+		if(attr) {
+			wattroff(w,attr);
+		}
+	} //life
+
+	wmove(w,getcury(w)+1,1);
+	wprintw(w,"%c %s"
+			, ncurses_get_symbol()
+			, get_name()
+			);
+
+	/* wmove(w,3,1); */
+	/* wprintw(w,"target: %zu" , id_of_target); */
+	wmove(w,getcury(w)+1,1);
+	wprintw(w,"ATK:%d-%d  "
+			,get_attack_base()
+			,get_attack_maximum() );
+	wmove(w,getcury(w)+1,1);
+	wprintw(w,"DEF:%d"
+			,get_defense() );
+
+	wrefresh(w);
+}

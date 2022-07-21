@@ -237,7 +237,7 @@ int main()
 		LEVEL.wprint_entitylist(w_text_entitylist);
 		LEVEL.ref_player_entity().wprint_detailed_entity_info(w_text_player);
 		if(LEVEL.ref_player_entity().has_selected_target) {
-			LEVEL.ref_target().wprint_detailed_entity_info(w_text_target);
+			LEVEL.ref_target().wprint_detailed_entity_info_enemy(w_text_target);
 		} else {
 			werase(w_text_target);
 		}

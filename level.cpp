@@ -1145,6 +1145,21 @@ Level::create_random_enemy_group(void)
 
 
 
+	std::vector<IDEntity> 
+Level::get_targetable_entities_around_point_with_range_skip_player(
+			 Vec2d const& point
+			,int const range
+		) const
+{
+	std::vector<IDEntity> vec;
+	for(IDEntity id = 1; id < vector_of_entity.size(); ++id) {
+		Entity const& entity = vector_of_entity.at(id);
+		vec.push_back(id);
+	}
+	assert(range >= 0);
+	return(vec);
+}
+
 
 
 

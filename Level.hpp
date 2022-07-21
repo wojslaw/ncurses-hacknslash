@@ -15,6 +15,7 @@
 
 typedef struct Level Level;
 typedef struct LevelCell LevelCell;
+typedef size_t IDEntity;
 
 
 #define FLAG_PRINT_ENTITYLIST_DEBUG  false
@@ -122,6 +123,10 @@ struct Level {
 		ref_levelcell_at_vec2d(
 				Vec2d const & v
 				);
+	std::vector<IDEntity> get_targetable_entities_around_point_with_range_skip_player(
+			 Vec2d const& point
+			,int const range
+			) const;
 	bool is_position_within_bounds_of_level_yx(int const y, int const x) const;
 	bool is_vec2d_position_within_bounds_of_level(Vec2d const & v) const;
 	bool is_vec2d_position_within_rectangle(

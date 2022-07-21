@@ -235,6 +235,8 @@ public:
 
 	void wprint_lifebar_at_the_rightmost(
 		 WINDOW * w) const ;
+
+	void wprint_detailed_entity_info_enemy(WINDOW * w) const;
 };
 
 
