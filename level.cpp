@@ -1279,6 +1279,8 @@ Level::Level(
 		// "wraith" - ignores collision with terrain
 		vector_of_entity.emplace_back(Entity(ID_BaseEntity_wraith));
 		vector_of_entity.back().force_set_position_yx(30,30);
+		vector_of_entity.emplace_back(Entity(ID_BaseEntity_wraith));
+		vector_of_entity.back().force_set_position_yx(28,30;
 		//
 		vector_of_entity.emplace_back(Entity(ID_BaseEntity_eater));
 		vector_of_entity.back().force_set_position_yx(2,5);
@@ -1289,11 +1291,7 @@ Level::Level(
 		vector_of_entity.back().force_set_position_yx(20,31);
 		vector_of_entity.emplace_back(Entity(ID_BaseEntity_bengalov));
 		vector_of_entity.back().force_set_position_yx(21,33);
-		vector_of_entity.emplace_back(Entity(ID_BaseEntity_bengalov));
-		vector_of_entity.back().force_set_position_yx(19,36);
 		// 
-		vector_of_entity.emplace_back(Entity(ID_BaseEntity_dickev));
-		vector_of_entity.back().force_set_position_yx(19,7);
 		vector_of_entity.emplace_back(Entity(ID_BaseEntity_dickev));
 		vector_of_entity.back().force_set_position_yx(20,4);
 		vector_of_entity.emplace_back(Entity(ID_BaseEntity_dickev));
