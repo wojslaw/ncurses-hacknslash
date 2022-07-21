@@ -4,6 +4,7 @@
 enum ABILITYTYPE {
 	ABILITYTYPE_NONE = 0 ,
 	ABILITYTYPE_SELF_HEAL ,
+	ABILITYTYPE_ATTACK_TARGET ,
 	ABILITYTYPE_ATTACK_AOE_SELF ,
 	ABILITYTYPE_ATTACK_AOE_TARGET ,
 };
@@ -11,9 +12,30 @@ enum ABILITYTYPE {
 
 struct Ability {
 	enum ABILITYTYPE abilitytype = ABILITYTYPE_NONE;
-	bool is_ability_damage(void) const { return((abilitytype == ABILITYTYPE_ATTACK_AOE_SELF) || (abilitytype == ABILITYTYPE_ATTACK_AOE_TARGET)); }
-	bool is_ability_targetable(void) const { return(abilitytype == ABILITYTYPE_ATTACK_AOE_TARGET); }
-	bool is_ability_self_heal(void) const { return(abilitytype == ABILITYTYPE_SELF_HEAL); }
+
+	bool is_ability_damage(void) const {
+		return(
+				   (abilitytype == ABILITYTYPE_ATTACK_AOE_SELF)
+				|| (abilitytype == ABILITYTYPE_ATTACK_AOE_TARGET)
+				|| (abilitytype == ABILITYTYPE_ATTACK_TARGET)
+				);
+	}
+	bool is_ability_aoe(void) const {
+		return(
+				(abilitytype == ABILITYTYPE_ATTACK_AOE_SELF)
+				|| (abilitytype == ABILITYTYPE_ATTACK_AOE_TARGET)
+				);
+	}
+	bool is_ability_targetable(void) const {
+		return(
+				  (abilitytype == ABILITYTYPE_ATTACK_AOE_TARGET)
+				||(abilitytype == ABILITYTYPE_ATTACK_TARGET)
+				);
+	}
+	bool is_ability_self_heal(void) const
+	{
+		return(abilitytype == ABILITYTYPE_SELF_HEAL);
+	}
 
 	int stat_roll_base = 1;
 	int stat_roll_dice = 1;
@@ -107,6 +129,7 @@ public:
 			case ABILITYTYPE_SELF_HEAL:        wprintw(w,"heal" ); break;
 			case ABILITYTYPE_ATTACK_AOE_SELF:   wprintw(w,"DMG self(AoE %d)" ,stat_range ); break;
 			case ABILITYTYPE_ATTACK_AOE_TARGET: wprintw(w,"DMG targ(AoE %d)" ,stat_range ); break;
+			case ABILITYTYPE_ATTACK_TARGET: wprintw(w,"DMG targ" ); break;
 			default: wprintw(w,"[INVALID]");
 		}
 		wprintw(w

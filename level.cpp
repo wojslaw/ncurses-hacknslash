@@ -379,6 +379,13 @@ Level::make_player_use_ability_number(int const number)
 		return;
 	}
 
+	if(     (not ref_player_entity().has_selected_target)
+	        &&
+	        (ref_ability.abilitytype == ABILITYTYPE_ATTACK_TARGET )
+	        ) {
+		return;
+	}
+
 	std::vector<IDEntity> vector_identity_of_picked_targets;
 
 	switch(ref_ability.abilitytype) {
@@ -405,6 +412,12 @@ Level::make_player_use_ability_number(int const number)
 							ref_player_entity().vec2d_position
 							,ref_ability.stat_range
 							);
+				break;
+			}
+		case ABILITYTYPE_ATTACK_TARGET:
+			{
+				make_visual_effect_on_target(0);
+				vector_identity_of_picked_targets.emplace_back(ref_player_entity().id_of_target);
 				break;
 			}
 		default:
@@ -670,7 +683,7 @@ Level::update_entity_combat_rounds(void)
 	void
 Level::make_visual_effect_on_target(int const range)
 {
-	assert(range >= 1);
+	assert(range >= 0);
 	const Vec2d & v_base = ref_from_entityid(ref_player_entity().id_of_target).vec2d_position;
 	for(int y = -range ; y <= range; ++y) {
 		for(int x = -range ; x <= range; ++x) {
@@ -686,7 +699,7 @@ Level::make_visual_effect_on_target(int const range)
 	void
 Level::make_visual_effect_on_player(int const range)
 {
-	assert(range >= 1);
+	assert(range >= 0);
 	const Vec2d & v_base = ref_player_entity().vec2d_position;
 	for(int y = -range ; y <= range; ++y) {
 		for(int x = -range ; x <= range; ++x) {

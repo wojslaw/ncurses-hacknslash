@@ -115,7 +115,7 @@ int main()
 	LEVEL.ref_player_entity().vector_of_abilities.emplace_back(Ability());
 	LEVEL.ref_player_entity().vector_of_abilities.back().abilitytype = ABILITYTYPE_SELF_HEAL;
 	LEVEL.ref_player_entity().vector_of_abilities.back().stack_max = 8;
-	LEVEL.ref_player_entity().vector_of_abilities.back().timer_stack = CountdownTimer(10.0);
+	LEVEL.ref_player_entity().vector_of_abilities.back().timer_stack = CountdownTimer(8.0);
 	LEVEL.ref_player_entity().vector_of_abilities.back().stat_roll_base = 5;
 	LEVEL.ref_player_entity().vector_of_abilities.back().stat_roll_dice = 4;
 
@@ -134,6 +134,13 @@ int main()
 	LEVEL.ref_player_entity().vector_of_abilities.back().stat_roll_dice = 3;
 	LEVEL.ref_player_entity().vector_of_abilities.back().stat_range = 2;
 
+	LEVEL.ref_player_entity().vector_of_abilities.emplace_back(Ability());
+	LEVEL.ref_player_entity().vector_of_abilities.back().abilitytype = ABILITYTYPE_ATTACK_TARGET;
+	LEVEL.ref_player_entity().vector_of_abilities.back().stack_max = 4;
+	LEVEL.ref_player_entity().vector_of_abilities.back().timer_stack = CountdownTimer(8.0);
+	LEVEL.ref_player_entity().vector_of_abilities.back().stat_roll_base = 3;
+	LEVEL.ref_player_entity().vector_of_abilities.back().stat_roll_dice = 6;
+
 	{
 		FILE * file_savefile = fopen("save.out","r");
 		if(file_savefile != nullptr) {
@@ -150,6 +157,7 @@ int main()
 	bool DISPLAY_DEBUG = true;
 	bool DEBUG_PRINT_COLLISION_TABLE = false;
 	bool IS_GAME_PAUSED = false;
+	double total_gameplay_seconds = 0.0;
 
 
 
@@ -162,7 +170,8 @@ int main()
 		mvprintw(1,0,"(press Z to quit)");
 		mvprintw(2,0,"living combatants: %4d" , LEVEL.get_count_of_living_entities());
 		if(LEVEL.ref_player_entity().is_dead()) {
-			mvprintw(3,0,"[[RIP] - [your ded]]");
+			mvprintw(3,0,"[[RIP] - [your ded]]" );
+			mvprintw(4,0,"died after %f seconds" , total_gameplay_seconds);
 		}
 		if(IS_GAME_PAUSED) {
 			mvprintw(4,0,"[[PAUSED]]");
@@ -172,7 +181,8 @@ int main()
 			case '1': LEVEL.make_player_use_ability_number(1); break;
 			case '2': LEVEL.make_player_use_ability_number(2); break;
 			case '3': LEVEL.make_player_use_ability_number(3); break;
-			case '4': LEVEL.ref_player_entity().consume_food();  break;
+			case '4': LEVEL.make_player_use_ability_number(4); break;
+			case '=': LEVEL.ref_player_entity().consume_food();  break;
 			//
 			case 'h': LEVEL.ref_player_entity().vec2d_planned_movement = DIRECTION_VECTOR[DIRECTION_LEFT]; break;
 			case 'j': LEVEL.ref_player_entity().vec2d_planned_movement = DIRECTION_VECTOR[DIRECTION_DOWN]; break;
@@ -222,6 +232,9 @@ int main()
 
 		mvprintw(LINES-2,0,"update_time_from_globaltimer\n");
 		LEVEL.update_time_from_globaltimer(GLOBALTIMER);
+		if(LEVEL.ref_player_entity().is_alive()) {
+			total_gameplay_seconds += GLOBALTIMER.deltatime_seconds;
+		}
 
 
 		// render text
@@ -231,8 +244,10 @@ int main()
 			move(12,0);
 			printw("%f" , GLOBALTIMER.total_seconds );
 			move(13,0);
-			printw("%f" , GLOBALTIMER.deltatime_seconds);
+			printw("%f" , total_gameplay_seconds);
 			move(14,0);
+			printw("%f" , GLOBALTIMER.deltatime_seconds);
+			move(15,0);
 			printw( "SFX: %4zu" , LEVEL.vector_of_visual_entity.size() );
 		}
 		move(0,0);
