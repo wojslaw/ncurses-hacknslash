@@ -115,21 +115,21 @@ int main()
 	LEVEL.ref_player_entity().vector_of_abilities.emplace_back(Ability());
 	LEVEL.ref_player_entity().vector_of_abilities.back().abilitytype = ABILITYTYPE_SELF_HEAL;
 	LEVEL.ref_player_entity().vector_of_abilities.back().stack_max = 8;
-	LEVEL.ref_player_entity().vector_of_abilities.back().timer_stack = CountdownTimer(8.0);
-	LEVEL.ref_player_entity().vector_of_abilities.back().stat_roll_base = 2;
+	LEVEL.ref_player_entity().vector_of_abilities.back().timer_stack = CountdownTimer(10.0);
+	LEVEL.ref_player_entity().vector_of_abilities.back().stat_roll_base = 5;
 	LEVEL.ref_player_entity().vector_of_abilities.back().stat_roll_dice = 4;
 
 	LEVEL.ref_player_entity().vector_of_abilities.emplace_back(Ability());
 	LEVEL.ref_player_entity().vector_of_abilities.back().abilitytype = ABILITYTYPE_ATTACK_AOE_SELF;
-	LEVEL.ref_player_entity().vector_of_abilities.back().stack_max = 3;
-	LEVEL.ref_player_entity().vector_of_abilities.back().timer_stack = CountdownTimer(15.0);
+	LEVEL.ref_player_entity().vector_of_abilities.back().stack_max = 4;
+	LEVEL.ref_player_entity().vector_of_abilities.back().timer_stack = CountdownTimer(12.0);
 	LEVEL.ref_player_entity().vector_of_abilities.back().stat_roll_base = 4;
 	LEVEL.ref_player_entity().vector_of_abilities.back().stat_roll_dice = 5;
 
 	LEVEL.ref_player_entity().vector_of_abilities.emplace_back(Ability());
 	LEVEL.ref_player_entity().vector_of_abilities.back().abilitytype = ABILITYTYPE_ATTACK_AOE_TARGET;
-	LEVEL.ref_player_entity().vector_of_abilities.back().stack_max = 3;
-	LEVEL.ref_player_entity().vector_of_abilities.back().timer_stack = CountdownTimer(20.0);
+	LEVEL.ref_player_entity().vector_of_abilities.back().stack_max = 4;
+	LEVEL.ref_player_entity().vector_of_abilities.back().timer_stack = CountdownTimer(12.0);
 	LEVEL.ref_player_entity().vector_of_abilities.back().stat_roll_base = 1;
 	LEVEL.ref_player_entity().vector_of_abilities.back().stat_roll_dice = 3;
 	LEVEL.ref_player_entity().vector_of_abilities.back().stat_range = 2;
@@ -233,7 +233,7 @@ int main()
 			move(13,0);
 			printw("%f" , GLOBALTIMER.deltatime_seconds);
 			move(14,0);
-			printw( "SFX: %zu" , LEVEL.vector_of_visual_entity.size() );
+			printw( "SFX: %4zu" , LEVEL.vector_of_visual_entity.size() );
 		}
 		move(0,0);
 		// only render if enough time moved

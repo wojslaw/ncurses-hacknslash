@@ -461,10 +461,17 @@ Level::update_time_from_globaltimer(GlobalTimer const & GLOBALTIMER)
 		create_random_enemy_group();
 	}
 
-	// visual entities
-	for(VisualEntity & visual_entity : vector_of_visual_entity) {
-		visual_entity.update_time_from_globaltimer(GLOBALTIMER);
-		// TODO delete useless visual entities
+	{// visual entities
+		bool is_any_visual_entity_valid = false;
+		for(VisualEntity & visual_entity : vector_of_visual_entity) {
+			visual_entity.update_time_from_globaltimer(GLOBALTIMER);
+			if(visual_entity.is_valid()) {
+				is_any_visual_entity_valid = true;
+			}
+		}
+		if(!is_any_visual_entity_valid) {
+			vector_of_visual_entity.clear();
+		}
 	}
 
 	move_decayed_entities();
