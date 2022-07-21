@@ -1,5 +1,23 @@
-TODO ability 
-TODO lifebar on the side of game window? oh I know - like with ability! next to life on the bottom
+Features I want to have before I consider this a "release candidate":
+1. generate new enemies during play
+2. generate new obstacles during play
+3. enemies that follow the player more smartly
+5. implement ability: aoe damage around self
+6. implement ability: aoe damage around target
+
+
+
+Then, further complexity:
+1. pick map size
+2. pick map type(cave/maze)
+3. levels, skills
+4. player inventory, weapon/armor/consumables
+5. some simple save/load system for t
+6. abilities: buffs
+7. ressurect
+8. "town" or something separate from the combat dungeon, where you can 
+
+
 
 IDEA penalty to ranged damage after moving
 IDEA shift+digit("!@#$") perform a stronger version of spell which consumes more stacks
