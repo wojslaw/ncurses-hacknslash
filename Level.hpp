@@ -203,7 +203,6 @@ struct Level {
 	// bool is_position_occupied_vec2d(Vec2d const& vec2d);
 
 	void update_entities_positions(void) ;
-	void update_entities_positions_old(void) ;
 	void update_entities_direction_planned(void) ;
 
 	void delete_decayed_entities_if_player_has_no_target(void);

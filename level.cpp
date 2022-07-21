@@ -772,41 +772,6 @@ Level::ensure_entities_are_within_bounds(void)
 }
 
 
-	void
-Level::update_entities_positions_old(void) {
-
-	//
-	for(Entity & ref_entity : vector_of_entity ) {
-		if(!(is_vec2d_position_within_bounds_of_level(ref_entity.vec2d_position))) { continue;  } // skip invalidly-placed
-		LevelCell & cell_at_new_position = ref_levelcell_at_vec2d(ref_entity.vec2d_position);
-		if(!ref_entity.has_collision()) {  // skip entities without collision
-			continue;
-		}
-		if(cell_at_new_position.is_blocked_cell()) {
-			if(ref_entity.has_destroyer_of_terrain()) { // try to destroy cell
-				cell_at_new_position.damage_this_cell();
-			}
-			ref_entity.position_restore_last();
-		}
-		for(Entity const& ref_entity_2 : vector_of_entity ) {
-			if(&ref_entity_2 == &ref_entity) { // skip check if same
-				continue;
-			}
-			if(!(ref_entity_2.is_blocking())) {
-				continue;
-			}
-			if(Vec2d_is_equal(ref_entity.vec2d_position ,ref_entity_2.vec2d_position )) {
-				ref_entity.position_restore_last();
-			}
-		}
-		// and finally compare with the collision table
-		if(collision_table.is_blocked_vec2d(ref_entity.vec2d_position)) {
-			ref_entity.position_restore_last();
-		}
-	}
-	//
-	//
-}
 
 
 
