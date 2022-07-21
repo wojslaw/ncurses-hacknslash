@@ -82,6 +82,7 @@ struct Level {
 
 	double total_seconds = 0.0;
 	CountdownTimer timer_ai = CountdownTimer(2.0); // random number of seconds for countdown
+	CountdownTimer timer_create_new_enemy = CountdownTimer(30.0);
 
 	unsigned seed = 0;
 
@@ -215,6 +216,8 @@ struct Level {
 
 	void make_visual_effect_on_target(int const range);
 	void make_visual_effect_on_player(int const range);
+
+	void create_random_enemy_group(void);
 }; // struct Level
 
 

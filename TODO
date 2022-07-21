@@ -1,5 +1,7 @@
+TODO always display the target, on top of the stack of monsters
+
 Features I want to have before I consider this a "release candidate":
-1. generate new enemies during play
+✓1. generate new enemies during play
 2. generate new obstacles during play
 3. enemies that follow the player more smartly
 5. implement ability: aoe damage around self

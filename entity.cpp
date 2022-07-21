@@ -173,7 +173,7 @@ Entity::update_time_from_globaltimer(GlobalTimer const & GLOBALTIMER)
 	}
 	if(timer_regenerate_life.consume_tick()) {
 		modify_life(1);
-		timer_regenerate_life.reset_countdown();
+		timer_regenerate_life.reset_countdown_keep_ticks();
 		if(timer_wellfed.remaining_seconds > 0) {
 			timer_regenerate_life.remaining_seconds = REGEN_SECONDS_WELLFED;
 		}
@@ -574,7 +574,7 @@ Entity::combat_roll_damage(void)
 	int
 Entity::combat_roll_damage_against_defense(int const defense)
 {
-	timer_is_in_battle.reset_countdown();
+	timer_is_in_battle.reset();
 	last_combat_attack_damage = combat_roll_damage() - defense;
 	if(last_combat_attack_damage <= 0) {
 		return 0;

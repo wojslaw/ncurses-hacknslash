@@ -52,7 +52,7 @@ CountdownTimer::CountdownTimer(double const _remaining_seconds)
 
 
 	void
-CountdownTimer::reset_countdown(void)
+CountdownTimer::reset_countdown_keep_ticks(void)
 {
 	remaining_seconds = seconds_countdown;
 }

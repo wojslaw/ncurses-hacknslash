@@ -49,7 +49,7 @@ struct CountdownTimer {
 	CountdownTimer();
 	CountdownTimer(double const _remaining_seconds);
 
-	void reset_countdown(void) ;
+	void reset_countdown_keep_ticks(void) ;
 
 	void reset(void) ;
 

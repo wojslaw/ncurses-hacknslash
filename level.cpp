@@ -398,6 +398,13 @@ Level::update_time_from_globaltimer(GlobalTimer const & GLOBALTIMER)
 //			}
 //		}
 //	}
+
+	timer_create_new_enemy.update_time_from_globaltimer(GLOBALTIMER);
+	if(timer_create_new_enemy.is_countdown_finished()) {
+		timer_create_new_enemy.reset();
+		create_random_enemy_group();
+	}
+
 	// visual entities
 	for(VisualEntity & visual_entity : vector_of_visual_entity) {
 		visual_entity.update_time_from_globaltimer(GLOBALTIMER);
@@ -1083,6 +1090,45 @@ Level::level_terrain_clear_around_player(void) {
 
 
 
+	void
+Level::create_random_enemy_group(void)
+{
+	int const enemy_group_type = rand_r(&seed)%3;
+	// pick some random empty spot
+	// TODO pick an empty cell
+	int const y = rand_r(&seed)%get_highest_y();
+	int const x = rand_r(&seed)%get_highest_x();
+
+	if(enemy_group_type == 0) { // bengalovie
+		vector_of_entity.emplace_back(Entity(ID_BaseEntity_bengalov));
+		vector_of_entity.back().force_set_position_yx(y,x);
+		vector_of_entity.emplace_back(Entity(ID_BaseEntity_bengalov));
+		vector_of_entity.back().force_set_position_yx(y-2,x+2);
+	}
+
+	if(enemy_group_type == 1) { // dickevs and gthrowers and eater
+		vector_of_entity.emplace_back(Entity(ID_BaseEntity_gthrower));
+		vector_of_entity.back().force_set_position_yx(y,x);
+		vector_of_entity.emplace_back(Entity(ID_BaseEntity_gthrower));
+		vector_of_entity.back().force_set_position_yx(y-2,x+2);
+		vector_of_entity.emplace_back(Entity(ID_BaseEntity_dickev));
+		vector_of_entity.back().force_set_position_yx(y-4,x+2);
+		vector_of_entity.emplace_back(Entity(ID_BaseEntity_dickev));
+		vector_of_entity.back().force_set_position_yx(y-2,x+4);
+		vector_of_entity.emplace_back(Entity(ID_BaseEntity_eater));
+		vector_of_entity.back().force_set_position_yx(y-4,x+4);
+	}
+
+	if(enemy_group_type == 2) { // wraiths
+		vector_of_entity.emplace_back(Entity(ID_BaseEntity_wraith));
+		vector_of_entity.back().force_set_position_yx(y,x);
+		vector_of_entity.emplace_back(Entity(ID_BaseEntity_wraith));
+		vector_of_entity.back().force_set_position_yx(y-1,x-1);
+		vector_of_entity.emplace_back(Entity(ID_BaseEntity_wraith));
+		vector_of_entity.back().force_set_position_yx(y+2,x+2);
+	}
+
+}
 
 
 
