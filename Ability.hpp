@@ -1,11 +1,19 @@
 #pragma once
 #include "Timer.hpp"
 
+enum ABILITYTYPE {
+	ABILITYTYPE_NONE = 0 ,
+	ABILITYTYPE_SELF_HEAL ,
+	ABILITYTYPE_ATTACK_AOE_SELF ,
+	ABILITYTYPE_ATTACK_AOE_TARGET ,
+};
+
 
 struct Ability {
-	bool is_ability_damage = false;
-	bool is_ability_targetable = false;
-	bool is_ability_healing = false;
+	enum ABILITYTYPE abilitytype = ABILITYTYPE_NONE;
+	bool is_ability_damage(void) const { return((abilitytype == ABILITYTYPE_ATTACK_AOE_SELF) || (abilitytype == ABILITYTYPE_ATTACK_AOE_TARGET)); }
+	bool is_ability_targetable(void) const { return(abilitytype == ABILITYTYPE_ATTACK_AOE_TARGET); }
+	bool is_ability_self_heal(void) const { return(abilitytype == ABILITYTYPE_SELF_HEAL); }
 
 	int stat_roll_base = 1;
 	int stat_roll_dice = 1;
@@ -24,8 +32,22 @@ struct Ability {
 	unsigned randomness_seed = 0;
 
 public:
+	int get_roll_min(void) const {
+		return(stat_roll_base);
+	}
+
 	int get_max_roll(void) const {
 		return(stat_roll_base + stat_roll_dice);
+	}
+
+	int get_damage_per_second_average(void) const {
+		int const dmg_max = get_max_roll();
+		int const dmg_min = stat_roll_base;
+		return(((dmg_max+dmg_min)/2)/(int)timer_stack.seconds_countdown);
+	}
+
+	int get_max_total_damage(void) const {
+		return(get_max_roll() * stat_range);
 	}
 
 	bool consume_stack(void) {
@@ -42,7 +64,7 @@ public:
 	int roll(void)
 	{
 		last_roll_of_dice = rand_r(&randomness_seed) % (1+stat_roll_dice);
-		last_roll = stat_roll_base + last_roll;
+		last_roll = stat_roll_base + last_roll_of_dice;
 		return(last_roll);
 	}
 
@@ -76,21 +98,16 @@ public:
 	void wprint(WINDOW * w) const
 	{
 		assert(w);
-		assert(is_ability_healing || is_ability_damage);
+		assert(abilitytype != ABILITYTYPE_NONE);
 		if(is_ability_ready()) {
 			wattron(w,ATTR_ABILITY_READY);
 		}
-		if(is_ability_healing) {
-			wprintw(w,"heal");
-		} else {
-			wprintw(w
-			        ,"DMG(RNG %d)"
-			        ,stat_range );
-			if(is_ability_targetable) {
-				wprintw(w," target");
-			} else {
-				wprintw(w," around");
-			}
+		switch(abilitytype) {
+			case ABILITYTYPE_NONE: wprintw(w,"[NONE]"); break;
+			case ABILITYTYPE_SELF_HEAL:        wprintw(w,"heal" ); break;
+			case ABILITYTYPE_ATTACK_AOE_SELF:   wprintw(w,"DMG self(AoE %d)" ,stat_range ); break;
+			case ABILITYTYPE_ATTACK_AOE_TARGET: wprintw(w,"DMG targ(AoE %d)" ,stat_range ); break;
+			default: wprintw(w,"[INVALID]");
 		}
 		wprintw(w
 				," %d-%d "
@@ -120,47 +137,4 @@ public:
 	}
 
 
-	void wprint_detailed(WINDOW * w) const
-	{
-		assert(w);
-		assert(is_ability_healing || is_ability_damage);
-		if(is_ability_ready()) {
-			wattron(w,ATTR_ABILITY_READY);
-		}
-		if(is_ability_healing) {
-			wprintw(w,"heal");
-		} else {
-			wprintw(w
-			        ,"dmg(AoE %d)"
-			        ,stat_range );
-			if(is_ability_targetable) {
-				wprintw(w," targ");
-			} else {
-				wprintw(w," self");
-			}
-		}
-		wprintw(w
-				,"%d-%d"
-				,stat_roll_base
-				,get_max_roll() );
-		wprintw(w
-				,"%d/%d(%.1f)"
-				,stack_current
-				,stack_max
-				,timer_stack.remaining_seconds
-			   );
-		if(is_ability_ready()) {
-			wattroff(w,ATTR_ABILITY_READY);
-		}
-		// also, display number of stacks:
-		wattron(w,ATTR_ABILITY_STACK);
-		int const start_x = (getmaxx(w)-1-stack_max);
-		for(int i = 0; i < stack_current; ++i ) {
-			mvwaddch(w,getcury(w),start_x+i,' ');
-		}
-		wattroff(w,ATTR_ABILITY_STACK);
-		for(int i = stack_current; i < stack_max; ++i ) {
-			mvwaddch(w,getcury(w),start_x+i,'_');
-		}
-	}
 };

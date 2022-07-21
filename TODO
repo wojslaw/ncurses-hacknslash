@@ -1,6 +1,7 @@
 TODO ability 
 TODO lifebar on the side of game window? oh I know - like with ability! next to life on the bottom
 
+IDEA penalty to ranged damage after moving
 IDEA shift+digit("!@#$") perform a stronger version of spell which consumes more stacks
 
 use CollisionTable

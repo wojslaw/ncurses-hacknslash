@@ -113,18 +113,25 @@ int main()
 	LEVEL.ref_player_entity().flag_follow_target = false;
 
 	LEVEL.ref_player_entity().vector_of_abilities.emplace_back(Ability());
-	LEVEL.ref_player_entity().vector_of_abilities.back().is_ability_healing = true;
+	LEVEL.ref_player_entity().vector_of_abilities.back().abilitytype = ABILITYTYPE_SELF_HEAL;
 	LEVEL.ref_player_entity().vector_of_abilities.back().stack_max = 8;
 	LEVEL.ref_player_entity().vector_of_abilities.back().timer_stack = CountdownTimer(8.0);
 	LEVEL.ref_player_entity().vector_of_abilities.back().stat_roll_base = 1;
 	LEVEL.ref_player_entity().vector_of_abilities.back().stat_roll_dice = 3;
 
 	LEVEL.ref_player_entity().vector_of_abilities.emplace_back(Ability());
-	LEVEL.ref_player_entity().vector_of_abilities.back().is_ability_damage = true;
+	LEVEL.ref_player_entity().vector_of_abilities.back().abilitytype = ABILITYTYPE_ATTACK_AOE_SELF;
 	LEVEL.ref_player_entity().vector_of_abilities.back().stack_max = 3;
 	LEVEL.ref_player_entity().vector_of_abilities.back().timer_stack = CountdownTimer(15.0);
 	LEVEL.ref_player_entity().vector_of_abilities.back().stat_roll_base = 4;
 	LEVEL.ref_player_entity().vector_of_abilities.back().stat_roll_dice = 5;
+
+	LEVEL.ref_player_entity().vector_of_abilities.emplace_back(Ability());
+	LEVEL.ref_player_entity().vector_of_abilities.back().abilitytype = ABILITYTYPE_ATTACK_AOE_TARGET;
+	LEVEL.ref_player_entity().vector_of_abilities.back().stack_max = 3;
+	LEVEL.ref_player_entity().vector_of_abilities.back().timer_stack = CountdownTimer(20.0);
+	LEVEL.ref_player_entity().vector_of_abilities.back().stat_roll_base = 1;
+	LEVEL.ref_player_entity().vector_of_abilities.back().stat_roll_dice = 3;
 
 	{
 		FILE * file_savefile = fopen("save.out","r");

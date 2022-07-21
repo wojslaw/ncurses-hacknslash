@@ -3,7 +3,7 @@
 #define SQUISH_FEATURES_WHEN_TOO_BIG true
 
 #define MAKE_ENEMIES true
-
+#define FLAG_SKIP_FIRST_ENTITY_IN_LIST_OF_VISIBLE  true
 
 	bool 
 LevelCell::is_blocked_cell(void) const
@@ -361,7 +361,7 @@ Level::make_player_use_ability_number(int const number)
 	size_t const id_ability = number-1;
 	assert(id_ability < ref_player_entity().vector_of_abilities.size());
 	Ability& ref_ability = ref_player_entity().vector_of_abilities.at(id_ability);
-	if(ref_ability.is_ability_healing) {
+	if(ref_ability.is_ability_self_heal()) {
 		ref_player_entity().make_entity_use_healing_ability_id(id_ability);
 	}
 
@@ -431,52 +431,29 @@ Level::wprint_entitylist(
 {
 	assert(w);
 	werase(w);
-	wmove(w,1,1);
+	box(w,0,0);
+	wmove(w,0,0);
 	int const max_entities_to_print = getmaxy(w)-(2+1); // +2 for borders, +1
-	int const max_line_length = getmaxx(w)-(2+2); // +2 for borders, +2 for ".."
 	int count_of_printed = 0;
-	size_t visibleid = 0;
 	for(size_t id : vector_of_entityids_on_screen) {
+		if(FLAG_SKIP_FIRST_ENTITY_IN_LIST_OF_VISIBLE) {
+			if(id == 0) {
+				continue;
+			}
+		}
 		if(count_of_printed >= max_entities_to_print) {
 			break;
 		}
 		//
+		bool const is_target = id == ref_player_entity().id_of_target;
 		Entity const& entity = vector_of_entity.at(id);
 		wmove(w,getcury(w)+1,1);
-		char buffer[0x100] = {0};
-		// wprint_entitylist_row(entity);
-		int const bytes_written
-			= FLAG_PRINT_ENTITYLIST_DEBUG
-			? snprintf(
-					buffer
-					,max_line_length
-					,"  %zu %c  (e%zu) \n"
-					,visibleid
-					,vector_of_entity.at(id).ncurses_get_symbol()
-					,id
-					 )
-			: snprintf(
-					buffer
-					,max_line_length
-					,"  %c %2d/%2d\n"
-					,vector_of_entity.at(id).ncurses_get_symbol()
-					,vector_of_entity.at(id).stat_life
-					,vector_of_entity.at(id).get_life_max()
-					 );
-		//
-		if(id == ref_player_entity().id_of_target ) {
-			buffer[0] = '>';
-		}
-		int const y = 1 + count_of_printed;
-		mvwaddstr(w,y,1,buffer);
-		if(bytes_written >= max_line_length) {
-			waddstr(w,"..");
-		}
+		entity.wprint_entitylist_row(w,is_target);
 		++count_of_printed;
-		++visibleid;
 	}
 
 	if(vector_of_entityids_on_screen.size() > 1) {
+		wmove(w,getcury(w)+1,1);
 		if(count_of_printed < (int)vector_of_entityids_on_screen.size()-1) {
 			wprintw(w,"...[%d more]"
 					, (((int)vector_of_entityids_on_screen.size())-count_of_printed-1)

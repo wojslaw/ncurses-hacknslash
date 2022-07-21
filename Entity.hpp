@@ -230,6 +230,11 @@ public:
 		modify_life(deltalife);
 		timer_ability.reset();
 	}
+
+	void wprint_entitylist_row(WINDOW * w,bool const is_target) const;
+
+	void wprint_lifebar_at_the_rightmost(
+		 WINDOW * w) const ;
 };
 
 

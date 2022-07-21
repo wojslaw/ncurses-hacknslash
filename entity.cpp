@@ -699,3 +699,63 @@ Entity::is_ready_to_cast_ability(void) const
 {
 	return timer_ability.is_countdown_finished();
 }
+
+
+
+
+
+
+
+
+
+	void
+Entity::wprint_entitylist_row(WINDOW * w,bool const is_target) const
+{
+	assert(w);
+	int const attr
+		= is_target
+		? ATTR_TARGET
+		: 0;
+	wprint_with_additional_attrs(w,attr);
+	wprintw(w
+			,"%2d/%2d"
+			,stat_life
+			,get_life_max()
+		   );
+
+	wprint_lifebar_at_the_rightmost(w);
+}
+
+
+	void
+Entity::wprint_lifebar_at_the_rightmost(
+		 WINDOW * w
+	) const
+{
+	assert(w);
+
+	int const length_of_lifebar
+		= std::min(
+				MAX_LIFE_STEPS_TO_DISPLAY
+				,getmaxx(w)-8
+				);
+
+	wmove(w,getcury(w),getmaxx(w)-length_of_lifebar-1);
+	int const attr = ncurses_get_attr_life();
+	if(attr) {
+		wattron(w,attr);
+	}
+	int const life_steps_to_display
+		= (stat_life
+				*
+				length_of_lifebar)
+		/ get_life_max();
+	for(int i = 0; i < life_steps_to_display; ++i) {
+		wattron(w,WA_REVERSE);
+		waddch(w,' ');
+		wattroff(w,WA_REVERSE);
+	}
+	if(attr) {
+		wattroff(w,attr);
+	}
+}
