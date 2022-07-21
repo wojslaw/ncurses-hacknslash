@@ -4,6 +4,8 @@
 #define MAX_LIFE_STEPS_TO_DISPLAY  40
 #define THRESHOLD_HEAVILY_DAMAGED 4
 #define DIVISOR_HEAVILY_DAMAGED_ROLL_DAMAGE 2
+#define ROLL_DAMAGE_DIVISOR_RECENTLY_MOVED 2
+
 
 
 
@@ -270,6 +272,9 @@ Entity::wprint_detailed_entity_info(WINDOW * w) const
 		wprintw(w," last %d, roll %d"
 				,last_combat_attack_damage
 				,last_combat_attack_roll );
+		if(!timer_movement.is_countdown_finished()) {
+			wprintw(w," (moved:dmg/2)");
+		}
 	}
 	wmove(w,getcury(w)+1,1);
 	if(timer_ability.remaining_seconds > 0) {
@@ -568,6 +573,9 @@ Entity::combat_roll_damage(void)
 	if(damage_rolled > 0) {
 		if(is_heavily_damaged()) {
 			return damage_rolled/DIVISOR_HEAVILY_DAMAGED_ROLL_DAMAGE;
+		}
+		if(!timer_movement.is_countdown_finished()) { // penalty for recent movement
+			return damage_rolled/ROLL_DAMAGE_DIVISOR_RECENTLY_MOVED;
 		}
 		return damage_rolled;
 	}

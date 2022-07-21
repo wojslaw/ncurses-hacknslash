@@ -402,7 +402,7 @@ Level::make_player_use_ability_number(int const number)
 				make_visual_effect_on_player(ref_ability.stat_range);
 				vector_identity_of_picked_targets
 					= get_targetable_entities_around_point_with_range_skip_player(
-							ref_target().vec2d_position
+							ref_player_entity().vec2d_position
 							,ref_ability.stat_range
 							);
 				break;
