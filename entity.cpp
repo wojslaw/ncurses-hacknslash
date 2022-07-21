@@ -4,7 +4,6 @@
 #define MAX_LIFE_STEPS_TO_DISPLAY  40
 #define THRESHOLD_HEAVILY_DAMAGED 4
 #define DIVISOR_HEAVILY_DAMAGED_ROLL_DAMAGE 2
-#define ROLL_DAMAGE_DIVISOR_RECENTLY_MOVED 2
 
 
 
@@ -474,6 +473,12 @@ bool
 Entity::is_ready_to_attack(void) const
 {
 	if(is_dead()) {
+		return 0;
+	}
+	if(timer_combat_turn.remaining_seconds > 0.0) {
+		return 0;
+	}
+	if(is_recently_moved()) {
 		return false;
 	}
 	return timer_combat_turn.remaining_seconds <= 0;
@@ -561,10 +566,7 @@ Entity::combat_get_range(void) const
 	int
 Entity::combat_roll_damage(void)
 {
-	if(is_dead()) {
-		return 0;
-	}
-	if(timer_combat_turn.remaining_seconds > 0.0) {
+	if(!is_ready_to_attack()) {
 		return 0;
 	}
 	timer_combat_turn.reset();
@@ -573,9 +575,6 @@ Entity::combat_roll_damage(void)
 	if(damage_rolled > 0) {
 		if(is_heavily_damaged()) {
 			return damage_rolled/DIVISOR_HEAVILY_DAMAGED_ROLL_DAMAGE;
-		}
-		if(!timer_movement.is_countdown_finished()) { // penalty for recent movement
-			return damage_rolled/ROLL_DAMAGE_DIVISOR_RECENTLY_MOVED;
 		}
 		return damage_rolled;
 	}
