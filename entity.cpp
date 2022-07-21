@@ -522,13 +522,14 @@ Entity::get_name(void) const
 int
 Entity::ncurses_get_attrs(void) const
 {
+	int attr = 0;
 	if(timer_recently_hit.remaining_seconds > 0.0) {
-		return ATTR_RECENTLY_HIT;
+		attr = attr | ATTR_RECENTLY_HIT;
 	}
 	if(is_heavily_damaged()) {
-		return ATTR_HEAVILY_DAMAGED_SYMBOL;
+		attr = attr | ATTR_HEAVILY_DAMAGED_SYMBOL;
 	}
-	return 0;
+	return attr;
 }
 
 
