@@ -290,7 +290,6 @@ Level::wprint_render_from_position_fill_window(
 	} //SFX
 
 	{ // 4 entities
-		size_t entityid_being_rendered = 0;
 		for(Entity const& entity_rendered : vector_of_entity ) {
 			if(is_vec2d_position_within_rectangle(
 						 entity_rendered.vec2d_position
@@ -302,15 +301,28 @@ Level::wprint_render_from_position_fill_window(
 				int const pos_window_y = entity_rendered.vec2d_position.y - pos_inlevel_start_y;
 				int const pos_window_x = entity_rendered.vec2d_position.x - pos_inlevel_start_x;
 				wmove(w,pos_window_y,pos_window_x);
-				int const attrs_additional
-					= (entityid_being_rendered == ref_player_entity().id_of_target)
-					? ATTR_TARGET
-					: 0;
-				entity_rendered.wprint_with_additional_attrs(w,attrs_additional);
+				entity_rendered.wprint_with_additional_attrs(w,0);
 			}
-			++entityid_being_rendered;
 		}
 	} //entities
+
+
+	{ // ensure the target is always displayed
+		Entity const& entity_rendered = ref_target();
+		if(is_vec2d_position_within_rectangle(
+					entity_rendered.vec2d_position
+					,pos_inlevel_start_y
+					,pos_inlevel_start_x
+					,pos_inlevel_last_y
+					,pos_inlevel_last_x
+					)) {
+			int const pos_window_y = entity_rendered.vec2d_position.y - pos_inlevel_start_y;
+			int const pos_window_x = entity_rendered.vec2d_position.x - pos_inlevel_start_x;
+			wmove(w,pos_window_y,pos_window_x);
+			entity_rendered.wprint_with_additional_attrs(w,ATTR_TARGET);
+		}
+	}//ensure the target is always displayed
+
 
 	// TODO decouple calculations from rendering
 	update_vector_of_entityids_with_entities_within_rectangle(
