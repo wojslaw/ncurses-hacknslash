@@ -126,7 +126,12 @@ Level::ref_levelcell_at_yx(
 		,int const x
 		)
 {
-	;// TODO errorcheck
+	// TODO errorcheck
+	assert(y >= 0);
+	assert(x >= 0);
+	assert(y <= get_highest_y());
+	assert(x <= get_highest_x());
+	assert(is_position_within_bounds_of_level_yx(y,x));
 	return table_of_cells.at(y).at(x);
 }
 
@@ -139,6 +144,8 @@ Level::ref_levelcell_at_vec2d(
 	// TODO errorcheck
 	assert(v.y >= 0);
 	assert(v.x >= 0);
+	assert(v.y <= get_highest_y());
+	assert(v.x <= get_highest_x());
 	assert(is_vec2d_position_within_bounds_of_level(v));
 	return table_of_cells.at(v.y).at(v.x);
 }
@@ -154,10 +161,10 @@ Level::is_vec2d_position_within_bounds_of_level(Vec2d const & v) const
 	if(v.x < 0) {
 		return false;
 	}
-	if(v.x > get_highest_y()) {
+	if(v.y > get_highest_y()) {
 		return false;
 	}
-	if(v.y > get_highest_x()) {
+	if(v.x > get_highest_x()) {
 		return false;
 	}
 	return true;
@@ -214,19 +221,6 @@ Level::is_position_within_bounds_of_level_yx(int const y, int const x) const
 
 
 
-	void
-Level::ensure_vec2d_position_is_within_bounds(Vec2d * v)
-{
-	assert(v);
-	if(!v) {
-		return;
-	}
-	v->y = std::max(v->y,0);
-	v->x = std::max(v->x,0);
-
-	v->y = std::min(get_highest_y(),v->y);
-	v->x = std::min(get_highest_x(),v->x);
-}
 
 
 
@@ -468,11 +462,15 @@ Level::update_time_from_globaltimer(GlobalTimer const & GLOBALTIMER)
 		entity.update_time_from_globaltimer(GLOBALTIMER);
 	}
 	// 
+	delete_decayed_entities_if_player_has_no_target();
+	//
+	ensure_entities_are_within_bounds();
 	update_table_of_cells_with_pointers_to_entities();
-	update_entities();
-	update_entities_direction_planned();
-	update_entity_combat_rounds();
 	update_collision_table();
+	//
+	update_entities_direction_planned();
+	update_entities_positions();
+	update_entity_combat_rounds();
 }
 
 
@@ -761,15 +759,23 @@ Level::delete_decayed_entities_if_player_has_no_target(void)
 
 
 
+	void
+Level::ensure_entities_are_within_bounds(void)
+{
+	for(Entity & ref_entity : vector_of_entity ) {
+		//ref_entity.update_position();
+		ref_entity.vec2d_position.y = std::max(ref_entity.vec2d_position.y,0);
+	    ref_entity.vec2d_position.x = std::max(ref_entity.vec2d_position.x,0);
+		ref_entity.vec2d_position.y = std::min(ref_entity.vec2d_position.y,get_highest_y());
+		ref_entity.vec2d_position.x = std::min(ref_entity.vec2d_position.x,get_highest_x());
+	}
+}
 
 
 	void
-Level::update_entities(void) {
-	// delete decayed stuff if it should be safe so
-	delete_decayed_entities_if_player_has_no_target();
+Level::update_entities_positions_old(void) {
 
 	//
-	update_table_of_cells_with_pointers_to_entities();
 	for(Entity & ref_entity : vector_of_entity ) {
 		if(!(is_vec2d_position_within_bounds_of_level(ref_entity.vec2d_position))) { continue;  } // skip invalidly-placed
 		LevelCell & cell_at_new_position = ref_levelcell_at_vec2d(ref_entity.vec2d_position);
@@ -793,14 +799,13 @@ Level::update_entities(void) {
 				ref_entity.position_restore_last();
 			}
 		}
+		// and finally compare with the collision table
+		if(collision_table.is_blocked_vec2d(ref_entity.vec2d_position)) {
+			ref_entity.position_restore_last();
+		}
 	}
 	//
-	for(Entity & ref_entity : vector_of_entity ) {
-		//ref_entity.update_position();
-		ensure_vec2d_position_is_within_bounds(&(ref_entity.vec2d_position));
-	}
 	//
-	update_table_of_cells_with_pointers_to_entities();
 }
 
 
@@ -1335,4 +1340,52 @@ Level::Level(
 	}
 
 
+}
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+	void
+Level::update_entities_positions(void) {
+
+	//
+	for(Entity & ref_entity : vector_of_entity ) {
+		//if(!(is_vec2d_position_within_bounds_of_level(ref_entity.vec2d_position))) { continue;  } // skip invalidly-placed
+		LevelCell & cell_at_new_position = ref_levelcell_at_vec2d(ref_entity.vec2d_position);
+		if(!ref_entity.has_collision()) {  // skip entities without collision
+			continue;
+		}
+		if(cell_at_new_position.is_blocked_cell()) {
+			if(ref_entity.has_destroyer_of_terrain()) { // try to destroy cell
+				cell_at_new_position.damage_this_cell();
+			}
+			ref_entity.position_restore_last();
+		}
+		for(Entity const& ref_entity_2 : vector_of_entity ) {
+			if(&ref_entity_2 == &ref_entity) { // skip check if same
+				continue;
+			}
+			if(!(ref_entity_2.is_blocking())) {
+				continue;
+			}
+			if(Vec2d_is_equal(ref_entity.vec2d_position ,ref_entity_2.vec2d_position )) {
+				ref_entity.position_restore_last();
+			}
+		}
+	}
+	//
+	//
 }

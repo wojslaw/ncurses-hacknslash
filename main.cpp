@@ -108,7 +108,7 @@ int main()
 	wrefresh(w_text_player);
 	wrefresh(w_text_target);
 
-	Level LEVEL  = Level(32,32); // FIXME collision is broken on non-square maps
+	Level LEVEL  = Level(64,16); // FIXME collision is broken on non-square maps
 	LEVEL.ref_player_entity().id_of_target = 1;
 	LEVEL.ref_player_entity().flag_follow_target = false;
 

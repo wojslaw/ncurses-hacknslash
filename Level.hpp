@@ -200,7 +200,10 @@ struct Level {
 
 	void update_time_from_globaltimer(GlobalTimer const & GLOBALTIMER);//TODO
 
-	void update_entities(void) ;
+	// bool is_position_occupied_vec2d(Vec2d const& vec2d);
+
+	void update_entities_positions(void) ;
+	void update_entities_positions_old(void) ;
 	void update_entities_direction_planned(void) ;
 
 	void delete_decayed_entities_if_player_has_no_target(void);
@@ -225,6 +228,7 @@ struct Level {
 	void make_visual_effect_on_player(int const range);
 
 	void create_random_enemy_group(void);
+	void ensure_entities_are_within_bounds(void);
 }; // struct Level
 
 
