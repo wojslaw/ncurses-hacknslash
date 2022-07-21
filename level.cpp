@@ -1280,7 +1280,7 @@ Level::Level(
 		vector_of_entity.emplace_back(Entity(ID_BaseEntity_wraith));
 		vector_of_entity.back().force_set_position_yx(30,30);
 		vector_of_entity.emplace_back(Entity(ID_BaseEntity_wraith));
-		vector_of_entity.back().force_set_position_yx(28,30;
+		vector_of_entity.back().force_set_position_yx(28,30);
 		//
 		vector_of_entity.emplace_back(Entity(ID_BaseEntity_eater));
 		vector_of_entity.back().force_set_position_yx(2,5);
