@@ -487,7 +487,7 @@ Level::update_time_from_globaltimer(GlobalTimer const & GLOBALTIMER)
 		}
 	}
 
-	move_decayed_entities();
+	//move_decayed_entities();
 	// remove_decayed_entities();
 
 	// entities
@@ -1169,7 +1169,7 @@ Level::level_terrain_clear_around_player(void) {
 	void
 Level::create_random_enemy_group(void)
 {
-	int const enemy_group_type = rand_r(&seed)%4;
+	int const enemy_group_type = rand_r(&seed)%5;
 	// pick some random empty spot
 	// TODO pick an empty cell
 	int const y = rand_r(&seed)%get_highest_y();
@@ -1217,6 +1217,21 @@ Level::create_random_enemy_group(void)
 		vector_of_entity.back().force_set_position_yx(y-1,x);
 		vector_of_entity.emplace_back(Entity(ID_BaseEntity_gthrower));
 		vector_of_entity.back().force_set_position_yx(y-2,x);
+	}
+
+	if(enemy_group_type == 4) { // orcs and gthrowers
+		vector_of_entity.emplace_back(Entity(ID_BaseEntity_orc));
+		vector_of_entity.back().force_set_position_yx(y,x);
+		vector_of_entity.emplace_back(Entity(ID_BaseEntity_orc));
+		vector_of_entity.back().force_set_position_yx(y,x+1);
+		vector_of_entity.emplace_back(Entity(ID_BaseEntity_orc));
+		vector_of_entity.back().force_set_position_yx(y,x+3);
+		vector_of_entity.emplace_back(Entity(ID_BaseEntity_gthrower));
+		vector_of_entity.back().force_set_position_yx(y-1,x);
+		vector_of_entity.emplace_back(Entity(ID_BaseEntity_gthrower));
+		vector_of_entity.back().force_set_position_yx(y-2,x);
+		vector_of_entity.emplace_back(Entity(ID_BaseEntity_gthrower));
+		vector_of_entity.back().force_set_position_yx(y-2,x+2);
 	}
 }
 

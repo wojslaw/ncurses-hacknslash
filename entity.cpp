@@ -623,6 +623,9 @@ Entity::take_damage(int const damage_to_take)
 	}
 	stat_life -= damage_to_take;
 	timer_recently_hit.reset();
+	if(damage_to_take >= (stat_life)/THRESHOLD_HEAVILY_DAMAGED) {
+		timer_recently_hit_heavily.reset();
+	}
 }
 
 

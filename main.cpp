@@ -108,7 +108,7 @@ int main()
 	wrefresh(w_text_player);
 	wrefresh(w_text_target);
 
-	Level LEVEL  = Level(64,64); // FIXME collision is broken on non-square maps
+	Level LEVEL  = Level(32,32); // FIXME collision is broken on non-square maps
 	LEVEL.ref_player_entity().id_of_target = 1;
 	LEVEL.ref_player_entity().flag_follow_target = false;
 
@@ -167,14 +167,15 @@ int main()
 	ESCDELAY = 10;
 	// loop
 	for(input_character = ERR ;  input_character != 'Z' ; input_character = getch() ) {
-		mvprintw(1,0,"(press Z to quit)");
-		mvprintw(2,0,"living combatants: %4d" , LEVEL.get_count_of_living_entities());
+		move(0,0);
+		mvprintw(getcury(stdscr)+1,0,"(press Z to quit)");
+		mvprintw(getcury(stdscr)+1,0,"living combatants: %4d" , LEVEL.get_count_of_living_entities());
 		if(LEVEL.ref_player_entity().is_dead()) {
-			mvprintw(3,0,"[[RIP] - [your ded]]" );
-			mvprintw(4,0,"died after %f seconds" , total_gameplay_seconds);
+			mvprintw(getcury(stdscr)+1,0,"[[RIP] - [your ded]]" );
+			mvprintw(getcury(stdscr)+1,0,"died after %f seconds" , total_gameplay_seconds);
 		}
 		if(IS_GAME_PAUSED) {
-			mvprintw(4,0,"[[PAUSED]]");
+			mvprintw(getcury(stdscr)+1,0,"[[PAUSED]]");
 		}
 
 		switch(input_character) {
@@ -188,6 +189,10 @@ int main()
 			case 'j': LEVEL.ref_player_entity().vec2d_planned_movement = DIRECTION_VECTOR[DIRECTION_DOWN]; break;
 			case 'k': LEVEL.ref_player_entity().vec2d_planned_movement = DIRECTION_VECTOR[DIRECTION_UP]; break;
 			case 'l': LEVEL.ref_player_entity().vec2d_planned_movement = DIRECTION_VECTOR[DIRECTION_RIGHT]; break;
+			case 'H': LEVEL.ref_player_entity().set_direction_persistent(DIRECTION_LEFT ); break;
+			case 'J': LEVEL.ref_player_entity().set_direction_persistent(DIRECTION_DOWN ); break;
+			case 'K': LEVEL.ref_player_entity().set_direction_persistent(DIRECTION_UP ); break;
+			case 'L': LEVEL.ref_player_entity().set_direction_persistent(DIRECTION_RIGHT); break;
 			//
 			case 'w': case KEY_UP:    LEVEL.ref_player_entity().set_direction_order(DIRECTION_UP   ); break;
 			case 'a': case KEY_LEFT:  LEVEL.ref_player_entity().set_direction_order(DIRECTION_LEFT ); break;
@@ -230,7 +235,6 @@ int main()
 			GLOBALTIMER.deltatime_seconds = 0;
 		}
 
-		mvprintw(LINES-2,0,"update_time_from_globaltimer\n");
 		LEVEL.update_time_from_globaltimer(GLOBALTIMER);
 		if(LEVEL.ref_player_entity().is_alive()) {
 			total_gameplay_seconds += GLOBALTIMER.deltatime_seconds;
@@ -239,16 +243,11 @@ int main()
 
 		// render text
 		if(DISPLAY_DEBUG) {
-			move(11,0);
-			printw( "timeout: %d [miliseconds]" , timeout_miliseconds);
-			move(12,0);
-			printw("%f" , GLOBALTIMER.total_seconds );
-			move(13,0);
-			printw("%f" , total_gameplay_seconds);
-			move(14,0);
-			printw("%f" , GLOBALTIMER.deltatime_seconds);
-			move(15,0);
-			printw( "SFX: %4zu" , LEVEL.vector_of_visual_entity.size() );
+			mvprintw(getcury(stdscr)+1,0, "timeout: %d [miliseconds]" , timeout_miliseconds);
+			mvprintw(getcury(stdscr)+1,0, "%.1f" , GLOBALTIMER.total_seconds );
+			mvprintw(getcury(stdscr)+1,0, "%.1f" , total_gameplay_seconds);
+			mvprintw(getcury(stdscr)+1,0, "%f" , GLOBALTIMER.deltatime_seconds);
+			mvprintw(getcury(stdscr)+1,0, "SFX: %4zu" , LEVEL.vector_of_visual_entity.size() );
 		}
 		move(0,0);
 		// only render if enough time moved
