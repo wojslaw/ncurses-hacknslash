@@ -53,7 +53,7 @@ Entity::fscan_as_tsv_row(FILE * f)
 Entity::Entity(ID_BaseEntity const _id_of_base_entity)
 	: id_base_entity(_id_of_base_entity)
 {
-	timer_movement = CountdownTimer(ref_base_entity().seconds_movement);
+	timer_movement = CountdownTimer(ref_base_entity().seconds_movement,0.0);
 	timer_regenerate_life = CountdownTimer(ref_base_entity().seconds_regen);
 	set_life_to_max();
 }
@@ -86,7 +86,16 @@ Entity::is_dead(void) const {
 bool
 Entity::is_heavily_damaged(void) const
 {
+	if(!timer_recently_hit_heavily.is_countdown_finished()) {
+		return true;
+	}
 	return (stat_life < (get_life_max()/THRESHOLD_HEAVILY_DAMAGED) );
+}
+
+	bool
+Entity::is_slowed(void) const
+{
+	return( is_heavily_damaged() );
 }
 
 
@@ -145,6 +154,7 @@ Entity::update_time_from_globaltimer(GlobalTimer const & GLOBALTIMER)
 	timer_movement.update_time_from_globaltimer(GLOBALTIMER);
 	timer_life.update_time_from_globaltimer(GLOBALTIMER);
 	timer_recently_hit.update_time_from_globaltimer(GLOBALTIMER);
+	timer_recently_hit_heavily.update_time_from_globaltimer(GLOBALTIMER);
 	timer_recently_healed.update_time_from_globaltimer(GLOBALTIMER);
 	timer_ability.update_time_from_globaltimer(GLOBALTIMER);
 	timer_last_message.update_time_from_globaltimer(GLOBALTIMER);
@@ -272,7 +282,7 @@ Entity::wprint_detailed_entity_info(WINDOW * w) const
 				,last_combat_attack_damage
 				,last_combat_attack_roll );
 		if(!timer_movement.is_countdown_finished()) {
-			wprintw(w," (moved:dmg/2)");
+			wprintw(w," (moved)");
 		}
 	}
 	wmove(w,getcury(w)+1,1);
@@ -412,6 +422,9 @@ Entity::update_movement(void)
 		timer_movement.consume_tick();
 		timer_movement.reset();
 		timer_movement.remaining_seconds *= (double)vec2d_last_movement.get_length_taxicab();
+		if(is_slowed()) { // even more penalty to low-healthers
+			timer_movement.remaining_seconds *= 1.5;
+		}
 	}
 
 }

@@ -48,6 +48,7 @@ struct CountdownTimer {
 
 	CountdownTimer();
 	CountdownTimer(double const _remaining_seconds);
+	CountdownTimer(double const _remaining_seconds, double const _start);
 
 	void reset_countdown_keep_ticks(void) ;
 

@@ -19,7 +19,7 @@
 #include "Entity.hpp"
 
 #define WINDOW_HALFSIZE_Y 6
-#define WINDOW_HALFSIZE_X 11
+#define WINDOW_HALFSIZE_X 10
 
 #define WINDOW_ENTITYLIST_SIZE_Y 12
 #define WINDOW_ENTITYLIST_SIZE_X 24

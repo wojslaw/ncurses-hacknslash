@@ -39,16 +39,25 @@ GlobalTimer::GlobalTimer()
 
 
 CountdownTimer::CountdownTimer()
-{
+	: seconds_countdown(0)
+	, remaining_seconds(0)
+{ }
 
-}
+
+CountdownTimer::CountdownTimer(
+		double const _remaining_seconds
+		)
+	: seconds_countdown(_remaining_seconds)
+	, remaining_seconds(_remaining_seconds)
+{ }
 
 
-CountdownTimer::CountdownTimer(double const _remaining_seconds)
-{ 
-	seconds_countdown = _remaining_seconds;
-	remaining_seconds = _remaining_seconds;
-}
+CountdownTimer::CountdownTimer(
+		 double const _remaining_seconds
+		,double const _start)
+	: seconds_countdown(_remaining_seconds)
+	, remaining_seconds(_start)
+{ }
 
 
 	void

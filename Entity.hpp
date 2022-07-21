@@ -109,17 +109,18 @@ struct Entity {
 	double total_seconds= 0.0;
 
 	CountdownTimer timer_combat_turn = CountdownTimer(COMBAT_TURN_SECONDS);
-	CountdownTimer timer_movement = CountdownTimer(MOVEMENT_TURN_SECONDS);
+	CountdownTimer timer_movement = CountdownTimer(MOVEMENT_TURN_SECONDS,0);
 	CountdownTimer timer_life = CountdownTimer(0);
 	CountdownTimer timer_regenerate_life = CountdownTimer(REGEN_SECONDS_NORMAL);
-	CountdownTimer timer_wellfed = CountdownTimer(0);
-	CountdownTimer timer_recently_hit = CountdownTimer(0.75);
-	CountdownTimer timer_is_in_battle = CountdownTimer(8.0);
+	CountdownTimer timer_wellfed = CountdownTimer(0,0);
+	CountdownTimer timer_recently_hit = CountdownTimer(0.75,0);
+	CountdownTimer timer_recently_hit_heavily = CountdownTimer(0.75,0);
+	CountdownTimer timer_is_in_battle = CountdownTimer(8.0,0);
 	CountdownTimer timer_decay = CountdownTimer(SECONDS_CORPSE_DECAY);
-	CountdownTimer timer_recently_healed = CountdownTimer(0.75);;
-	CountdownTimer timer_ability  = CountdownTimer(1.0);;
+	CountdownTimer timer_recently_healed = CountdownTimer(0.75,0);;
+	CountdownTimer timer_ability  = CountdownTimer(1.0,0);;
 
-	CountdownTimer timer_last_message = CountdownTimer(2.0);
+	CountdownTimer timer_last_message = CountdownTimer(2.0,0);
 	std::string last_message;
 
 	//
@@ -176,6 +177,7 @@ struct Entity {
 	int ncurses_get_attr_life(void) const ;
 	bool is_renderable(void) const ;
 	bool is_heavily_damaged(void) const ;
+	bool is_slowed(void) const;
 
 
 	int wprint_with_additional_attrs(
