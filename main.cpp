@@ -116,15 +116,15 @@ int main()
 	LEVEL.ref_player_entity().vector_of_abilities.back().is_ability_healing = true;
 	LEVEL.ref_player_entity().vector_of_abilities.back().stack_max = 8;
 	LEVEL.ref_player_entity().vector_of_abilities.back().timer_stack = CountdownTimer(8.0);
-	LEVEL.ref_player_entity().vector_of_abilities.back().stat_heal_base = 1;
-	LEVEL.ref_player_entity().vector_of_abilities.back().stat_heal_dice = 3;
+	LEVEL.ref_player_entity().vector_of_abilities.back().stat_roll_base = 1;
+	LEVEL.ref_player_entity().vector_of_abilities.back().stat_roll_dice = 3;
 
 	LEVEL.ref_player_entity().vector_of_abilities.emplace_back(Ability());
 	LEVEL.ref_player_entity().vector_of_abilities.back().is_ability_damage = true;
 	LEVEL.ref_player_entity().vector_of_abilities.back().stack_max = 3;
 	LEVEL.ref_player_entity().vector_of_abilities.back().timer_stack = CountdownTimer(15.0);
-	LEVEL.ref_player_entity().vector_of_abilities.back().stat_damage_base = 4;
-	LEVEL.ref_player_entity().vector_of_abilities.back().stat_damage_dice = 5;
+	LEVEL.ref_player_entity().vector_of_abilities.back().stat_roll_base = 4;
+	LEVEL.ref_player_entity().vector_of_abilities.back().stat_roll_dice = 5;
 
 	{
 		FILE * file_savefile = fopen("save.out","r");
@@ -168,10 +168,10 @@ int main()
 			case 'k': LEVEL.ref_player_entity().vec2d_planned_movement = DIRECTION_VECTOR[DIRECTION_UP]; break;
 			case 'l': LEVEL.ref_player_entity().vec2d_planned_movement = DIRECTION_VECTOR[DIRECTION_RIGHT]; break;
 			//
-			case 'w': LEVEL.ref_player_entity().set_direction_order(DIRECTION_UP   ); break;
-			case 'a': LEVEL.ref_player_entity().set_direction_order(DIRECTION_LEFT ); break;
-			case 's': LEVEL.ref_player_entity().set_direction_order(DIRECTION_DOWN ); break;
-			case 'd': LEVEL.ref_player_entity().set_direction_order(DIRECTION_RIGHT); break;
+			case 'w': case KEY_UP:    LEVEL.ref_player_entity().set_direction_order(DIRECTION_UP   ); break;
+			case 'a': case KEY_LEFT:  LEVEL.ref_player_entity().set_direction_order(DIRECTION_LEFT ); break;
+			case 's': case KEY_DOWN:  LEVEL.ref_player_entity().set_direction_order(DIRECTION_DOWN ); break;
+			case 'd': case KEY_RIGHT: LEVEL.ref_player_entity().set_direction_order(DIRECTION_RIGHT); break;
 			case 'c': LEVEL.ref_player_entity().set_direction_order(DIRECTION_ANGLED_DOWN_RIGHT); break;
 			case 'z': LEVEL.ref_player_entity().set_direction_order(DIRECTION_ANGLED_DOWN_LEFT ); break;
 			case 'e': LEVEL.ref_player_entity().set_direction_order(DIRECTION_ANGLED_UP_RIGHT  ); break;

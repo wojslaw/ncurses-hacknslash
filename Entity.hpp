@@ -226,7 +226,7 @@ public:
 		assert(is_ready_to_cast_ability());
 		assert(id < vector_of_abilities.size());
 		Ability& ref_ability = vector_of_abilities.at(id);
-		int const deltalife = ref_ability.roll_heal_if_ready();
+		int const deltalife = ref_ability.roll_and_consume();
 		modify_life(deltalife);
 		timer_ability.reset();
 	}

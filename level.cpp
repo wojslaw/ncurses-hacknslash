@@ -431,7 +431,7 @@ Level::wprint_entitylist(
 {
 	assert(w);
 	werase(w);
-	wmove(w,0,0);
+	wmove(w,1,1);
 	int const max_entities_to_print = getmaxy(w)-(2+1); // +2 for borders, +1
 	int const max_line_length = getmaxx(w)-(2+2); // +2 for borders, +2 for ".."
 	int count_of_printed = 0;
@@ -441,7 +441,10 @@ Level::wprint_entitylist(
 			break;
 		}
 		//
+		Entity const& entity = vector_of_entity.at(id);
+		wmove(w,getcury(w)+1,1);
 		char buffer[0x100] = {0};
+		// wprint_entitylist_row(entity);
 		int const bytes_written
 			= FLAG_PRINT_ENTITYLIST_DEBUG
 			? snprintf(
