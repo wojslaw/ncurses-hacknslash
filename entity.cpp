@@ -600,9 +600,6 @@ Entity::combat_roll_damage(void)
 	last_combat_attack_roll = rand_r(&randomness_seed_combat) % (1+get_attack_dice());
 	int const damage_rolled = last_combat_attack_roll + get_attack_base();
 	if(damage_rolled > 0) {
-		if(is_heavily_damaged()) {
-			return damage_rolled/DIVISOR_HEAVILY_DAMAGED_ROLL_DAMAGE;
-		}
 		return damage_rolled;
 	}
 	return 0;
