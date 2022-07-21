@@ -567,7 +567,7 @@ Level::update_entities_direction_planned(void)
 					attacker.vec2d_position
 					,target.vec2d_position
 					);
-		if(distance >= attacker.combat_get_range()) {
+		if(distance > attacker.combat_get_range()) {
 			attacker.vec2d_planned_movement
 				= vec2d_find_direction_vec2d_from_to(
 						attacker.vec2d_position
