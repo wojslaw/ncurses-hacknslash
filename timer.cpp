@@ -2,21 +2,6 @@
 
 
 
-	double
-GlobalTimer::update_auto(void)
-{
-	//int const errval = // TODO
-	gettimeofday(&time_new,0);
-	deltatime_seconds
-		=  ((double)time_new.tv_sec  - (double)time_last.tv_sec )
-		+ (((double)time_new.tv_usec - (double)time_last.tv_usec) / 1000000) ;
-	time_last = time_new;
-	total_seconds += deltatime_seconds;
-	return deltatime_seconds;
-}
-
-
-
 
 GlobalTimer::GlobalTimer()
 {
@@ -25,6 +10,31 @@ GlobalTimer::GlobalTimer()
 	// TODO handle errorvalue
 	time_new = time_last;
 }
+
+
+	double
+GlobalTimer::update_with_multiplier(double const multiplier)
+{
+	//int const errval = // TODO
+	gettimeofday(&time_new,0);
+	new_deltatime_seconds
+		=  ((double)time_new.tv_sec  - (double)time_last.tv_sec )
+		+ (((double)time_new.tv_usec - (double)time_last.tv_usec) / 1000000) ;
+	deltatime_seconds += new_deltatime_seconds * multiplier;
+	time_last = time_new;
+	total_seconds += deltatime_seconds;
+	return deltatime_seconds;
+}
+
+	void 
+GlobalTimer::reset(void)
+{
+	deltatime_seconds = 0;
+}
+
+
+
+
 
 
 

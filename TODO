@@ -21,6 +21,7 @@ Then, further complexity:
 8. "town" or something separate from the combat dungeon, where you can 
 
 
+✓ IDEA optimization: only allow let's say 100 or 20 updates per second, so the level or timer will stack up on seconds before updating
 
 IDEA penalty to ranged damage after moving
 IDEA shift+digit("!@#$") perform a stronger version of spell which consumes more stacks

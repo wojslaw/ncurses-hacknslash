@@ -28,6 +28,7 @@
 #define WINDOW_DETAILS_SIZE_X 40
 
 #define MULTIPLY_TIME 1.0
+#define SECONDS_MINIMUM_TIME_BEFORE_UPDATE (1.0/100.0)
 
 
 
@@ -217,12 +218,21 @@ int main()
 			case 'f': LEVEL.ref_player_entity().flag_follow_target = true; break;
 			case 'F': LEVEL.ref_player_entity().flag_follow_target = false; break;
 			  //
-			case KEY_F(12): DEBUG_PRINT_COLLISION_TABLE = true; break;
+			case KEY_F(1):  IS_GAME_PAUSED = true;  break;
+			case KEY_F(2): IS_GAME_PAUSED = false;  break;
 			case KEY_F(11): DEBUG_PRINT_COLLISION_TABLE = false; clear(); break;
+			case KEY_F(12): DEBUG_PRINT_COLLISION_TABLE = true; break;
+			// ghost
 			case KEY_F(5): LEVEL.ref_player_entity().flag_stop_on_collision = true; break;
 			case KEY_F(6): LEVEL.ref_player_entity().flag_stop_on_collision = false; break;
-			case KEY_F(9):  IS_GAME_PAUSED = true;  break;
-			case KEY_F(10): IS_GAME_PAUSED = false;  break;
+			// spawn a lot of garbage
+			case KEY_F(7):
+				{
+					for(int i = 0; i < 100; ++i) {
+						LEVEL.create_random_enemy_group();
+					}
+					break;
+				}
 			// godmode
 			case KEY_F(8):
 				{
@@ -261,16 +271,16 @@ int main()
 		}
 
 		// timers
-		GLOBALTIMER.update_auto();
-		if(MULTIPLY_TIME > 1.0) {
-			GLOBALTIMER.deltatime_seconds *= MULTIPLY_TIME;
-		}
 
 		if(!IS_GAME_PAUSED) {
-			LEVEL.update_time_from_globaltimer(GLOBALTIMER);
-			if(LEVEL.ref_player_entity().is_alive()) {
-				total_gameplay_seconds += GLOBALTIMER.deltatime_seconds;
+			if(GLOBALTIMER.deltatime_seconds >= SECONDS_MINIMUM_TIME_BEFORE_UPDATE) {
+				LEVEL.update_time_from_globaltimer(GLOBALTIMER);
+				if(LEVEL.ref_player_entity().is_alive()) {
+					total_gameplay_seconds += GLOBALTIMER.deltatime_seconds;
+				}
+				GLOBALTIMER.reset();
 			}
+			GLOBALTIMER.update_with_multiplier(MULTIPLY_TIME);
 		}
 
 

@@ -18,7 +18,7 @@ const struct BaseEntity TABLE_BASEENTITY[] = {
 		.attack_dice = 4 ,
 		.attack_range= 6,
 		.defense_base = 1,
-		.seconds_movement = 0.25 ,
+		.seconds_movement = 0.20 ,
 	} ,
 	[ID_BaseEntity_wraith] = {
 		.ncurses_symbol = 'w',
@@ -28,7 +28,7 @@ const struct BaseEntity TABLE_BASEENTITY[] = {
 		.attack_base = 1 ,
 		.attack_dice = 3 ,
 		.attack_range = 1,
-		.seconds_movement = 0.4 ,
+		.seconds_movement = 0.30 ,
 		.flag_has_collision = false,
 	} ,
 	[ID_BaseEntity_gthrower] = {
@@ -39,7 +39,7 @@ const struct BaseEntity TABLE_BASEENTITY[] = {
 		.attack_base = 0 ,
 		.attack_dice = 2 ,
 		.attack_range = 7,
-		.seconds_movement = 0.35,
+		.seconds_movement = 0.30,
 	} ,
 	[ID_BaseEntity_dickev] = {
 		.ncurses_symbol = 'd',
@@ -49,7 +49,7 @@ const struct BaseEntity TABLE_BASEENTITY[] = {
 		.attack_base = 0 ,
 		.attack_dice = 3 ,
 		.attack_range = 1,
-		.seconds_movement = 0.35,
+		.seconds_movement = 0.10,
 	} ,
 	[ID_BaseEntity_orc] = {
 		.ncurses_symbol = 'O',
@@ -61,7 +61,7 @@ const struct BaseEntity TABLE_BASEENTITY[] = {
 		.attack_dice = 2 ,
 		.attack_range = 2,
 		.defense_base = 2,
-		.seconds_movement = 0.35,
+		.seconds_movement = 0.30,
 	} ,
 	[ID_BaseEntity_eater] = {
 		.ncurses_symbol = 'e',
@@ -72,7 +72,7 @@ const struct BaseEntity TABLE_BASEENTITY[] = {
 		.attack_base = 1 ,
 		.attack_dice = 2 ,
 		.attack_range = 1,
-		.seconds_movement = 0.40 ,
+		.seconds_movement = 0.33 ,
 		.flag_destroys_terrain = true ,
 		.flag_is_vampiric = true ,
 	} ,
@@ -86,7 +86,7 @@ const struct BaseEntity TABLE_BASEENTITY[] = {
 		.attack_dice = 4 ,
 		.attack_range = 1,
 		.defense_base = 1,
-		.seconds_movement = 0.40 ,
+		.seconds_movement = 0.33 ,
 		.flag_destroys_terrain = true ,
 	} ,
 	[ID_BaseEntity_devourer] = {
@@ -99,7 +99,7 @@ const struct BaseEntity TABLE_BASEENTITY[] = {
 		.attack_dice = 5 ,
 		.attack_range = 1,
 		.defense_base = 1,
-		.seconds_movement = 0.45 ,
+		.seconds_movement = 0.33 ,
 		.flag_destroys_terrain = true ,
 		.flag_is_vampiric = true ,
 	} ,

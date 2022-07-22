@@ -18,10 +18,12 @@ typedef struct GlobalTimer GlobalTimer;
 struct GlobalTimer {
 	double total_seconds = 0.0;
 	double deltatime_seconds = 0.0;
+	double new_deltatime_seconds = 0.0;
 	struct timeval time_last = {0,0};
 	struct timeval time_new = {0,0};
 
-	double update_auto(void);
+	double update_with_multiplier(double const multiplier);
+	void reset(void);
 
 	// ctor
 	GlobalTimer() ;
