@@ -4,6 +4,7 @@
 #define MAX_LIFE_STEPS_TO_DISPLAY  40
 #define THRESHOLD_HEAVILY_DAMAGED 4
 #define DIVISOR_HEAVILY_DAMAGED_ROLL_DAMAGE 2
+#define PRINT_DAMAGED_ON_LIFEBAR false
 
 
 
@@ -211,6 +212,13 @@ Entity::update_time_from_globaltimer(GlobalTimer const & GLOBALTIMER)
 		}
 	}
 
+	if(timer_recently_hit.is_countdown_finished()) {
+		last_amount_of_damage_taken = 0;
+	}
+
+	if(timer_recently_healed.is_countdown_finished()) {
+		last_amount_of_heal = 0;
+	}
 
 }
 
@@ -247,27 +255,7 @@ Entity::wprint_detailed_entity_info(WINDOW * w) const
 				, stat_life
 				, get_life_max()
 			   );
-		int const max_life_steps_to_display
-			= std::min(
-					MAX_LIFE_STEPS_TO_DISPLAY
-					,getmaxx(w)-8
-					);
-		int const life_steps_to_display
-			= (stat_life
-			   *
-			   max_life_steps_to_display)
-			/ get_life_max();
-		wmove(w
-		      ,getcury(w)
-			  ,getmaxx(w)-1-max_life_steps_to_display );
-		for(int i = 0; i < life_steps_to_display; ++i) {
-			wattron(w,WA_REVERSE);
-			waddch(w,' ');
-			wattroff(w,WA_REVERSE);
-		}
-		if(attr) {
-			wattroff(w,attr);
-		}
+		wprint_lifebar_at_the_rightmost(w);
 	} //life
 
 	wmove(w,getcury(w)+1,1);
@@ -453,12 +441,19 @@ Entity::update_movement(void)
 
 
 
+	void
+Entity::order_stop_only_movement(void)
+{
+	set_direction_persistent(DIRECTION_NONE );
+	vec2d_planned_movement.set_zero();
+}
+
 
 
 	void
-Entity::order_stop(void)
+Entity::order_stop_full_stop(void)
 {
-	set_direction_persistent(DIRECTION_NONE );
+	order_stop_only_movement();
 	reset_targeting();
 }
 
@@ -529,11 +524,11 @@ int
 Entity::ncurses_get_attrs(void) const
 {
 	int attr = 0;
+	if(is_heavily_damaged()) {
+		attr = attr | ATTR_HEAVILY_DAMAGED;
+	}
 	if(timer_recently_hit.remaining_seconds > 0.0) {
 		attr = attr | ATTR_RECENTLY_HIT;
-	}
-	if(is_heavily_damaged()) {
-		attr = attr | ATTR_HEAVILY_DAMAGED_SYMBOL;
 	}
 	return attr;
 }
@@ -543,16 +538,24 @@ Entity::ncurses_get_attrs(void) const
 Entity::ncurses_get_attr_life(void) const
 {
 	if(!timer_recently_healed.is_countdown_finished()) {
-		return ATTR_RECENTLY_HEALED;
-	}
-	if(!timer_recently_hit.is_countdown_finished()) {
-		return ATTR_RECENTLY_HIT;
+		if(last_amount_of_heal > last_amount_of_damage_taken) {
+			return(ATTR_RECENTLY_HEALED);
+		}
 	}
 	if(is_heavily_damaged()) {
-		return ATTR_HEAVILY_DAMAGED_BAR;
+		return(ATTR_HEAVILY_DAMAGED);
+	}
+	if(!timer_recently_hit.is_countdown_finished()) {
+		return(ATTR_RECENTLY_HIT);
 	}
 
-	return 0;
+	return(0);
+}
+
+	int
+Entity::ncurses_get_attr_lifebar(void) const
+{
+	return(WA_REVERSE|ncurses_get_attr_life());
 }
 
 
@@ -655,13 +658,23 @@ Entity::modify_life(int const delta_life)
 	if(is_dead()) {
 		return;
 	}
+	if(delta_life == 0) {
+		return;
+	}
+
 	stat_life += delta_life;
 	if(stat_life > get_life_max()) {
 		stat_life = get_life_max();
 	}
 	if(delta_life > 0) {
 		timer_recently_healed.reset();
+		last_amount_of_heal = delta_life;
 	}
+	if(delta_life < 0) {
+		timer_recently_hit.reset();
+		last_amount_of_damage_taken = (-delta_life);
+	}
+
 }
 
 
@@ -791,23 +804,32 @@ Entity::wprint_lifebar_at_the_rightmost(
 				);
 
 	wmove(w,getcury(w),getmaxx(w)-length_of_lifebar-1);
-	int const attr = ncurses_get_attr_life();
-	if(attr) {
-		wattron(w,attr);
-	}
+	int const attr = ncurses_get_attr_lifebar();
+	wattron(w,attr);
 	int const life_steps_to_display
 		= (stat_life
 				*
 				length_of_lifebar)
 		/ get_life_max();
-	for(int i = 0; i < life_steps_to_display; ++i) {
-		wattron(w,WA_REVERSE);
-		waddch(w,' ');
-		wattroff(w,WA_REVERSE);
+	if(is_heavily_damaged()) {
+		for(int i = 0; i < life_steps_to_display; ++i) {
+			waddch(w,'+');
+		}
+	} else {
+		for(int i = 0; i < life_steps_to_display; ++i) {
+			waddch(w,'+');
+		}
 	}
-	if(attr) {
-		wattroff(w,attr);
+	wattroff(w,WA_REVERSE);
+	if(PRINT_DAMAGED_ON_LIFEBAR) {
+		if(is_heavily_damaged()) {
+			if(length_of_lifebar >= 8) {
+				wmove(w,getcury(w),(getmaxx(w)-length_of_lifebar));
+				wprintw(w,"DAMAGED");
+			}
+		}
 	}
+	wattroff(w,attr);
 }
 
 
@@ -834,33 +856,13 @@ Entity::wprint_detailed_entity_info_enemy(WINDOW * w) const
 				, stat_life
 				, get_life_max()
 			   );
-		// TODO lifebar()
-		int const max_life_steps_to_display
-			= std::min(
-					MAX_LIFE_STEPS_TO_DISPLAY
-					,getmaxx(w)-8
-					);
-		int const life_steps_to_display
-			= (stat_life
-			   *
-			   max_life_steps_to_display)
-			/ get_life_max();
-		wmove(w
-		      ,getcury(w)
-			  ,getmaxx(w)-1-max_life_steps_to_display );
-		for(int i = 0; i < life_steps_to_display; ++i) {
-			wattron(w,WA_REVERSE);
-			waddch(w,' ');
-			wattroff(w,WA_REVERSE);
-		}
-		if(attr) {
-			wattroff(w,attr);
-		}
+		wprint_lifebar_at_the_rightmost(w);
 	} //life
 
 	wmove(w,getcury(w)+1,1);
-	wprintw(w,"%c %s"
-			, ncurses_get_symbol()
+	wprint_with_additional_attrs(w,0);
+	wmove(w,getcury(w)+1,3);
+	wprintw(w,"%s"
 			, get_name()
 			);
 

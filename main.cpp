@@ -108,7 +108,7 @@ int main()
 	wrefresh(w_text_player);
 	wrefresh(w_text_target);
 
-	Level LEVEL  = Level(64,16); // FIXME collision is broken on non-square maps
+	Level LEVEL  = Level(64,32);
 	LEVEL.ref_player_entity().id_of_target = 1;
 	LEVEL.ref_player_entity().flag_follow_target = false;
 
@@ -184,7 +184,14 @@ int main()
 			case '3': LEVEL.make_player_use_ability_number(3); break;
 			case '4': LEVEL.make_player_use_ability_number(4); break;
 			case '=': LEVEL.ref_player_entity().consume_food();  break;
-			//
+			// movement 
+			case '\n':
+			case '\r':
+				{
+					LEVEL.ref_player_entity().order_stop_only_movement();
+					break;
+				}
+			// vim
 			case 'h': LEVEL.ref_player_entity().vec2d_planned_movement = DIRECTION_VECTOR[DIRECTION_LEFT]; break;
 			case 'j': LEVEL.ref_player_entity().vec2d_planned_movement = DIRECTION_VECTOR[DIRECTION_DOWN]; break;
 			case 'k': LEVEL.ref_player_entity().vec2d_planned_movement = DIRECTION_VECTOR[DIRECTION_UP]; break;
@@ -193,7 +200,7 @@ int main()
 			case 'J': LEVEL.ref_player_entity().set_direction_persistent(DIRECTION_DOWN ); break;
 			case 'K': LEVEL.ref_player_entity().set_direction_persistent(DIRECTION_UP ); break;
 			case 'L': LEVEL.ref_player_entity().set_direction_persistent(DIRECTION_RIGHT); break;
-			//
+			// wasd+diagonals
 			case 'w': case KEY_UP:    LEVEL.ref_player_entity().set_direction_order(DIRECTION_UP   ); break;
 			case 'a': case KEY_LEFT:  LEVEL.ref_player_entity().set_direction_order(DIRECTION_LEFT ); break;
 			case 's': case KEY_DOWN:  LEVEL.ref_player_entity().set_direction_order(DIRECTION_DOWN ); break;
@@ -202,7 +209,6 @@ int main()
 			case 'z': LEVEL.ref_player_entity().set_direction_order(DIRECTION_ANGLED_DOWN_LEFT ); break;
 			case 'e': LEVEL.ref_player_entity().set_direction_order(DIRECTION_ANGLED_UP_RIGHT  ); break;
 			case 'q': LEVEL.ref_player_entity().set_direction_order(DIRECTION_ANGLED_UP_LEFT   ); break;
-			//
 			case 'W': LEVEL.ref_player_entity().set_direction_persistent(DIRECTION_UP   ); break;
 			case 'A': LEVEL.ref_player_entity().set_direction_persistent(DIRECTION_LEFT ); break;
 			case 'S': LEVEL.ref_player_entity().set_direction_persistent(DIRECTION_DOWN ); break;
@@ -229,11 +235,28 @@ int main()
 					break;
 				}
 			case '\e': {
-						  LEVEL.ref_player_entity().order_stop();
+						  LEVEL.ref_player_entity().order_stop_full_stop();
 						  break;
 			          }
-			//
-			case '\t': LEVEL.player_tab_target(); break;
+
+			//tab target
+			case KEY_DC:
+				{
+					LEVEL.ref_player_entity().reset_targeting();
+					break;
+				}
+			case KEY_NPAGE: // pagedown
+			case '\t':      // tab
+				{
+					LEVEL.player_tab_target(+1);
+					break;
+				}
+			case KEY_PPAGE: // pagedown
+			case KEY_BTAB:  // shift+tab
+				{
+					LEVEL.player_tab_target(-1);
+					break;
+				}
 			
 		}
 

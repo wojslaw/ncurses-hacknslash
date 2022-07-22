@@ -159,6 +159,8 @@ struct Entity {
 	int get_attack_dice() const    { return ref_base_entity().attack_dice; }
 	int get_attack_maximum() const { return get_attack_base()+(1+get_attack_dice()); }
 
+	int last_amount_of_heal = 0;
+	int last_amount_of_damage_taken = 0;
 	int last_combat_attack_roll = -1;
 	int last_combat_attack_damage = -1;
 
@@ -181,6 +183,7 @@ struct Entity {
 	bool is_corpse(void) const ;
 	int  ncurses_get_symbol(void) const ;
 	int ncurses_get_attr_life(void) const ;
+	int ncurses_get_attr_lifebar(void) const;
 	bool is_renderable(void) const ;
 	bool is_heavily_damaged(void) const ;
 	bool is_slowed(void) const;
@@ -216,7 +219,8 @@ public:
 	void wprint_detailed_entity_info(WINDOW * w) const;
 	char const * get_name(void) const;
 	int ncurses_get_attrs(void) const;
-	void order_stop(void);
+	void order_stop_full_stop(void);
+	void order_stop_only_movement(void);
 
 	void update_movement_from_planned_movement(void);
 

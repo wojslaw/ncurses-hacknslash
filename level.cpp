@@ -539,8 +539,9 @@ Level::visibleid_from_entityid(size_t const entityid) const
 
 
 	void
-Level::player_tab_target()
+Level::player_tab_target(int const delta)
 {
+	assert(delta != 0);
 	Entity & player_entity = ref_player_entity();
 	if(vector_of_entityids_on_screen.size() <= 1 ) {
 		player_entity.reset_targeting();
@@ -550,13 +551,25 @@ Level::player_tab_target()
 	// find visibleid for entityid of target
 	size_t const visibleid_of_target = visibleid_from_entityid(player_entity.id_of_target);
 	size_t const visibleid_of_next_target = visibleid_of_target + 1;
+	size_t const visibleid_of_prev_target = visibleid_of_target - 1;
 	size_t const highest_visibleid = vector_of_entityids_on_screen.size() - 1;
+	size_t const lowest_visibleid  = 1;
 
 	// set visible id
-	if(visibleid_of_next_target <= highest_visibleid) {
-		player_entity.set_target_to_entityid(entityid_from_visibleid(visibleid_of_next_target));
-	} else {
-		player_entity.set_target_to_entityid(1); // lowest expected visibleid
+	if(delta >= +1) {
+		if(visibleid_of_next_target <= highest_visibleid) {
+			player_entity.set_target_to_entityid(entityid_from_visibleid(visibleid_of_next_target));
+		} else {
+			player_entity.set_target_to_entityid(entityid_from_visibleid(lowest_visibleid)); // lowest expected visibleid
+		}
+	}
+
+	if(delta <= -1) {
+		if(visibleid_of_next_target > lowest_visibleid) {
+			player_entity.set_target_to_entityid(entityid_from_visibleid(visibleid_of_prev_target));
+		} else {
+			player_entity.set_target_to_entityid(entityid_from_visibleid(highest_visibleid)); // lowest expected visibleid
+		}
 	}
 }
 

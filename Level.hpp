@@ -109,7 +109,7 @@ struct Level {
 	size_t entityid_from_visibleid(size_t const visibleid) const { return vector_of_entityids_on_screen.at(visibleid); }
 	size_t visibleid_from_entityid(size_t const entityid) const;
 
-	void player_tab_target();
+	void player_tab_target(int const delta);
 	void player_set_target_to_visibleid_from_digit(int const input_digit);
 
 
