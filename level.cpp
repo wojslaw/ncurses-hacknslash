@@ -549,11 +549,21 @@ Level::player_tab_target(int const delta)
 	}
 
 	// find visibleid for entityid of target
-	size_t const visibleid_of_target = visibleid_from_entityid(player_entity.id_of_target);
-	size_t const visibleid_of_next_target = visibleid_of_target + 1;
-	size_t const visibleid_of_prev_target = visibleid_of_target - 1;
 	size_t const highest_visibleid = vector_of_entityids_on_screen.size() - 1;
 	size_t const lowest_visibleid  = 1;
+	size_t const visibleid_of_target = visibleid_from_entityid(player_entity.id_of_target);
+	size_t const visibleid_of_next_target
+		= std::min(
+				(size_t)(visibleid_of_target + 1)
+				,
+				highest_visibleid
+				);
+	size_t const visibleid_of_prev_target
+		= std::max(
+				(size_t)(visibleid_of_target - 1)
+				,
+				(size_t)lowest_visibleid
+				);
 
 	// set visible id
 	if(delta >= +1) {
