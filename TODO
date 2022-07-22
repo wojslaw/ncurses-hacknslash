@@ -8,6 +8,7 @@ Features I want to have before I consider this a "release candidate":
 ✓6. implement ability: aoe damage around target
 
 
+FIXME stacked entities which have collision seem to be unable to un-stack themselves
 
 
 Then, further complexity:

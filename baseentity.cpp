@@ -49,7 +49,7 @@ const struct BaseEntity TABLE_BASEENTITY[] = {
 		.attack_base = 0 ,
 		.attack_dice = 3 ,
 		.attack_range = 1,
-		.seconds_movement = 0.10,
+		.seconds_movement = 0.15,
 	} ,
 	[ID_BaseEntity_orc] = {
 		.ncurses_symbol = 'O',
