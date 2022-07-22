@@ -900,3 +900,21 @@ Entity::wprint_detailed_entity_info_enemy(WINDOW * w) const
 
 
 
+
+
+
+
+
+
+
+	bool
+entity_is_farther_distance_from_point(
+		 Entity const& e1
+		,Entity const& e2
+		,Vec2d const& vec2d_point
+		)
+{
+	int const distance_1 = vec2d_highest_distance_between(e1.vec2d_position,vec2d_point);
+	int const distance_2 = vec2d_highest_distance_between(e2.vec2d_position,vec2d_point);
+	return(distance_1 > distance_2);
+}

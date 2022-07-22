@@ -6,6 +6,7 @@
 #include <stdlib.h>
 #include <locale.h>
 #include <ctype.h>
+#include <limits.h>
 #include <vector>
 #include <algorithm>
 
@@ -268,6 +269,16 @@ int main()
 					LEVEL.player_tab_target(-1);
 					break;
 				}
+			case KEY_HOME:  // 
+				{
+					LEVEL.player_set_target_to_visibleid(1);
+					break;
+				}
+			case KEY_END:  // 
+				{
+					LEVEL.player_set_target_to_visibleid(INT_MAX);
+					break;
+				}
 			
 		}
 
@@ -293,7 +304,6 @@ int main()
 			mvprintw(getcury(stdscr)+1,0, "%f" , GLOBALTIMER.deltatime_seconds);
 			mvprintw(getcury(stdscr)+1,0, "SFX: %4zu" , LEVEL.vector_of_visual_entity.size() );
 		}
-		move(0,0);
 		LEVEL.wprint_render_centered_on_player_entity_fill_window(w_gamewindow);
 		LEVEL.wprint_entitylist(w_text_entitylist);
 		LEVEL.ref_player_entity().wprint_detailed_entity_info(w_text_player);

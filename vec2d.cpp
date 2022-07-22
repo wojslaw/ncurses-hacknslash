@@ -83,6 +83,21 @@ vec2d_highest_distance_between(
 }
 
 
+	int
+vec2d_distance_taxicab(
+		 const Vec2d & v0
+		,const Vec2d & v1
+		)
+{
+	return(
+			std::abs(v0.y - v1.y)
+			+
+			std::abs(v0.x - v1.x)
+		  );
+}
+
+
+
 
 
 	void

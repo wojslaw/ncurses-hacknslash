@@ -20,6 +20,7 @@ typedef size_t IDEntity;
 
 #define FLAG_PRINT_ENTITYLIST_DEBUG  false
 #define DISTANCE_FOLLOW_MAX_BEFORE_TARGET_LOST  20
+#define SORT_BY_DISTANCE true
 
 
 
@@ -110,7 +111,7 @@ struct Level {
 	size_t visibleid_from_entityid(size_t const entityid) const;
 
 	void player_tab_target(int const delta);
-	void player_set_target_to_visibleid_from_digit(int const input_digit);
+	void player_set_target_to_visibleid(int const input_digit);
 
 
 
@@ -229,5 +230,13 @@ struct Level {
 	void create_random_enemy_group(void);
 	void ensure_entities_are_within_bounds(void);
 }; // struct Level
+
+
+
+
+
+
+
+
 
 

@@ -588,15 +588,22 @@ Level::player_tab_target(int const delta)
 
 
 	void
-Level::player_set_target_to_visibleid_from_digit(int const input_digit)
+Level::player_set_target_to_visibleid(int const input_digit)
 {
 	assert(input_digit >= 0);
-	size_t const highest_visibleid = vector_of_entityids_on_screen.size();
-	if((size_t)input_digit >= highest_visibleid) {
-		ref_player_entity().id_of_target = highest_visibleid;
+	if(vector_of_entityids_on_screen.size() <= 1) { // skip if only player on screen
 		return;
 	}
-	ref_player_entity().id_of_target = entityid_from_visibleid(input_digit);
+	int const highest_visibleid = (int)vector_of_entityids_on_screen.size() - 1;
+	if(input_digit > highest_visibleid ) {
+		ref_player_entity().set_target_to_entityid(entityid_from_visibleid(highest_visibleid));
+		return;
+	}
+	if(input_digit < 1 ) {
+		ref_player_entity().set_target_to_entityid(entityid_from_visibleid(1));
+		return;
+	}
+	ref_player_entity().set_target_to_entityid(entityid_from_visibleid(input_digit));
 }
 
 
@@ -809,6 +816,32 @@ Level::ensure_entities_are_within_bounds(void)
 
 
 
+
+// to help with sorting:
+struct Entityid_and_distance {
+	IDEntity id;
+	int distance;
+
+	Entityid_and_distance(
+			IDEntity _id
+			,int _distance)
+		: id(_id)
+		, distance(_distance) 
+	{ }
+};
+
+
+	bool
+compare_entityid_and_distance(
+	Entityid_and_distance const &eidd_1
+	,Entityid_and_distance const &eidd_2
+	)
+{
+	return(eidd_1.distance < eidd_2.distance);
+}
+
+
+
 	void
 Level::update_vector_of_entityids_with_entities_within_rectangle(
 		int const y_start
@@ -817,6 +850,7 @@ Level::update_vector_of_entityids_with_entities_within_rectangle(
 		,int const x_end )
 {
 	vector_of_entityids_on_screen.resize(0);
+	std::vector<Entityid_and_distance> vector_of_ids_and_distances_for_sorting;
 	bool is_target_on_screen = false;
 	for(size_t id = 0; id < vector_of_entity.size(); ++id) {
 		auto const & entity = vector_of_entity.at(id);
@@ -824,14 +858,31 @@ Level::update_vector_of_entityids_with_entities_within_rectangle(
 			continue;
 		}
 		if(entity.vec2d_position.is_within_rectangle(y_start,x_start,y_end,x_end)) {
-			vector_of_entityids_on_screen.emplace_back(id);
 			if(id == vector_of_entity.at(0).id_of_target) {
 				is_target_on_screen = true;
 			}
+			vector_of_ids_and_distances_for_sorting.emplace_back(
+					Entityid_and_distance(
+						id
+						,vec2d_distance_taxicab(
+							 ref_player_entity().vec2d_position
+							,entity.vec2d_position
+							) ) );
 		}
 	}
 	if(!is_target_on_screen) {
 		ref_player_entity().reset_targeting();
+	}
+	// sort by distance
+	if(SORT_BY_DISTANCE) {
+		std::sort(
+				vector_of_ids_and_distances_for_sorting.begin()
+				,vector_of_ids_and_distances_for_sorting.end()
+				,compare_entityid_and_distance
+				);
+	}
+	for(Entityid_and_distance const& entityid_and_distance : vector_of_ids_and_distances_for_sorting ) {
+		vector_of_entityids_on_screen.emplace_back(entityid_and_distance.id);
 	}
 }
 

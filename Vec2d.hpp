@@ -57,6 +57,13 @@ vec2d_highest_distance_between(
 		);
 
 
+	int
+vec2d_distance_taxicab(
+		 const Vec2d & v0
+		,const Vec2d & v1
+		);
+
+
 Vec2d
 vec2d_find_direction_vec2d_from_to(
 		Vec2d const & v0

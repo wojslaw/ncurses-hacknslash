@@ -268,3 +268,11 @@ public:
 
 
 
+
+
+	bool
+entity_is_farther_distance_from_point(
+		 Entity const& e1
+		,Entity const& e2
+		,Vec2d const& vec2d_point
+		);
