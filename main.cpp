@@ -222,8 +222,6 @@ int main()
 			  //
 			case KEY_F(1):  IS_GAME_PAUSED = true;  break;
 			case KEY_F(2): IS_GAME_PAUSED = false;  break;
-			case KEY_F(11): DEBUG_PRINT_COLLISION_TABLE = false; clear(); break;
-			case KEY_F(12): DEBUG_PRINT_COLLISION_TABLE = true; break;
 			// ghost
 			case KEY_F(5): LEVEL.ref_player_entity().flag_stop_on_collision = true; break;
 			case KEY_F(6): LEVEL.ref_player_entity().flag_stop_on_collision = false; break;
@@ -246,6 +244,16 @@ int main()
 					}
 					break;
 				}
+			// godmode
+			case KEY_F(9):
+				{
+					LEVEL.roll_new_random_feature();
+					break;
+				}
+			//
+			case KEY_F(11): DEBUG_PRINT_COLLISION_TABLE = false; clear(); break;
+			case KEY_F(12): DEBUG_PRINT_COLLISION_TABLE = true; break;
+
 			case '\e': {
 						  LEVEL.ref_player_entity().order_stop_full_stop();
 						  break;

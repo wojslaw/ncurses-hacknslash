@@ -5,6 +5,8 @@
 #define MAKE_ENEMIES true
 #define FLAG_SKIP_FIRST_ENTITY_IN_LIST_OF_VISIBLE  true
 
+
+
 	bool 
 LevelCell::is_cell_terrain_blocked(void) const
 {
@@ -18,6 +20,18 @@ LevelCell::is_cell_terrain_walkable(void) const
 {
 	return(not is_cell_terrain_blocked());
 }
+
+
+	void
+LevelCell::set_cell_terrain_if_empty(
+		enum CellTerrain const _cellterrain
+		)
+{
+	if(cellterrain == CELLTERRAIN_NONE) {
+		cellterrain = _cellterrain;
+	}
+}
+
 
 
 
@@ -447,15 +461,37 @@ Level::make_player_use_ability_number(int const number)
 
 
 
+
+
+
+
+
+
+
 	void
 Level::update_time_from_globaltimer(GlobalTimer const & GLOBALTIMER)
 {
 	total_seconds += GLOBALTIMER.deltatime_seconds;
 
+
+	// TODO: iterate from the end, so that it's easier to clear the vector as we got
+	for(size_t id = 0 ; id < vector_of_pending_level_features.size(); ++id) {
+		PendingLevelFeature & pending_level_feature = vector_of_pending_level_features.at(id);
+		if(pending_level_feature.is_generated) {
+			continue;
+		}
+		pending_level_feature.timer.update_time_from_globaltimer(GLOBALTIMER);;
+		if(pending_level_feature.timer.is_countdown_finished()) {
+			generate_level_feature_id(id);
+		}
+	}
+
+
 	timer_create_new_enemy.update_time_from_globaltimer(GLOBALTIMER);
 	if(timer_create_new_enemy.is_countdown_finished()) {
 		timer_create_new_enemy.reset();
 		create_random_enemy_group();
+		roll_new_random_feature();
 	}
 
 	{// visual entities
@@ -1014,7 +1050,7 @@ Level::update_collision_table(void)
 
 
 	void
-Level::level_add_terrain_feature_noise_with_cellterain_(
+Level::level_add_terrain_feature_noise_with_cellterain_global(
 		 CellTerrain cellterrain
 		,unsigned const randomness_dice
 		,unsigned randomness_seed
@@ -1028,6 +1064,39 @@ Level::level_add_terrain_feature_noise_with_cellterain_(
 		}
 	}
 }
+
+
+	void 
+Level::level_add_terrain_feature_noise_with_cellterain_local(
+		CellTerrain cellterrain
+		,int const start_y
+		,int const start_x
+		,int const end_y
+		,int const end_x
+		,unsigned const randomness_dice
+		,unsigned randomness_seed
+		)
+{
+	assert(start_y >= 0);
+	assert(start_x >= 0);
+	assert(end_y <= get_highest_y());
+	assert(end_x <= get_highest_x());
+
+	for(int y = start_y; y < end_y; ++y) {
+		for(int x = start_x; x < end_x; ++x) {
+			if(rand_r(&randomness_seed)%randomness_dice == 0) {
+				ref_levelcell_at_yx(y,x).cellterrain = cellterrain;
+			}
+		}
+	}
+}
+
+
+
+
+
+
+
 
 
 
@@ -1060,6 +1129,42 @@ Level::level_add_terrain_feature_rectangle_with_cellterain_fill(
 		}
 	}
 }
+
+
+
+
+	void
+Level::level_add_terrain_feature_rectangle_room(
+		 int const _start_y
+		,int const _start_x
+		,int const _end_y
+		,int const _end_x
+		)
+{
+	assert(_start_y >=0);
+	assert(_start_x >=0);
+	assert(_end_y <= get_highest_y());
+	assert(_end_x <= get_highest_x());
+	for(int y = _start_y; y <= _end_y; ++y) {
+		ref_levelcell_at_yx(y,_start_x).cellterrain = CELLTERRAIN_WALL_VERTICAL;
+		ref_levelcell_at_yx(y,  _end_x).cellterrain = CELLTERRAIN_WALL_VERTICAL;
+	}
+	for(int x = _start_x; x <= _end_x; ++x) {
+		ref_levelcell_at_yx(_start_y,x).cellterrain = CELLTERRAIN_WALL_HORIZONTAL;
+		ref_levelcell_at_yx(  _end_y,x).cellterrain = CELLTERRAIN_WALL_HORIZONTAL;
+	}
+
+	ref_levelcell_at_yx(_start_y,_start_x).cellterrain = CELLTERRAIN_HASH;
+	ref_levelcell_at_yx(_start_y,  _end_x).cellterrain = CELLTERRAIN_HASH;
+	ref_levelcell_at_yx(  _end_y,_start_x).cellterrain = CELLTERRAIN_HASH;
+	ref_levelcell_at_yx(  _end_y,  _end_x).cellterrain = CELLTERRAIN_HASH;
+
+}
+
+
+
+
+
 
 
 
@@ -1107,7 +1212,7 @@ Level::level_create_terrain_open_field(
 			,unsigned randomness_seed 
 			)
 {
-	level_add_terrain_feature_noise_with_cellterain_(
+	level_add_terrain_feature_noise_with_cellterain_global(
 			CELLTERRAIN_RUBBLE
 			,rubble_dice
 			,randomness_seed
@@ -1168,7 +1273,7 @@ Level::level_create_terrain_messy_hall(void)
 			);
 
 
-	level_add_terrain_feature_noise_with_cellterain_(
+	level_add_terrain_feature_noise_with_cellterain_global(
 			 CELLTERRAIN_RUBBLE
 			,8
 			,0
@@ -1445,3 +1550,136 @@ Level::update_entities_positions(void) {
 
 
 
+	void
+Level::roll_new_random_feature(void)
+{
+	assert( (feature_size_roll_base + feature_size_roll_dice + 1) < get_highest_y() );
+	assert( (feature_size_roll_base + feature_size_roll_dice + 1) < get_highest_x() );
+	//
+	enum FeatureType const type
+		= (enum FeatureType)(rand_r(&seed)%((int)FEATURETYPE_COUNT) );
+	int const size 
+		= (feature_size_roll_base)
+		+ (rand_r(&seed)%(feature_size_roll_dice+1) );
+	int const start_y = rand_r(&seed)%(get_highest_y() - size);
+	int const start_x = rand_r(&seed)%(get_highest_x() - size);
+	//
+	//
+	vector_of_pending_level_features.emplace_back(
+			PendingLevelFeature(
+				 type
+				,size
+				,start_y
+				,start_x
+				,((double)size)
+				,seed
+				) );
+	move(0,0);
+	printw("rolled feature: size  %4d , @[%3d,%3d]"
+			,size
+			,start_y
+			,start_x
+			);
+
+	for(int offset_y = 0 ; offset_y < size; ++offset_y ) {
+		for(int offset_x = 0 ; offset_x < size; ++offset_x ) {
+			int const y = offset_y + start_y;
+			int const x = offset_x + start_x;
+			ref_levelcell_at_yx(y,x).set_cell_terrain_if_empty(CELLTERRAIN_WARNING);
+		}
+	}
+
+}
+
+
+
+
+
+
+
+
+
+
+
+	void
+Level::generate_level_feature_id(size_t const id)
+{
+
+	PendingLevelFeature & pending_level_feature = vector_of_pending_level_features.at(id);
+	pending_level_feature.is_generated = true;
+
+
+	// clear
+	level_add_terrain_feature_rectangle_with_cellterain_fill(
+			CELLTERRAIN_NONE
+			,pending_level_feature.start_y
+			,pending_level_feature.start_x
+			,pending_level_feature.start_y + pending_level_feature.size
+			,pending_level_feature.start_x + pending_level_feature.size
+			);
+
+	switch(pending_level_feature.type) {
+		case FEATURETYPE_ZERO:
+			{
+				level_add_terrain_feature_rectangle_room(
+						 pending_level_feature.start_y
+						,pending_level_feature.start_x
+						,pending_level_feature.start_y + pending_level_feature.size
+						,pending_level_feature.start_x + pending_level_feature.size
+						);
+				// TODO random combatants
+				break;
+			}
+
+		case FEATURETYPE_ROCK_INFESTED:
+			{
+				level_add_terrain_feature_noise_with_cellterain_local(
+						 CELLTERRAIN_RUBBLE
+						,pending_level_feature.start_y
+						,pending_level_feature.start_x
+						,pending_level_feature.start_y + pending_level_feature.size
+						,pending_level_feature.start_x + pending_level_feature.size
+						,3
+						,seed
+						);
+				// TODO random combatants
+				break;
+			}
+
+		case FEATURETYPE_COUNT:
+			{
+				assert(pending_level_feature.type != FEATURETYPE_COUNT);
+				break;
+			}
+		default: assert(false);
+	}
+
+
+
+	vector_of_entity.emplace_back(Entity(ID_BaseEntity_eater));
+	vector_of_entity.back().force_set_position_yx(
+			(pending_level_feature.start_y+2) + (rand_r(&seed)%pending_level_feature.size - 4)
+			,(pending_level_feature.start_x+2) + (rand_r(&seed)%pending_level_feature.size - 4)
+			);
+	vector_of_entity.emplace_back(Entity(ID_BaseEntity_eater));
+	vector_of_entity.back().force_set_position_yx(
+			(pending_level_feature.start_y+2) + (rand_r(&seed)%pending_level_feature.size - 4)
+			,(pending_level_feature.start_x+2) + (rand_r(&seed)%pending_level_feature.size - 4)
+			);
+	vector_of_entity.emplace_back(Entity(ID_BaseEntity_devourer));
+	vector_of_entity.back().force_set_position_yx(
+			(pending_level_feature.start_y+2) + (rand_r(&seed)%pending_level_feature.size - 4)
+			,(pending_level_feature.start_x+2) + (rand_r(&seed)%pending_level_feature.size - 4)
+			);
+	vector_of_entity.emplace_back(Entity(ID_BaseEntity_orc));
+	vector_of_entity.back().force_set_position_yx(
+			(pending_level_feature.start_y+2) + (rand_r(&seed)%pending_level_feature.size - 4)
+			,(pending_level_feature.start_x+2) + (rand_r(&seed)%pending_level_feature.size - 4)
+			);
+	vector_of_entity.emplace_back(Entity(ID_BaseEntity_wraith));
+	vector_of_entity.back().force_set_position_yx(
+			(pending_level_feature.start_y+2) + (rand_r(&seed)%pending_level_feature.size - 4)
+			,(pending_level_feature.start_x+2) + (rand_r(&seed)%pending_level_feature.size - 4)
+			);
+
+}

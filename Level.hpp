@@ -42,9 +42,9 @@ enum CellTerrain {
 int const TABLE_CELLTERRAIN_SYMBOL[] = {
 	[CELLTERRAIN_NONE]             = ' ' ,
 	[CELLTERRAIN_WARNING]          = '.' ,
-	[CELLTERRAIN_RUBBLE]           = '+' ,
+	[CELLTERRAIN_RUBBLE]           = '~' ,
 	[CELLTERRAIN_HASH]             = '#' ,
-	[CELLTERRAIN_WALL_HORIZONTAL]  = '-' ,
+	[CELLTERRAIN_WALL_HORIZONTAL]  = '=' ,
 	[CELLTERRAIN_WALL_VERTICAL]    = '|' ,
 	[CELLTERRAIN_CORPSE]           = '%' ,
 };
@@ -97,6 +97,8 @@ struct LevelCell {
 	bool is_cell_terrain_blocked(void) const ;
 	bool is_cell_terrain_walkable(void) const ;
 
+	void set_cell_terrain_if_empty(enum CellTerrain const _cellterrain) ;
+
 	// mutating methods
 	void damage_this_cell(void);
 
@@ -107,6 +109,51 @@ struct LevelCell {
 			) const ;
 
 	void wprint_detailed_info(WINDOW * w);
+};
+
+
+
+
+
+
+enum FeatureType {
+	FEATURETYPE_ZERO = 0 ,
+	FEATURETYPE_ROCK_INFESTED ,
+
+	FEATURETYPE_COUNT ,
+};
+
+
+
+struct PendingLevelFeature {
+	bool is_generated = false;
+	enum FeatureType type = FEATURETYPE_ZERO;
+	int size = 0;
+	int start_y = 0;
+	int start_x = 0;
+	unsigned seed = 0;
+	CountdownTimer timer;
+	//ctor
+	PendingLevelFeature(
+			 enum FeatureType const _type
+			,int const _size
+			,int const _start_y
+			,int const _start_x 
+			,double const _seconds_of_countdown
+			,unsigned const _seed
+			)
+		:type(_type)
+		,size(_size)
+		,start_y(_start_y)
+		,start_x(_start_x)
+		,seed(_seed)
+		,timer(CountdownTimer(_seconds_of_countdown))
+	{ }
+
+	void update_time_from_globaltimer( GlobalTimer const & global_timer) 
+	{
+		timer.update_time_from_globaltimer(global_timer);
+	}
 };
 
 
@@ -134,12 +181,16 @@ struct Level {
 		,int const _x_max 
 			);
 
+	int feature_size_roll_base = 8;
+	int feature_size_roll_dice = 8;
+
 
 
 	std::vector<std::vector<LevelCell>> table_of_cells = std::vector<std::vector<LevelCell>>();
 	std::vector<Entity> vector_of_entity = std::vector<Entity>();
 	std::vector<VisualEntity> vector_of_visual_entity = std::vector<VisualEntity>();
 	std::vector<size_t> vector_of_entityids_on_screen = std::vector<size_t>();
+	std::vector<PendingLevelFeature> vector_of_pending_level_features;
 	struct CollisionTable collision_table = CollisionTable(0,0);
 	void update_collision_table(void);
 	int get_count_of_living_entities(void) const;
@@ -182,8 +233,18 @@ struct Level {
 
 
 
-	void level_add_terrain_feature_noise_with_cellterain_(
+	void level_add_terrain_feature_noise_with_cellterain_global(
 			CellTerrain cellterrain
+			,unsigned const randomness_dice
+			,unsigned randomness_seed
+			);
+
+	void level_add_terrain_feature_noise_with_cellterain_local(
+			CellTerrain cellterrain
+			,int const start_y
+			,int const start_x
+			,int const end_y
+			,int const end_x
 			,unsigned const randomness_dice
 			,unsigned randomness_seed
 			);
@@ -199,6 +260,13 @@ struct Level {
 	void level_add_terrain_feature_rectangle_with_cellterrain_border(
 			CellTerrain const cellterrain
 			,int const _start_y
+			,int const _start_x
+			,int const _end_y
+			,int const _end_x
+			);
+
+	void level_add_terrain_feature_rectangle_room(
+			 int const _start_y
 			,int const _start_x
 			,int const _end_y
 			,int const _end_x
@@ -270,6 +338,9 @@ struct Level {
 
 	void create_random_enemy_group(void);
 	void ensure_entities_are_within_bounds(void);
+
+	void roll_new_random_feature(void);
+	void generate_level_feature_id(size_t const id);
 }; // struct Level
 
 

@@ -8,6 +8,8 @@ Features I want to have before I consider this a "release candidate":
 ✓6. implement ability: aoe damage around target
 
 
+TODO  add a warning when standing on a pendinglevelfeature: "Beware! the dungeon is forming in this spot."
+
 FIXME stacked entities which have collision seem to be unable to un-stack themselves
 
 

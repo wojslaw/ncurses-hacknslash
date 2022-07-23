@@ -5,6 +5,8 @@
 #define THRESHOLD_HEAVILY_DAMAGED 4
 #define DIVISOR_HEAVILY_DAMAGED_ROLL_DAMAGE 2
 #define PRINT_DAMAGED_ON_LIFEBAR false
+#define FLAG_MOVEMENT_DISABLES_ATTACK false
+
 
 
 
@@ -506,8 +508,10 @@ Entity::is_ready_to_attack(void) const
 	if(timer_combat_turn.remaining_seconds > 0.0) {
 		return 0;
 	}
-	if(is_recently_moved()) {
-		return false;
+	if(FLAG_MOVEMENT_DISABLES_ATTACK) {
+		if(is_recently_moved()) {
+			return false;
+		}
 	}
 	return timer_combat_turn.remaining_seconds <= 0;
 }
