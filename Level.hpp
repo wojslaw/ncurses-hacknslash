@@ -31,6 +31,7 @@ typedef size_t IDEntity;
 
 enum CellTerrain {
 	CELLTERRAIN_NONE = 0 ,
+	CELLTERRAIN_WARNING ,
 	CELLTERRAIN_RUBBLE ,
 	CELLTERRAIN_HASH ,
 	CELLTERRAIN_WALL_HORIZONTAL ,
@@ -38,14 +39,52 @@ enum CellTerrain {
 	CELLTERRAIN_CORPSE ,
 };
 
-int const NCURSES_TABLE_CELLTERRAIN_SYMBOL[] = {
-	[CELLTERRAIN_NONE] = ' ' ,
-	[CELLTERRAIN_RUBBLE] = '+' ,
-	[CELLTERRAIN_HASH] = '#' ,
-	[CELLTERRAIN_WALL_HORIZONTAL] = '-' ,
-	[CELLTERRAIN_WALL_VERTICAL]   = '|' ,
-	[CELLTERRAIN_CORPSE]   = '%' ,
+int const TABLE_CELLTERRAIN_SYMBOL[] = {
+	[CELLTERRAIN_NONE]             = ' ' ,
+	[CELLTERRAIN_WARNING]          = '.' ,
+	[CELLTERRAIN_RUBBLE]           = '+' ,
+	[CELLTERRAIN_HASH]             = '#' ,
+	[CELLTERRAIN_WALL_HORIZONTAL]  = '-' ,
+	[CELLTERRAIN_WALL_VERTICAL]    = '|' ,
+	[CELLTERRAIN_CORPSE]           = '%' ,
 };
+
+
+
+int const TABLE_CELLTERRAIN_IS_BLOCKING[] = {
+	[CELLTERRAIN_NONE]    = false ,
+	[CELLTERRAIN_WARNING] = false ,
+	[CELLTERRAIN_RUBBLE]          = true ,
+	[CELLTERRAIN_HASH]            = true ,
+	[CELLTERRAIN_WALL_HORIZONTAL] = true ,
+	[CELLTERRAIN_WALL_VERTICAL]   = true ,
+	[CELLTERRAIN_CORPSE]          = false ,
+};
+
+
+int const TABLE_CELLTERRAIN_IS_DESTRUCTIBLE[] = {
+	[CELLTERRAIN_NONE]    = false ,
+	[CELLTERRAIN_WARNING] = false ,
+	[CELLTERRAIN_RUBBLE]          = true ,
+	[CELLTERRAIN_HASH]            = true ,
+	[CELLTERRAIN_WALL_HORIZONTAL] = true ,
+	[CELLTERRAIN_WALL_VERTICAL]   = true ,
+	[CELLTERRAIN_CORPSE]          = true ,
+};
+
+
+CellTerrain const TABLE_CELLTERRAIN_WHEN_DAMAGED_REDUCE_TO[] = {
+	[CELLTERRAIN_NONE]            = CELLTERRAIN_NONE   ,
+	[CELLTERRAIN_WARNING]         = CELLTERRAIN_NONE   ,
+	[CELLTERRAIN_RUBBLE]          = CELLTERRAIN_NONE   ,
+	[CELLTERRAIN_HASH]            = CELLTERRAIN_RUBBLE ,
+	[CELLTERRAIN_WALL_HORIZONTAL] = CELLTERRAIN_RUBBLE ,
+	[CELLTERRAIN_WALL_VERTICAL]   = CELLTERRAIN_RUBBLE ,
+	[CELLTERRAIN_CORPSE]          = CELLTERRAIN_NONE   ,
+};
+
+
+
 
 
 
@@ -55,8 +94,8 @@ struct LevelCell {
 	size_t id_of_entity = 0;
 	VisualEntity const * ptr_visual_entity = 0;
 
-	bool is_blocked_cell(void) const ;
-	bool is_cell_walkable(void) const ;
+	bool is_cell_terrain_blocked(void) const ;
+	bool is_cell_terrain_walkable(void) const ;
 
 	// mutating methods
 	void damage_this_cell(void);
@@ -66,6 +105,8 @@ struct LevelCell {
 			,int const y
 			,int const x
 			) const ;
+
+	void wprint_detailed_info(WINDOW * w);
 };
 
 

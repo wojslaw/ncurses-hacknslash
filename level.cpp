@@ -6,23 +6,17 @@
 #define FLAG_SKIP_FIRST_ENTITY_IN_LIST_OF_VISIBLE  true
 
 	bool 
-LevelCell::is_blocked_cell(void) const
+LevelCell::is_cell_terrain_blocked(void) const
 {
-	if(cellterrain != CELLTERRAIN_NONE) {
-		return true;
-	}
-	return false;
+	return(TABLE_CELLTERRAIN_IS_BLOCKING[cellterrain]);
 }
 
 
 
 	bool 
-LevelCell::is_cell_walkable(void) const
+LevelCell::is_cell_terrain_walkable(void) const
 {
-	if(cellterrain == CELLTERRAIN_NONE) {
-		return true;
-	}
-	return false;
+	return(not is_cell_terrain_blocked());
 }
 
 
@@ -31,14 +25,10 @@ LevelCell::is_cell_walkable(void) const
 	void
 LevelCell::damage_this_cell(void)
 {
-	if(cellterrain == CELLTERRAIN_NONE) {
+	if(not TABLE_CELLTERRAIN_IS_DESTRUCTIBLE[cellterrain]) {
 		return;
 	}
-	if(cellterrain == CELLTERRAIN_RUBBLE) {
-		cellterrain = CELLTERRAIN_NONE;
-		return;
-	}
-	cellterrain = CELLTERRAIN_RUBBLE;
+	cellterrain = TABLE_CELLTERRAIN_WHEN_DAMAGED_REDUCE_TO[cellterrain];
 }
 
 
@@ -47,13 +37,37 @@ LevelCell::wprint(WINDOW * w) const
 {
 	assert(w);
 	if(cellterrain == CELLTERRAIN_NONE) {
-		return waddch(w,NCURSES_TABLE_CELLTERRAIN_SYMBOL[cellterrain]);
+		return waddch(w,TABLE_CELLTERRAIN_SYMBOL[cellterrain]);
 	}
 	wattron(w,ATTR_TERRAIN);
-	waddch(w,NCURSES_TABLE_CELLTERRAIN_SYMBOL[cellterrain]);
+	waddch(w,TABLE_CELLTERRAIN_SYMBOL[cellterrain]);
 	wattroff(w,ATTR_TERRAIN);
 	return OK;
 }
+
+
+	void
+LevelCell::wprint_detailed_info(WINDOW * w)
+{
+	wprintw(w,"%c\n"
+			,TABLE_CELLTERRAIN_SYMBOL[cellterrain]
+			);
+	if(TABLE_CELLTERRAIN_IS_BLOCKING[cellterrain]) {
+		wprintw(w,"blocking\n"
+				);
+	}
+	if(TABLE_CELLTERRAIN_IS_DESTRUCTIBLE[cellterrain]) {
+		wprintw(w,"destructible into: %c\n"
+				,TABLE_CELLTERRAIN_SYMBOL[TABLE_CELLTERRAIN_WHEN_DAMAGED_REDUCE_TO[cellterrain]]
+				);
+	}
+}
+
+
+
+
+
+
 
 
 	int 
@@ -986,7 +1000,7 @@ Level::update_collision_table(void)
 	//terrain
 	for(int y = 0; y < y_max; ++y ) {
 		for(int x = 0; x < x_max; ++x ) {
-			if(not table_of_cells.at(y).at(x).is_cell_walkable()) {
+			if(table_of_cells.at(y).at(x).is_cell_terrain_blocked()) {
 				collision_table.set_blocked_yx(y,x);
 			}
 		}
@@ -1405,7 +1419,7 @@ Level::update_entities_positions(void) {
 		if(!ref_entity.has_collision()) {  // skip entities without collision
 			continue;
 		}
-		if(cell_at_new_position.is_blocked_cell()) {
+		if(cell_at_new_position.is_cell_terrain_blocked()) {
 			if(ref_entity.has_destroyer_of_terrain()) { // try to destroy cell
 				cell_at_new_position.damage_this_cell();
 			}
@@ -1426,3 +1440,8 @@ Level::update_entities_positions(void) {
 	//
 	//
 }
+
+
+
+
+
