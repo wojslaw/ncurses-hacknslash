@@ -6,10 +6,29 @@
 #define FLAG_SKIP_FIRST_ENTITY_IN_LIST_OF_VISIBLE  true
 
 
+
+
+	void
+LevelCell::clear(void)
+{
+	has_entity = false;
+	id_of_entity = -1;
+	ptr_visual_entity = 0;
+}
+
+
 	bool 
 LevelCell::is_cell_blocked_by_entity(void) const
 {
-	return(ptr_entity && (id_of_entity != (size_t)-1)) ;
+	if(has_entity) {
+		assert(has_entity);
+		assert(id_of_entity != (size_t)-1);
+	}
+	return(
+			has_entity
+			&& 
+			(id_of_entity != (size_t)-1)
+			) ;
 }
 
 
@@ -136,9 +155,7 @@ Level::update_table_of_cells_with_pointers_to_entities(void)
 	// clean
 	for(auto & row : table_of_cells ) {
 		for( auto & cell : row ) {
-			cell.ptr_entity = 0;
-			cell.id_of_entity = -1;
-			cell.ptr_visual_entity = 0;
+			cell.clear();
 		}
 	}
 	// and add
@@ -148,12 +165,11 @@ Level::update_table_of_cells_with_pointers_to_entities(void)
 			continue;
 		}
 		// skip invalid-positioned entities
-		if(!(is_vec2d_position_within_bounds_of_level(entity.vec2d_position))) {
+		if(not is_position_within_bounds_of_level_vec2d(entity.vec2d_position)) {
 			continue;
 		}
 		//
 		LevelCell & levelcell = ref_levelcell_at_vec2d(entity.vec2d_position);
-		levelcell.ptr_entity = &entity;
 		levelcell.id_of_entity = id_of_entity;
 		//
 		++id_of_entity;
@@ -164,12 +180,14 @@ Level::update_table_of_cells_with_pointers_to_entities(void)
 			continue;
 		}
 		// skip invalid-positioned entities
-		if(!(is_vec2d_position_within_bounds_of_level(visual_entity.vec2d_position))) {
+		if(!(is_position_within_bounds_of_level_vec2d(visual_entity.vec2d_position))) {
 			continue;
 		}
 		//
 		LevelCell & levelcell = ref_levelcell_at_vec2d(visual_entity.vec2d_position);
 		levelcell.ptr_visual_entity = &visual_entity;
+		levelcell.id_of_entity = id_of_entity;
+		levelcell.has_entity = true;
 		//
 		++id_of_entity;
 	}
@@ -184,6 +202,8 @@ Level::ref_levelcell_at_yx(
 		,int const x
 		)
 {
+	move(0,0);
+	printw("%d %d\n",y,x);
 	// TODO errorcheck
 	assert(y >= 0);
 	assert(x >= 0);
@@ -199,19 +219,21 @@ Level::ref_levelcell_at_vec2d(
 		Vec2d const & v
 		)
 {
+	move(0,0);
+	printw("%d %d\n",v.y,v.x);
 	// TODO errorcheck
 	assert(v.y >= 0);
 	assert(v.x >= 0);
 	assert(v.y <= get_highest_y());
 	assert(v.x <= get_highest_x());
-	assert(is_vec2d_position_within_bounds_of_level(v));
+	assert(is_position_within_bounds_of_level_vec2d(v));
 	return table_of_cells.at(v.y).at(v.x);
 }
 
 
 
 	bool
-Level::is_vec2d_position_within_bounds_of_level(Vec2d const & v) const
+Level::is_position_within_bounds_of_level_vec2d(Vec2d const & v) const
 {
 	if(v.y < 0) {
 		return false;
@@ -546,6 +568,7 @@ Level::update_time_from_globaltimer(GlobalTimer const & GLOBALTIMER)
 	delete_decayed_entities_if_player_has_no_target();
 	//
 	ensure_entities_are_within_bounds();
+	// TODO push away entities from an occupied cell
 	update_table_of_cells_with_pointers_to_entities();
 	update_collision_table();
 	//
@@ -1217,28 +1240,32 @@ Level::level_add_terrain_feature_rectangle_room(
 	assert(is_position_within_bounds_of_level_yx(middle_y,middle_x));
 
 	for(int y = _start_y; y <= _end_y; ++y) {
+		assert(is_position_within_bounds_of_level_yx(y,_start_x));
+		assert(is_position_within_bounds_of_level_yx(y,  _end_x));
 		ref_levelcell_at_yx(y,_start_x).cellterrain = CELLTERRAIN_WALL_VERTICAL;
 		ref_levelcell_at_yx(y,  _end_x).cellterrain = CELLTERRAIN_WALL_VERTICAL;
 	}
 	for(int x = _start_x; x <= _end_x; ++x) {
+		assert(is_position_within_bounds_of_level_yx(_start_y,x));
+		assert(is_position_within_bounds_of_level_yx(  _end_y,x));
 		ref_levelcell_at_yx(_start_y,x).cellterrain = CELLTERRAIN_WALL_HORIZONTAL;
 		ref_levelcell_at_yx(  _end_y,x).cellterrain = CELLTERRAIN_WALL_HORIZONTAL;
 	}
 
-	ref_levelcell_at_yx(_start_y,_start_x).cellterrain = CELLTERRAIN_HASH;
-	ref_levelcell_at_yx(_start_y,  _end_x).cellterrain = CELLTERRAIN_HASH;
-	ref_levelcell_at_yx(  _end_y,_start_x).cellterrain = CELLTERRAIN_HASH;
-	ref_levelcell_at_yx(  _end_y,  _end_x).cellterrain = CELLTERRAIN_HASH;
+	ref_levelcell_at_yx( _start_y , _start_x).cellterrain = CELLTERRAIN_HASH;
+	ref_levelcell_at_yx( _start_y ,   _end_x).cellterrain = CELLTERRAIN_HASH;
+	ref_levelcell_at_yx(   _end_y , _start_x).cellterrain = CELLTERRAIN_HASH;
+	ref_levelcell_at_yx(   _end_y ,   _end_x).cellterrain = CELLTERRAIN_HASH;
 
-	ref_levelcell_at_yx( _start_y , middle_x ).cellterrain = CELLTERRAIN_NONE;
-	ref_levelcell_at_yx(   _end_y , middle_x ).cellterrain = CELLTERRAIN_NONE;
+	ref_levelcell_at_yx( _start_y , middle_x   ).cellterrain = CELLTERRAIN_NONE;
+	ref_levelcell_at_yx(   _end_y , middle_x   ).cellterrain = CELLTERRAIN_NONE;
 	ref_levelcell_at_yx( _start_y , middle_x+1 ).cellterrain = CELLTERRAIN_NONE;
 	ref_levelcell_at_yx(   _end_y , middle_x+1 ).cellterrain = CELLTERRAIN_NONE;
 
-	ref_levelcell_at_yx( middle_y , _start_y ).cellterrain = CELLTERRAIN_NONE;
-	ref_levelcell_at_yx( middle_y ,   _end_y ).cellterrain = CELLTERRAIN_NONE;
-	ref_levelcell_at_yx( middle_y+1 , _start_y ).cellterrain = CELLTERRAIN_NONE;
-	ref_levelcell_at_yx( middle_y+1 ,   _end_y ).cellterrain = CELLTERRAIN_NONE;
+	ref_levelcell_at_yx( middle_y  , _start_x ).cellterrain = CELLTERRAIN_NONE;
+	ref_levelcell_at_yx( middle_y  ,   _end_x ).cellterrain = CELLTERRAIN_NONE;
+	ref_levelcell_at_yx( middle_y+1, _start_x ).cellterrain = CELLTERRAIN_NONE;
+	ref_levelcell_at_yx( middle_y+1,   _end_x ).cellterrain = CELLTERRAIN_NONE;
 }
 
 
@@ -1265,10 +1292,15 @@ Level::level_add_terrain_feature_rectangle_with_cellterrain_border(
 	assert(_end_y <= get_highest_y());
 	assert(_end_x <= get_highest_x());
 	for(int y = _start_y; y <= _end_y; ++y) {
+
+		assert(is_position_within_bounds_of_level_yx(y,_start_x));
+		assert(is_position_within_bounds_of_level_yx(y,  _end_x));
 		ref_levelcell_at_yx(y,_start_x).cellterrain = cellterrain;
 		ref_levelcell_at_yx(y,  _end_x).cellterrain = cellterrain;
 	}
 	for(int x = _start_x; x <= _end_x; ++x) {
+		assert(is_position_within_bounds_of_level_yx(_start_y,x));
+		assert(is_position_within_bounds_of_level_yx(  _end_y,x));
 		ref_levelcell_at_yx(_start_y,x).cellterrain = cellterrain;
 		ref_levelcell_at_yx(  _end_y,x).cellterrain = cellterrain;
 	}
@@ -1606,8 +1638,10 @@ Level::Level(
 Level::update_entities_positions(void) {
 
 	//
+	size_t id_of_entity = 0;
 	for(Entity & ref_entity : vector_of_entity ) {
-		//if(!(is_vec2d_position_within_bounds_of_level(ref_entity.vec2d_position))) { continue;  } // skip invalidly-placed
+		//if(!(is_position_within_bounds_of_level_vec2d(ref_entity.vec2d_position))) { continue;  } // skip invalidly-placed
+		assert(is_position_within_bounds_of_level_vec2d(ref_entity.vec2d_position));
 		LevelCell & cell_at_new_position = ref_levelcell_at_vec2d(ref_entity.vec2d_position);
 		if(!ref_entity.has_collision()) {  // skip entities without collision
 			continue;
@@ -1619,26 +1653,12 @@ Level::update_entities_positions(void) {
 			ref_entity.position_restore_last();
 		}
 		if(cell_at_new_position.is_cell_blocked_by_entity()) {
-			if(cell_at_new_position.ptr_entity != &ref_entity) { // skip check if same
+			if(cell_at_new_position.id_of_entity != id_of_entity) { // skip check if same
 				ref_entity.position_restore_last();
 			}
 		}
-		//ref_entity.vec2d_position_last = ref_entity.vec2d_position;
-
-		/* for(Entity const& ref_entity_2 : vector_of_entity ) { */
-		/* 	if(&ref_entity_2 == &ref_entity) { // skip check if same */
-		/* 		continue; */
-		/* 	} */
-		/* 	if(!(ref_entity_2.is_blocking())) { */
-		/* 		continue; */
-		/* 	} */
-		/* 	if(Vec2d_is_equal(ref_entity.vec2d_position ,ref_entity_2.vec2d_position )) { */
-		/* 		ref_entity.position_restore_last(); */
-		/* 	} */
-		/* } */
+		++id_of_entity;
 	}
-	//
-	//
 }
 
 
@@ -1670,7 +1690,7 @@ Level::roll_new_random_feature(void)
 				,size
 				,start_y
 				,start_x
-				,((double)size)
+				,(double)(size>>2)+1
 				,seed
 				) );
 	move(0,0);
@@ -1817,14 +1837,21 @@ Level::generate_level_feature_id(size_t const id)
 	PendingLevelFeature & pending_level_feature = vector_of_pending_level_features.at(id);
 	pending_level_feature.is_generated = true;
 
+	int const end_y = pending_level_feature.start_y + pending_level_feature.size;
+	int const end_x = pending_level_feature.start_x + pending_level_feature.size;
+
+	assert(pending_level_feature.start_y >= 0);
+	assert(pending_level_feature.start_x >= 0);
+	assert(end_y);
+	assert(end_x);
 
 	// clear
 	level_add_terrain_feature_rectangle_with_cellterain_fill(
 			CELLTERRAIN_NONE
 			,pending_level_feature.start_y
 			,pending_level_feature.start_x
-			,pending_level_feature.start_y + pending_level_feature.size
-			,pending_level_feature.start_x + pending_level_feature.size
+			,end_y
+			,end_x
 			);
 
 	switch(pending_level_feature.type) {
@@ -1833,8 +1860,8 @@ Level::generate_level_feature_id(size_t const id)
 				level_add_terrain_feature_rectangle_room(
 						 pending_level_feature.start_y
 						,pending_level_feature.start_x
-						,pending_level_feature.start_y + pending_level_feature.size
-						,pending_level_feature.start_x + pending_level_feature.size
+						,end_y
+						,end_x
 						);
 				// TODO random combatants
 				break;
@@ -1846,9 +1873,9 @@ Level::generate_level_feature_id(size_t const id)
 						 CELLTERRAIN_RUBBLE
 						,pending_level_feature.start_y
 						,pending_level_feature.start_x
-						,pending_level_feature.start_y + pending_level_feature.size
-						,pending_level_feature.start_x + pending_level_feature.size
-						,3
+						,end_y
+						,end_x
+						,7
 						,seed
 						);
 				// TODO random combatants
@@ -1860,16 +1887,14 @@ Level::generate_level_feature_id(size_t const id)
 				assert(pending_level_feature.type != FEATURETYPE_COUNT);
 				break;
 			}
-		default: assert(false);
+		default:
+			printw("pending_level_feature.type=%d",pending_level_feature.type);
+			printf("pending_level_feature.type=%d",pending_level_feature.type);
+			assert(false);
 	}
 
 
 
-	vector_of_entity.emplace_back(Entity(ID_BaseEntity_eater));
-	vector_of_entity.back().force_set_position_yx(
-			(pending_level_feature.start_y+2) + (rand_r(&seed)%pending_level_feature.size - 4)
-			,(pending_level_feature.start_x+2) + (rand_r(&seed)%pending_level_feature.size - 4)
-			);
 	vector_of_entity.emplace_back(Entity(ID_BaseEntity_eater));
 	vector_of_entity.back().force_set_position_yx(
 			(pending_level_feature.start_y+2) + (rand_r(&seed)%pending_level_feature.size - 4)

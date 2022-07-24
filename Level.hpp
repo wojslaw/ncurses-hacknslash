@@ -92,9 +92,11 @@ CellTerrain const TABLE_CELLTERRAIN_WHEN_DAMAGED_REDUCE_TO[] = {
 
 struct LevelCell {
 	enum CellTerrain cellterrain = CELLTERRAIN_NONE;
-	Entity const * ptr_entity = 0;
-	size_t id_of_entity = 0;
+	bool has_entity = false;
+	size_t id_of_entity = (size_t)(-1);
 	VisualEntity const * ptr_visual_entity = 0;
+
+	void clear(void);
 
 	bool is_cell_blocked_by_entity(void) const;
 	bool is_cell_blocked_by_terrain(void) const;
@@ -102,15 +104,6 @@ struct LevelCell {
 	bool is_cell_walkable(void) const;
 
 	void set_cell_terrain_if_empty(enum CellTerrain const _cellterrain) ;
-
-
-
-
-
-
-
-
-
 
 
 	// mutating methods
@@ -235,7 +228,7 @@ struct Level {
 			,int const range
 			) const;
 	bool is_position_within_bounds_of_level_yx(int const y, int const x) const;
-	bool is_vec2d_position_within_bounds_of_level(Vec2d const & v) const;
+	bool is_position_within_bounds_of_level_vec2d(Vec2d const & v) const;
 	bool is_vec2d_position_within_rectangle(
 			Vec2d const & v
 			,int const y_start

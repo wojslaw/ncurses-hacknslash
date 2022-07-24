@@ -90,12 +90,9 @@ struct Entity {
 	void force_set_position_yx(int const y , int const x) {
 		vec2d_position.y = y;
 		vec2d_position.x = x;
-		vec2d_position_last.y = y;
-		vec2d_position_last.x = x;
-		vec2d_planned_movement.y = 0;
-		vec2d_planned_movement.x = 0;
-		vec2d_last_movement.y = 0;
-		vec2d_last_movement.x = 0;
+		vec2d_position_last = vec2d_position;
+		vec2d_planned_movement.set_zero();
+		vec2d_last_movement.set_zero();
 	}
 
 

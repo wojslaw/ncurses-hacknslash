@@ -40,6 +40,15 @@
 
 
 
+#include <stdio.h>
+#include <execinfo.h>
+#include <signal.h>
+#include <stdlib.h>
+#include <unistd.h>
+
+
+
+
 
 
 
@@ -50,6 +59,7 @@
 
 int main()
 {
+
 	check_table_of_baseentity_is_valid();
 
 
