@@ -91,7 +91,7 @@ struct VisualEntity {
 		timer_bold.update_time_from_globaltimer(GLOBALTIMER);
 	}
 
-	int wprint(WINDOW * w) const {
+	int wrender(WINDOW * w) const {
 		assert(w);
 		if(timer_life.is_countdown_finished()) {
 			return ERR;

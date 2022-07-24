@@ -688,7 +688,7 @@ Entity::modify_life(int const delta_life)
 
 
 	int
-Entity::wprint_with_additional_attrs(
+Entity::wrender_with_additional_attrs(
 		 WINDOW * w
 		,int const attrs_additional
 		) const {
@@ -783,7 +783,7 @@ Entity::wprint_entitylist_row(WINDOW * w,bool const is_target) const
 		= is_target
 		? ATTR_TARGET
 		: 0;
-	wprint_with_additional_attrs(w,attr);
+	wrender_with_additional_attrs(w,attr);
 	wprintw(w
 			,"%2d/%2d"
 			,stat_life
@@ -864,7 +864,7 @@ Entity::wprint_detailed_entity_info_enemy(WINDOW * w) const
 	} //life
 
 	wmove(w,getcury(w)+1,1);
-	wprint_with_additional_attrs(w,0);
+	wrender_with_additional_attrs(w,0);
 	wmove(w,getcury(w)+1,3);
 	wprintw(w,"%s"
 			, get_name()

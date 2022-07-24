@@ -1,3 +1,4 @@
+// arena-ncurses-of-famewar
 
 #include <ncurses.h>
 
@@ -25,11 +26,15 @@
 #define WINDOW_ENTITYLIST_SIZE_Y 12
 #define WINDOW_ENTITYLIST_SIZE_X 24
 
-#define WINDOW_DETAILS_SIZE_Y 12
+#define WINDOW_DETAILS_SIZE_Y 14
 #define WINDOW_DETAILS_SIZE_X 40
 
 #define MULTIPLY_TIME 1.0
 #define SECONDS_MINIMUM_TIME_BEFORE_UPDATE (1.0/100.0)
+
+
+#define FLAG_MOUSE_GAMEWINDOW_SETS_TARGET true
+#define FLAG_MOUSE_SCROLL_TARGETS true
 
 
 
@@ -54,6 +59,16 @@ int main()
 	noecho();
 	keypad(stdscr, TRUE);
 	refresh();
+
+	mousemask(
+         BUTTON_SHIFT            
+       | BUTTON_CTRL             
+       | BUTTON_ALT              
+       | ALL_MOUSE_EVENTS        
+       | REPORT_MOUSE_POSITION   
+	   , 0);
+	MEVENT mevent = {0,0,0,0,0};
+	mouseinterval(0);
 
 	init_colorpairs();
 
@@ -105,8 +120,8 @@ int main()
 	wrefresh(w_gamewindow);
 	wrefresh(w_text_entitylist);
 
-	box(w_text_player,0,0);
-	box(w_text_target,0,0);
+	//box(w_text_player,0,0);
+	//box(w_text_target,0,0);
 	wrefresh(w_text_player);
 	wrefresh(w_text_target);
 
@@ -290,6 +305,77 @@ int main()
 			
 		}
 
+		//mouse
+		getmouse(&mevent);
+
+		//	trafo
+		int mouse_w_gamewindow_y = mevent.y;
+		int mouse_w_gamewindow_x = mevent.x;
+		int mouse_w_entitylist_y = mevent.y;
+		int mouse_w_entitylist_x = mevent.x; ++mouse_w_entitylist_x;
+
+		bool const trafo_mouse_w_gamewindow = wmouse_trafo(
+				 w_gamewindow // const WINDOW* win,
+				,&mouse_w_gamewindow_y // int* pY,
+				,&mouse_w_gamewindow_x // int* pX,
+				,false // bool to_screen);
+			 );
+		bool const trafo_mouse_w_entitylist = wmouse_trafo(
+				 w_text_entitylist // const WINDOW* win,
+				,&mouse_w_gamewindow_y // int* pY,
+				,&mouse_w_gamewindow_x // int* pX,
+				,false // bool to_screen);
+			 );
+
+
+		// send to level
+		if(trafo_mouse_w_gamewindow) {
+			if(FLAG_MOUSE_GAMEWINDOW_SETS_TARGET) {
+				LEVEL.input_mouse_set_target(
+						w_gamewindow
+						,mouse_w_gamewindow_y// int x
+						,mouse_w_gamewindow_x// int y
+						,mevent.bstate // mmask_t bstate
+						);
+			} else {
+				LEVEL.handle_input_mouse(
+						w_gamewindow
+						,mouse_w_gamewindow_y// int x
+						,mouse_w_gamewindow_x// int y
+						,mevent.bstate // mmask_t bstate
+						);
+			}
+		}
+		if(trafo_mouse_w_entitylist) {
+			switch(mevent.bstate) {
+				case BUTTON1_CLICKED:
+				case BUTTON1_PRESSED:
+					{
+						LEVEL.player_set_target_to_visibleid(
+								(mouse_w_entitylist_y - 3) // don't know why, but 3 works correctly - I thought it should be 2
+								// +1 border
+								// +1 player(id 0)
+								// +1 - where from?
+								);
+					} break;
+			}
+		}
+		// scroll targets with mouse
+		if(FLAG_MOUSE_SCROLL_TARGETS) {
+			if(mevent.bstate == BUTTON4_PRESSED) { // scrollup
+				LEVEL.player_tab_target(-1);
+			}
+			if(mevent.bstate == BUTTON5_PRESSED) { // scrolldown
+				LEVEL.player_tab_target(+1);
+			}
+			if(mevent.bstate == BUTTON2_PRESSED) { // middleclick
+				LEVEL.ref_player_entity().reset_targeting();
+			}
+		}
+
+		//end mouse
+
+
 		// timers
 
 		if(!IS_GAME_PAUSED) {
@@ -312,7 +398,7 @@ int main()
 			mvprintw(getcury(stdscr)+1,0, "%f" , GLOBALTIMER.deltatime_seconds);
 			mvprintw(getcury(stdscr)+1,0, "SFX: %4zu" , LEVEL.vector_of_visual_entity.size() );
 		}
-		LEVEL.wprint_render_centered_on_player_entity_fill_window(w_gamewindow);
+		LEVEL.wrender_level_centered_on_player_entity_fill_window(w_gamewindow);
 		LEVEL.wprint_entitylist(w_text_entitylist);
 		LEVEL.ref_player_entity().wprint_detailed_entity_info(w_text_player);
 		werase(w_text_target);
@@ -322,6 +408,7 @@ int main()
 				) {
 			LEVEL.ref_target().wprint_detailed_entity_info_enemy(w_text_target);
 		}
+		mvaddch(LINES-2,COLS-2,TABLE_CELLTERRAIN_SYMBOL[CELLTERRAIN_WALL_HORIZONTAL]);
 		wrefresh(w_text_target);
 		wrefresh(w_gamewindow);
 		wrefresh(w_text_entitylist);

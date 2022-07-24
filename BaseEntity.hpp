@@ -11,7 +11,7 @@ enum ID_BASEENTITY {
 	ID_BaseEntity_human  = 1 ,
 	ID_BaseEntity_wraith = 2 ,
 	ID_BaseEntity_gthrower = 3 ,
-	ID_BaseEntity_dickev = 4 ,
+	ID_BaseEntity_silverworm = 4 ,
 	ID_BaseEntity_orc = 5 ,
 	ID_BaseEntity_eater  = 6 ,
 	ID_BaseEntity_bengalov  = 7 ,

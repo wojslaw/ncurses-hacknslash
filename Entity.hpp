@@ -189,7 +189,7 @@ struct Entity {
 	bool is_slowed(void) const;
 
 
-	int wprint_with_additional_attrs(
+	int wrender_with_additional_attrs(
 		 WINDOW * w
 		,int const attrs_additional
 		) const;

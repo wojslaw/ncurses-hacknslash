@@ -39,13 +39,15 @@ enum CellTerrain {
 	CELLTERRAIN_CORPSE ,
 };
 
-int const TABLE_CELLTERRAIN_SYMBOL[] = {
+
+// not that useful, because somehow reading from the array doesn't show the proper values ;_;
+chtype const TABLE_CELLTERRAIN_SYMBOL[] = {
 	[CELLTERRAIN_NONE]             = ' ' ,
 	[CELLTERRAIN_WARNING]          = '.' ,
 	[CELLTERRAIN_RUBBLE]           = '~' ,
 	[CELLTERRAIN_HASH]             = '#' ,
-	[CELLTERRAIN_WALL_HORIZONTAL]  = '=' ,
-	[CELLTERRAIN_WALL_VERTICAL]    = '|' ,
+	[CELLTERRAIN_WALL_HORIZONTAL]  = ACS_HLINE ,
+	[CELLTERRAIN_WALL_VERTICAL]    = ACS_VLINE ,
 	[CELLTERRAIN_CORPSE]           = '%' ,
 };
 
@@ -102,8 +104,8 @@ struct LevelCell {
 	// mutating methods
 	void damage_this_cell(void);
 
-	int wprint(WINDOW * w) const;
-	int mvwprint(WINDOW * w
+	void wrender(WINDOW * w) const;
+	void wrender_move(WINDOW * w
 			,int const y
 			,int const x
 			) const ;
@@ -203,7 +205,7 @@ struct Level {
 	size_t visibleid_from_entityid(size_t const entityid) const;
 
 	void player_tab_target(int const delta);
-	void player_set_target_to_visibleid(int const input_digit);
+	void player_set_target_to_visibleid(int const visibleid);
 
 
 
@@ -318,13 +320,13 @@ struct Level {
 	void delete_decayed_entities_if_player_has_no_target(void);
 
 
-	void wprint_render_from_position_fill_window(
+	void wrender_level_from_position_fill_window(
 			WINDOW * w
 			,int const pos_inlevel_start_y
 			,int const pos_inlevel_start_x
 			);
 
-	void wprint_render_centered_on_player_entity_fill_window(
+	void wrender_level_centered_on_player_entity_fill_window(
 			WINDOW * w
 			);
 
@@ -332,6 +334,19 @@ struct Level {
 	void wprint_entitylist(
 				WINDOW * w);
 
+
+
+	void make_visual_effect_on_point_vec2d(
+			 Vec2d const v_base
+			,int const range
+			);
+
+
+	void make_visual_effect_on_point_yx(
+			 int y
+			,int x
+			,int const range
+			);
 
 	void make_visual_effect_on_target(int const range);
 	void make_visual_effect_on_player(int const range);
@@ -341,6 +356,29 @@ struct Level {
 
 	void roll_new_random_feature(void);
 	void generate_level_feature_id(size_t const id);
+
+	void handle_input_mouse(
+			 WINDOW * w
+			,int y
+			,int x
+			,mmask_t bstate
+			);
+
+	void input_mouse_set_target(
+			 WINDOW * w
+			,int y
+			,int x
+			,mmask_t bstate
+			);
+
+	Vec2d vec2d_position_from_window_mouse(
+			 WINDOW * w
+			,int y
+			,int x
+			);
+
+
+
 }; // struct Level
 
 

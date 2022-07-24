@@ -41,9 +41,9 @@ const struct BaseEntity TABLE_BASEENTITY[] = {
 		.attack_range = 7,
 		.seconds_movement = 0.30,
 	} ,
-	[ID_BaseEntity_dickev] = {
-		.ncurses_symbol = 'd',
-		.name = "dickev" ,
+	[ID_BaseEntity_silverworm] = {
+		.ncurses_symbol = 'r',
+		.name = "silverworm" ,
 		.level = 1 ,
 		.stat_life_max = 8 ,
 		.attack_base = 0 ,
@@ -53,7 +53,7 @@ const struct BaseEntity TABLE_BASEENTITY[] = {
 	} ,
 	[ID_BaseEntity_orc] = {
 		.ncurses_symbol = 'O',
-		.name = "orc" ,
+		.name = "porkish pikeswine" ,
 		.description = "armored spear-wielding warrior" ,
 		.level = 3 ,
 		.stat_life_max = 24 ,

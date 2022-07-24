@@ -46,26 +46,34 @@ LevelCell::damage_this_cell(void)
 }
 
 
-	int 
-LevelCell::wprint(WINDOW * w) const
+	void
+LevelCell::wrender(WINDOW * w) const
 {
 	assert(w);
-	if(cellterrain == CELLTERRAIN_NONE) {
-		return waddch(w,TABLE_CELLTERRAIN_SYMBOL[cellterrain]);
+	if(cellterrain != CELLTERRAIN_NONE) {
+		wattron(w,ATTR_TERRAIN);
 	}
-	wattron(w,ATTR_TERRAIN);
-	waddch(w,TABLE_CELLTERRAIN_SYMBOL[cellterrain]);
-	wattroff(w,ATTR_TERRAIN);
-	return OK;
+	// the ACS_HLINE and ACS_VLINE don't want to work from an array ;_; whether int or chtype
+	switch(cellterrain) {
+		case CELLTERRAIN_NONE            : waddch(w,' '        ); break;
+		case CELLTERRAIN_WARNING         : waddch(w,'.'        ); break;
+		case CELLTERRAIN_RUBBLE          : waddch(w,'~'        ); break;
+		case CELLTERRAIN_HASH            : waddch(w,'#'        ); break;
+		case CELLTERRAIN_WALL_HORIZONTAL : waddch(w,ACS_HLINE  ); break;
+		case CELLTERRAIN_WALL_VERTICAL   : waddch(w,ACS_VLINE  ); break;
+		case CELLTERRAIN_CORPSE          : waddch(w,'%'        ); break;
+	}
+	if(cellterrain != CELLTERRAIN_NONE) {
+		wattroff(w,ATTR_TERRAIN);
+	}
 }
 
 
 	void
 LevelCell::wprint_detailed_info(WINDOW * w)
 {
-	wprintw(w,"%c\n"
-			,TABLE_CELLTERRAIN_SYMBOL[cellterrain]
-			);
+	assert(w);
+	wrender(w);
 	if(TABLE_CELLTERRAIN_IS_BLOCKING[cellterrain]) {
 		wprintw(w,"blocking\n"
 				);
@@ -84,15 +92,15 @@ LevelCell::wprint_detailed_info(WINDOW * w)
 
 
 
-	int 
-LevelCell::mvwprint(WINDOW * w
+	void
+LevelCell::wrender_move(WINDOW * w
 			,int const y
 			,int const x
 			) const
 {
 	assert(w);
 	wmove(w,y,x);
-	return wprint(w);
+	wrender(w);
 }
 
 
@@ -257,7 +265,7 @@ Level::is_position_within_bounds_of_level_yx(int const y, int const x) const
 
 
 	void
-Level::wprint_render_from_position_fill_window(
+Level::wrender_level_from_position_fill_window(
 		 WINDOW * w
 		,int const pos_inlevel_start_y
 		,int const pos_inlevel_start_x
@@ -289,7 +297,7 @@ Level::wprint_render_from_position_fill_window(
 					wattroff(w,ATTR_OUT_OF_MAP_BOUNDS);
 					continue; // prevent fatal error(trying to read beyond vector's size
 				}
-				ref_levelcell_at_yx(pos_level_y,pos_level_x).wprint(w);
+				ref_levelcell_at_yx(pos_level_y,pos_level_x).wrender(w);
 			}
 		}
 	} //terrain
@@ -306,7 +314,7 @@ Level::wprint_render_from_position_fill_window(
 				int const pos_window_y = visual_entity_rendered.vec2d_position.y - pos_inlevel_start_y;
 				int const pos_window_x = visual_entity_rendered.vec2d_position.x - pos_inlevel_start_x;
 				wmove(w,pos_window_y,pos_window_x);
-				visual_entity_rendered.wprint(w);
+				visual_entity_rendered.wrender(w);
 			}
 		}
 	} //SFX
@@ -323,7 +331,7 @@ Level::wprint_render_from_position_fill_window(
 				int const pos_window_y = entity_rendered.vec2d_position.y - pos_inlevel_start_y;
 				int const pos_window_x = entity_rendered.vec2d_position.x - pos_inlevel_start_x;
 				wmove(w,pos_window_y,pos_window_x);
-				entity_rendered.wprint_with_additional_attrs(w,0);
+				entity_rendered.wrender_with_additional_attrs(w,0);
 			}
 		}
 	} //entities
@@ -341,7 +349,7 @@ Level::wprint_render_from_position_fill_window(
 			int const pos_window_y = entity_rendered.vec2d_position.y - pos_inlevel_start_y;
 			int const pos_window_x = entity_rendered.vec2d_position.x - pos_inlevel_start_x;
 			wmove(w,pos_window_y,pos_window_x);
-			entity_rendered.wprint_with_additional_attrs(w,ATTR_TARGET);
+			entity_rendered.wrender_with_additional_attrs(w,ATTR_TARGET);
 		}
 	}//ensure the target is always displayed
 
@@ -363,7 +371,7 @@ Level::wprint_render_from_position_fill_window(
 
 
 	void
-Level::wprint_render_centered_on_player_entity_fill_window(
+Level::wrender_level_centered_on_player_entity_fill_window(
 		 WINDOW * w
 		)
 {
@@ -377,7 +385,7 @@ Level::wprint_render_centered_on_player_entity_fill_window(
 	int const x_start = center_of_screen.x - x_halfsize;
 	// NODO try to fill the given size screen - I decided that it's better to keep the screensize smaller
 	// It would be weird if at the corner you'd see more xD
-	wprint_render_from_position_fill_window(
+	wrender_level_from_position_fill_window(
 			w
 			,y_start 
 			,x_start );
@@ -638,22 +646,22 @@ Level::player_tab_target(int const delta)
 
 
 	void
-Level::player_set_target_to_visibleid(int const input_digit)
+Level::player_set_target_to_visibleid(int const visibleid)
 {
-	assert(input_digit >= 0);
+	assert(visibleid >= 0);
 	if(vector_of_entityids_on_screen.size() <= 1) { // skip if only player on screen
 		return;
 	}
 	int const highest_visibleid = (int)vector_of_entityids_on_screen.size() - 1;
-	if(input_digit > highest_visibleid ) {
+	if(visibleid > highest_visibleid ) {
 		ref_player_entity().set_target_to_entityid(entityid_from_visibleid(highest_visibleid));
 		return;
 	}
-	if(input_digit < 1 ) {
+	if(visibleid < 1 ) {
 		ref_player_entity().set_target_to_entityid(entityid_from_visibleid(1));
 		return;
 	}
-	ref_player_entity().set_target_to_entityid(entityid_from_visibleid(input_digit));
+	ref_player_entity().set_target_to_entityid(entityid_from_visibleid(visibleid));
 }
 
 
@@ -730,11 +738,21 @@ Level::update_entity_combat_rounds(void)
 
 
 
+
+
+
+
+
+
+
+
 	void
-Level::make_visual_effect_on_target(int const range)
+Level::make_visual_effect_on_point_vec2d(
+		 Vec2d const v_base
+		,int const range
+		)
 {
 	assert(range >= 0);
-	const Vec2d & v_base = ref_from_entityid(ref_player_entity().id_of_target).vec2d_position;
 	for(int y = -range ; y <= range; ++y) {
 		for(int x = -range ; x <= range; ++x) {
 			vector_of_visual_entity.emplace_back(
@@ -743,23 +761,45 @@ Level::make_visual_effect_on_target(int const range)
 						,v_base.x+x) );
 		}
 	}
+}
+
+
+	void
+Level::make_visual_effect_on_point_yx(
+		 int y
+		,int x
+		,int const range
+		)
+{
+	assert(range >= 0);
+	make_visual_effect_on_point_vec2d(Vec2d(y,x),range);
+}
+
+
+
+
+
+
+	void
+Level::make_visual_effect_on_target(int const range)
+{
+	assert(range >= 0);
+	make_visual_effect_on_point_vec2d(
+			 ref_from_entityid(ref_player_entity().id_of_target).vec2d_position
+			,range);
 }
 
 
 	void
 Level::make_visual_effect_on_player(int const range)
 {
-	assert(range >= 0);
-	const Vec2d & v_base = ref_player_entity().vec2d_position;
-	for(int y = -range ; y <= range; ++y) {
-		for(int x = -range ; x <= range; ++x) {
-			vector_of_visual_entity.emplace_back(
-					VisualEntity(
-						 v_base.y+y
-						,v_base.x+x) );
-		}
-	}
+	make_visual_effect_on_point_vec2d(
+			 ref_player_entity().vec2d_position
+			,range);
 }
+
+
+
 
 
 
@@ -1145,6 +1185,10 @@ Level::level_add_terrain_feature_rectangle_room(
 	assert(_start_x >=0);
 	assert(_end_y <= get_highest_y());
 	assert(_end_x <= get_highest_x());
+
+	int const middle_y = (_start_y + _end_y)/2;
+	int const middle_x = (_start_x + _end_x)/2;
+
 	for(int y = _start_y; y <= _end_y; ++y) {
 		ref_levelcell_at_yx(y,_start_x).cellterrain = CELLTERRAIN_WALL_VERTICAL;
 		ref_levelcell_at_yx(y,  _end_x).cellterrain = CELLTERRAIN_WALL_VERTICAL;
@@ -1159,6 +1203,15 @@ Level::level_add_terrain_feature_rectangle_room(
 	ref_levelcell_at_yx(  _end_y,_start_x).cellterrain = CELLTERRAIN_HASH;
 	ref_levelcell_at_yx(  _end_y,  _end_x).cellterrain = CELLTERRAIN_HASH;
 
+	ref_levelcell_at_yx( _start_y , middle_x ).cellterrain = CELLTERRAIN_NONE;
+	ref_levelcell_at_yx(   _end_y , middle_x ).cellterrain = CELLTERRAIN_NONE;
+	ref_levelcell_at_yx( _start_y , middle_x+1 ).cellterrain = CELLTERRAIN_NONE;
+	ref_levelcell_at_yx(   _end_y , middle_x+1 ).cellterrain = CELLTERRAIN_NONE;
+
+	ref_levelcell_at_yx( middle_y , _start_y ).cellterrain = CELLTERRAIN_NONE;
+	ref_levelcell_at_yx( middle_y ,   _end_y ).cellterrain = CELLTERRAIN_NONE;
+	ref_levelcell_at_yx( middle_y+1 , _start_y ).cellterrain = CELLTERRAIN_NONE;
+	ref_levelcell_at_yx( middle_y+1 ,   _end_y ).cellterrain = CELLTERRAIN_NONE;
 }
 
 
@@ -1344,9 +1397,9 @@ Level::create_random_enemy_group(void)
 		vector_of_entity.back().force_set_position_yx(y,x);
 		vector_of_entity.emplace_back(Entity(ID_BaseEntity_gthrower));
 		vector_of_entity.back().force_set_position_yx(y-2,x+2);
-		vector_of_entity.emplace_back(Entity(ID_BaseEntity_dickev));
+		vector_of_entity.emplace_back(Entity(ID_BaseEntity_silverworm));
 		vector_of_entity.back().force_set_position_yx(y-4,x+2);
-		vector_of_entity.emplace_back(Entity(ID_BaseEntity_dickev));
+		vector_of_entity.emplace_back(Entity(ID_BaseEntity_silverworm));
 		vector_of_entity.back().force_set_position_yx(y-2,x+4);
 		vector_of_entity.emplace_back(Entity(ID_BaseEntity_eater));
 		vector_of_entity.back().force_set_position_yx(y-4,x+4);
@@ -1362,13 +1415,13 @@ Level::create_random_enemy_group(void)
 	}
 
 	if(enemy_group_type == 3) { // more dickevs and gthrowers
-		vector_of_entity.emplace_back(Entity(ID_BaseEntity_dickev));
+		vector_of_entity.emplace_back(Entity(ID_BaseEntity_silverworm));
 		vector_of_entity.back().force_set_position_yx(y,x);
-		vector_of_entity.emplace_back(Entity(ID_BaseEntity_dickev));
+		vector_of_entity.emplace_back(Entity(ID_BaseEntity_silverworm));
 		vector_of_entity.back().force_set_position_yx(y,x+1);
-		vector_of_entity.emplace_back(Entity(ID_BaseEntity_dickev));
+		vector_of_entity.emplace_back(Entity(ID_BaseEntity_silverworm));
 		vector_of_entity.back().force_set_position_yx(y,x+2);
-		vector_of_entity.emplace_back(Entity(ID_BaseEntity_dickev));
+		vector_of_entity.emplace_back(Entity(ID_BaseEntity_silverworm));
 		vector_of_entity.back().force_set_position_yx(y,x+3);
 		vector_of_entity.emplace_back(Entity(ID_BaseEntity_gthrower));
 		vector_of_entity.back().force_set_position_yx(y-1,x);
@@ -1459,6 +1512,14 @@ Level::Level(
 			, 0	// unsigned randomness_seed 
 			);
 
+
+	level_add_terrain_feature_rectangle_room(
+			 1
+			,1
+			,16
+			,16
+			);
+
 	level_terrain_clear_around_player();
 
 
@@ -1485,9 +1546,9 @@ Level::Level(
 		vector_of_entity.emplace_back(Entity(ID_BaseEntity_bengalov));
 		vector_of_entity.back().force_set_position_yx(21,33);
 		// 
-		vector_of_entity.emplace_back(Entity(ID_BaseEntity_dickev));
+		vector_of_entity.emplace_back(Entity(ID_BaseEntity_silverworm));
 		vector_of_entity.back().force_set_position_yx(20,4);
-		vector_of_entity.emplace_back(Entity(ID_BaseEntity_dickev));
+		vector_of_entity.emplace_back(Entity(ID_BaseEntity_silverworm));
 		vector_of_entity.back().force_set_position_yx(20,5);
 		vector_of_entity.emplace_back(Entity(ID_BaseEntity_gthrower));
 		vector_of_entity.back().force_set_position_yx(20,6);
@@ -1591,6 +1652,115 @@ Level::roll_new_random_feature(void)
 
 }
 
+
+
+
+
+
+
+
+
+	Vec2d
+Level::vec2d_position_from_window_mouse(
+			 WINDOW * w
+			,int y
+			,int x
+			)
+{
+	assert(w);
+	assert(y >= 0);
+	assert(x >= 0);
+	assert(y <= get_highest_y());
+	assert(x <= get_highest_x());
+
+	return Vec2d(
+				 ref_player_entity().vec2d_position.y + y - (getmaxy(w)/2)
+				,ref_player_entity().vec2d_position.x + x - (getmaxx(w)/2)
+			 );
+}
+
+
+
+
+	void
+Level::input_mouse_set_target(
+		 WINDOW * w
+		,int y
+		,int x
+		,mmask_t bstate
+		)
+{
+	assert(w);
+	assert(y >= 0);
+	assert(x >= 0);
+	assert(y <= get_highest_y());
+	assert(x <= get_highest_x());
+	assert(bstate != 0);
+
+	Vec2d const vec2d_position_at_mouse
+		= vec2d_position_from_window_mouse(
+				w
+				,y
+				,x
+				);
+
+
+	std::vector<IDEntity> const entityid_at_pos
+		= get_targetable_entities_around_point_with_range_skip_player(
+			 vec2d_position_at_mouse
+			,0
+			);
+	if(entityid_at_pos.size() > 0) {
+		ref_player_entity().set_target_to_entityid(entityid_at_pos.at(0));
+		return;
+	}
+
+	// slightly higher search-range so you don't have to click exactly
+	std::vector<IDEntity> const entityid_at_pos_higher_search
+		= get_targetable_entities_around_point_with_range_skip_player(
+			 vec2d_position_at_mouse
+			,1
+			);
+	if(entityid_at_pos_higher_search.size() > 0) {
+		ref_player_entity().set_target_to_entityid(entityid_at_pos_higher_search.at(0));
+		return;
+	}
+
+}
+
+
+
+
+
+
+	void
+Level::handle_input_mouse(
+		 WINDOW * w
+		,int y
+		,int x
+		,mmask_t bstate
+		)
+{
+	assert(w);
+	assert(y >= 0);
+	assert(x >= 0);
+	assert(y <= get_highest_y());
+	assert(x <= get_highest_x());
+	assert(bstate != 0);
+
+	Vec2d const vec2d_position_at_mouse
+		= vec2d_position_from_window_mouse(
+				w
+				,y
+				,x
+				);
+
+	make_visual_effect_on_point_vec2d(
+			 vec2d_position_at_mouse
+			,0);
+
+	ref_player_entity().timer_movement.reset();
+}
 
 
 

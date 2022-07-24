@@ -1,4 +1,5 @@
 TODO always display the target, on top of the stack of monsters
+TODO mouse-spell: let's say that id=0 at vector of active abilities will be the mouse spell
 
 Features I want to have before I consider this a "release candidate":
 ✓1. generate new enemies during play
@@ -83,3 +84,8 @@ I was thinking about making the SFX for attack spells show briefly on, but that 
 
 2022-07-21T17:31:17+0200
 around 1000 entities the game starts slowing down, and at 2k it gets really slow
+
+
+
+
+IDEA achievement/conduct: "purity of keys" - disabled mouse
