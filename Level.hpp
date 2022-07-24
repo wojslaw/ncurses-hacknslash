@@ -96,10 +96,22 @@ struct LevelCell {
 	size_t id_of_entity = 0;
 	VisualEntity const * ptr_visual_entity = 0;
 
-	bool is_cell_terrain_blocked(void) const ;
-	bool is_cell_terrain_walkable(void) const ;
+	bool is_cell_blocked_by_entity(void) const;
+	bool is_cell_blocked_by_terrain(void) const;
+	bool is_cell_blocked(void) const;
+	bool is_cell_walkable(void) const;
 
 	void set_cell_terrain_if_empty(enum CellTerrain const _cellterrain) ;
+
+
+
+
+
+
+
+
+
+
 
 	// mutating methods
 	void damage_this_cell(void);

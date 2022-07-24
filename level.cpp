@@ -6,20 +6,39 @@
 #define FLAG_SKIP_FIRST_ENTITY_IN_LIST_OF_VISIBLE  true
 
 
+	bool 
+LevelCell::is_cell_blocked_by_entity(void) const
+{
+	return(ptr_entity && (id_of_entity != (size_t)-1)) ;
+}
+
 
 	bool 
-LevelCell::is_cell_terrain_blocked(void) const
+LevelCell::is_cell_blocked_by_terrain(void) const
 {
 	return(TABLE_CELLTERRAIN_IS_BLOCKING[cellterrain]);
 }
 
 
+	bool 
+LevelCell::is_cell_blocked(void) const
+{
+	return(
+			is_cell_blocked_by_entity()
+			||
+			is_cell_blocked_by_terrain()
+		  );
+}
+
 
 	bool 
-LevelCell::is_cell_terrain_walkable(void) const
+LevelCell::is_cell_walkable(void) const
 {
-	return(not is_cell_terrain_blocked());
+	return(not is_cell_blocked());
 }
+
+
+
 
 
 	void
@@ -118,13 +137,16 @@ Level::update_table_of_cells_with_pointers_to_entities(void)
 	for(auto & row : table_of_cells ) {
 		for( auto & cell : row ) {
 			cell.ptr_entity = 0;
-			cell.id_of_entity = 0;
+			cell.id_of_entity = -1;
 			cell.ptr_visual_entity = 0;
 		}
 	}
 	// and add
 	size_t id_of_entity = 0;
 	for(const auto & entity : vector_of_entity) {
+		if(not entity.is_blocking()) {
+			continue;
+		}
 		// skip invalid-positioned entities
 		if(!(is_vec2d_position_within_bounds_of_level(entity.vec2d_position))) {
 			continue;
@@ -297,6 +319,7 @@ Level::wrender_level_from_position_fill_window(
 					wattroff(w,ATTR_OUT_OF_MAP_BOUNDS);
 					continue; // prevent fatal error(trying to read beyond vector's size
 				}
+				assert(is_position_within_bounds_of_level_yx(pos_level_y,pos_level_x));
 				ref_levelcell_at_yx(pos_level_y,pos_level_x).wrender(w);
 			}
 		}
@@ -1066,7 +1089,7 @@ Level::update_collision_table(void)
 	//assert(table_of_cells.size() == (size_t)y_max);
 	//assert(table_of_cells.size() == (size_t)x_max);
 	//
-	collision_table.resize_and_clear(get_size_y(),get_size_x());
+	collision_table.clear();
 	// entities
 	for(Entity const& entity : vector_of_entity ) {
 		if(entity.is_blocking()) {
@@ -1076,7 +1099,7 @@ Level::update_collision_table(void)
 	//terrain
 	for(int y = 0; y < y_max; ++y ) {
 		for(int x = 0; x < x_max; ++x ) {
-			if(table_of_cells.at(y).at(x).is_cell_terrain_blocked()) {
+			if(table_of_cells.at(y).at(x).is_cell_blocked()) {
 				collision_table.set_blocked_yx(y,x);
 			}
 		}
@@ -1099,6 +1122,7 @@ Level::level_add_terrain_feature_noise_with_cellterain_global(
 	for(int y = 0; y < get_highest_y(); ++y) {
 		for(int x = 0; x < get_highest_x(); ++x) {
 			if(rand_r(&randomness_seed)%randomness_dice == 0) {
+				assert(is_position_within_bounds_of_level_yx(y,x));
 				ref_levelcell_at_yx(y,x).cellterrain = cellterrain;
 			}
 		}
@@ -1125,6 +1149,7 @@ Level::level_add_terrain_feature_noise_with_cellterain_local(
 	for(int y = start_y; y < end_y; ++y) {
 		for(int x = start_x; x < end_x; ++x) {
 			if(rand_r(&randomness_seed)%randomness_dice == 0) {
+				assert(is_position_within_bounds_of_level_yx(y,x));
 				ref_levelcell_at_yx(y,x).cellterrain = cellterrain;
 			}
 		}
@@ -1165,6 +1190,7 @@ Level::level_add_terrain_feature_rectangle_with_cellterain_fill(
 
 	for(int y = _start_y; y <= _end_y; ++y) {
 		for(int x = _start_x; x <= _end_x; ++x) {
+			assert(is_position_within_bounds_of_level_yx(y,x));
 			ref_levelcell_at_yx(y,x).cellterrain = cellterrain;
 		}
 	}
@@ -1188,6 +1214,7 @@ Level::level_add_terrain_feature_rectangle_room(
 
 	int const middle_y = (_start_y + _end_y)/2;
 	int const middle_x = (_start_x + _end_x)/2;
+	assert(is_position_within_bounds_of_level_yx(middle_y,middle_x));
 
 	for(int y = _start_y; y <= _end_y; ++y) {
 		ref_levelcell_at_yx(y,_start_x).cellterrain = CELLTERRAIN_WALL_VERTICAL;
@@ -1585,23 +1612,30 @@ Level::update_entities_positions(void) {
 		if(!ref_entity.has_collision()) {  // skip entities without collision
 			continue;
 		}
-		if(cell_at_new_position.is_cell_terrain_blocked()) {
+		if(cell_at_new_position.is_cell_blocked_by_terrain()) {
 			if(ref_entity.has_destroyer_of_terrain()) { // try to destroy cell
 				cell_at_new_position.damage_this_cell();
 			}
 			ref_entity.position_restore_last();
 		}
-		for(Entity const& ref_entity_2 : vector_of_entity ) {
-			if(&ref_entity_2 == &ref_entity) { // skip check if same
-				continue;
-			}
-			if(!(ref_entity_2.is_blocking())) {
-				continue;
-			}
-			if(Vec2d_is_equal(ref_entity.vec2d_position ,ref_entity_2.vec2d_position )) {
+		if(cell_at_new_position.is_cell_blocked_by_entity()) {
+			if(cell_at_new_position.ptr_entity != &ref_entity) { // skip check if same
 				ref_entity.position_restore_last();
 			}
 		}
+		//ref_entity.vec2d_position_last = ref_entity.vec2d_position;
+
+		/* for(Entity const& ref_entity_2 : vector_of_entity ) { */
+		/* 	if(&ref_entity_2 == &ref_entity) { // skip check if same */
+		/* 		continue; */
+		/* 	} */
+		/* 	if(!(ref_entity_2.is_blocking())) { */
+		/* 		continue; */
+		/* 	} */
+		/* 	if(Vec2d_is_equal(ref_entity.vec2d_position ,ref_entity_2.vec2d_position )) { */
+		/* 		ref_entity.position_restore_last(); */
+		/* 	} */
+		/* } */
 	}
 	//
 	//
@@ -1624,6 +1658,10 @@ Level::roll_new_random_feature(void)
 		+ (rand_r(&seed)%(feature_size_roll_dice+1) );
 	int const start_y = rand_r(&seed)%(get_highest_y() - size);
 	int const start_x = rand_r(&seed)%(get_highest_x() - size);
+	assert(start_y >= 0);
+	assert(start_x >= 0);
+	assert(start_y+size <= get_highest_y());
+	assert(start_x+size <= get_highest_x());
 	//
 	//
 	vector_of_pending_level_features.emplace_back(
@@ -1646,6 +1684,7 @@ Level::roll_new_random_feature(void)
 		for(int offset_x = 0 ; offset_x < size; ++offset_x ) {
 			int const y = offset_y + start_y;
 			int const x = offset_x + start_x;
+			assert(is_position_within_bounds_of_level_yx(y,x));
 			ref_levelcell_at_yx(y,x).set_cell_terrain_if_empty(CELLTERRAIN_WARNING);
 		}
 	}
