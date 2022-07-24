@@ -439,15 +439,15 @@ Level::wrender_level_centered_on_player_entity_fill_window(
 
 
 	void
-Level::make_player_use_ability_number(int const number)
+Level::make_player_use_ability_id_autotarget(int const id_ability)
 {
+	assert(id_ability >= 0);
+	assert((size_t)id_ability < ref_player_entity().vector_of_abilities.size());
+
 	if(not ref_player_entity().is_ready_to_cast_ability()) {
 		// TODO notify not ready
 		return;
 	}
-	assert(number >= 1);
-	size_t const id_ability = number-1;
-	assert(id_ability < ref_player_entity().vector_of_abilities.size());
 	Ability& ref_ability = ref_player_entity().vector_of_abilities.at(id_ability);
 	if(!ref_ability.is_ability_ready()) {
 		// TODO notify not ready
@@ -1724,7 +1724,7 @@ Level::vec2d_position_from_window_mouse(
 			 WINDOW * w
 			,int y
 			,int x
-			)
+			)const
 {
 	assert(w);
 	assert(y >= 0);
@@ -1733,20 +1733,23 @@ Level::vec2d_position_from_window_mouse(
 	assert(x <= get_highest_x());
 
 	return Vec2d(
-				 ref_player_entity().vec2d_position.y + y - (getmaxy(w)/2)
-				,ref_player_entity().vec2d_position.x + x - (getmaxx(w)/2)
+				 constref_player_entity().vec2d_position.y + y - (getmaxy(w)/2)
+				,constref_player_entity().vec2d_position.x + x - (getmaxx(w)/2)
 			 );
 }
 
 
 
 
-	void
-Level::input_mouse_set_target(
+
+
+
+
+	bool
+Level::handle_input_mouse_select_target_at_position(
 		 WINDOW * w
 		,int y
 		,int x
-		,mmask_t bstate
 		)
 {
 	assert(w);
@@ -1754,7 +1757,6 @@ Level::input_mouse_set_target(
 	assert(x >= 0);
 	assert(y <= get_highest_y());
 	assert(x <= get_highest_x());
-	assert(bstate != 0);
 
 	Vec2d const vec2d_position_at_mouse
 		= vec2d_position_from_window_mouse(
@@ -1763,28 +1765,29 @@ Level::input_mouse_set_target(
 				,x
 				);
 
-
 	std::vector<IDEntity> const entityid_at_pos
 		= get_targetable_entities_around_point_with_range_skip_player(
-			 vec2d_position_at_mouse
-			,0
-			);
+				vec2d_position_at_mouse
+				,0
+				);
+
 	if(entityid_at_pos.size() > 0) {
 		ref_player_entity().set_target_to_entityid(entityid_at_pos.at(0));
-		return;
+		return(true);
 	}
 
 	// slightly higher search-range so you don't have to click exactly
 	std::vector<IDEntity> const entityid_at_pos_higher_search
 		= get_targetable_entities_around_point_with_range_skip_player(
-			 vec2d_position_at_mouse
-			,1
-			);
+				vec2d_position_at_mouse
+				,1
+				);
 	if(entityid_at_pos_higher_search.size() > 0) {
 		ref_player_entity().set_target_to_entityid(entityid_at_pos_higher_search.at(0));
-		return;
+		return(true);
 	}
 
+	return(false);
 }
 
 
@@ -1800,26 +1803,36 @@ Level::handle_input_mouse(
 		,mmask_t bstate
 		)
 {
-	assert(w);
-	assert(y >= 0);
-	assert(x >= 0);
-	assert(y <= get_highest_y());
-	assert(x <= get_highest_x());
-	assert(bstate != 0);
 
-	Vec2d const vec2d_position_at_mouse
-		= vec2d_position_from_window_mouse(
-				w
-				,y
-				,x
-				);
 
-	make_visual_effect_on_point_vec2d(
-			 vec2d_position_at_mouse
-			,0);
+	bool const just_selected_target
+		= handle_input_mouse_select_target_at_position(
+				 w
+				 ,y
+				 ,x );
 
-	ref_player_entity().timer_movement.reset();
+	if(just_selected_target) {
+		if(
+				(bstate == BUTTON3_PRESSED        )
+				||
+				(bstate == BUTTON3_RELEASED       )
+				||
+				(bstate == BUTTON3_CLICKED        )
+				||
+				(bstate == BUTTON3_DOUBLE_CLICKED )
+				||
+				(bstate == BUTTON3_TRIPLE_CLICKED )
+		  ) {
+			make_player_use_ability_id_autotarget(0);
+		}
+	}
 }
+
+
+
+
+
+
 
 
 

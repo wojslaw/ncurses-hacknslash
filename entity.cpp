@@ -303,12 +303,16 @@ Entity::wprint_detailed_entity_info(WINDOW * w) const
 	}
 
 	{ // abilities 
-	int ability_number = 1;
+	int ability_id = 0;
 	for(Ability const& ability : vector_of_abilities ) {
 		wmove(w,getcury(w)+1,1);
-		wprintw(w,"a%d " , ability_number);
+		if(ability_id == 0) {
+			wprintw(w,"am");
+		} else {
+			wprintw(w,"a%d " , ability_id);
+		}
 		ability.wprint(w);
-		++ability_number;
+		++ability_id;
 	}
 	}//abilities 
 

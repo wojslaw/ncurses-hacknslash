@@ -33,7 +33,6 @@
 #define SECONDS_MINIMUM_TIME_BEFORE_UPDATE (1.0/100.0)
 
 
-#define FLAG_MOUSE_GAMEWINDOW_SETS_TARGET true
 #define FLAG_MOUSE_SCROLL_TARGETS true
 
 
@@ -135,9 +134,16 @@ int main()
 	wrefresh(w_text_player);
 	wrefresh(w_text_target);
 
-	Level LEVEL  = Level(64,32);
+	Level LEVEL  = Level(80,40);
 	LEVEL.ref_player_entity().id_of_target = 1;
 	LEVEL.ref_player_entity().flag_follow_target = false;
+
+	LEVEL.ref_player_entity().vector_of_abilities.emplace_back(Ability());
+	LEVEL.ref_player_entity().vector_of_abilities.back().abilitytype = ABILITYTYPE_ATTACK_AOE_TARGET;
+	LEVEL.ref_player_entity().vector_of_abilities.back().stack_max = 8;
+	LEVEL.ref_player_entity().vector_of_abilities.back().timer_stack = CountdownTimer(3.0);
+	LEVEL.ref_player_entity().vector_of_abilities.back().stat_roll_base = 1;
+	LEVEL.ref_player_entity().vector_of_abilities.back().stat_roll_dice = 2;
 
 	LEVEL.ref_player_entity().vector_of_abilities.emplace_back(Ability());
 	LEVEL.ref_player_entity().vector_of_abilities.back().abilitytype = ABILITYTYPE_SELF_HEAL;
@@ -207,10 +213,10 @@ int main()
 		}
 
 		switch(input_character) {
-			case '1': LEVEL.make_player_use_ability_number(1); break;
-			case '2': LEVEL.make_player_use_ability_number(2); break;
-			case '3': LEVEL.make_player_use_ability_number(3); break;
-			case '4': LEVEL.make_player_use_ability_number(4); break;
+			case '1': LEVEL.make_player_use_ability_id_autotarget(1); break;
+			case '2': LEVEL.make_player_use_ability_id_autotarget(2); break;
+			case '3': LEVEL.make_player_use_ability_id_autotarget(3); break;
+			case '4': LEVEL.make_player_use_ability_id_autotarget(4); break;
 			case '=': LEVEL.ref_player_entity().consume_food();  break;
 			// movement 
 			case '\n':
@@ -340,21 +346,12 @@ int main()
 
 		// send to level
 		if(trafo_mouse_w_gamewindow) {
-			if(FLAG_MOUSE_GAMEWINDOW_SETS_TARGET) {
-				LEVEL.input_mouse_set_target(
-						w_gamewindow
-						,mouse_w_gamewindow_y// int x
-						,mouse_w_gamewindow_x// int y
-						,mevent.bstate // mmask_t bstate
-						);
-			} else {
-				LEVEL.handle_input_mouse(
-						w_gamewindow
-						,mouse_w_gamewindow_y// int x
-						,mouse_w_gamewindow_x// int y
-						,mevent.bstate // mmask_t bstate
-						);
-			}
+			LEVEL.handle_input_mouse(
+					w_gamewindow
+					,mouse_w_gamewindow_y// int x
+					,mouse_w_gamewindow_x// int y
+					,mevent.bstate // mmask_t bstate
+					);
 		}
 		if(trafo_mouse_w_entitylist) {
 			switch(mevent.bstate) {

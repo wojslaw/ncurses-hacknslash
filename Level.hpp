@@ -202,8 +202,9 @@ struct Level {
 	void update_collision_table(void);
 	int get_count_of_living_entities(void) const;
 
+	Entity const & constref_player_entity(void) const { return vector_of_entity.at(0); }
 	Entity & ref_player_entity(void) { return vector_of_entity.at(0); }
-	Entity & ref_from_entityid(size_t const entityid) { return vector_of_entity.at(entityid); }
+	Entity & ref_from_entityid(size_t entityid) { return vector_of_entity.at(entityid); }
 	Entity & ref_target(void) { return ref_from_entityid(ref_player_entity().id_of_target); }
 	Entity & ref_from_visibleid(size_t const visibleid) { return vector_of_entity.at(vector_of_entityids_on_screen.at(visibleid)); }
 	size_t entityid_from_visibleid(size_t const visibleid) const { return vector_of_entityids_on_screen.at(visibleid); }
@@ -292,7 +293,13 @@ struct Level {
 			,unsigned randomness_seed 
 			);
 
-	void make_player_use_ability_number(int const number);
+	void make_player_use_ability_id_autotarget(int const id);
+
+	bool handle_input_mouse_select_target_at_position(
+		 WINDOW * w
+		,int y
+		,int x
+		) ;
 
 //private:
 	void remove_decayed_entities(void);
@@ -380,7 +387,7 @@ struct Level {
 			 WINDOW * w
 			,int y
 			,int x
-			);
+			) const;
 
 
 
