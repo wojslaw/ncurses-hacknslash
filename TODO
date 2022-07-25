@@ -1,4 +1,5 @@
 TODO ensure rewards get placed somewhere if there is a reward on the current tile
+TODO fix entities not chasing player - currently only wraiths chase, but the rest stands in place
 
 TODO always display the target, on top of the stack of monsters
 TODO mouse-spell: let's say that id=0 at vector of active abilities will be the mouse spell

@@ -39,8 +39,6 @@ enum CellTerrain {
 	CELLTERRAIN_HASH             ,
 	CELLTERRAIN_WALL_HORIZONTAL  ,
 	CELLTERRAIN_WALL_VERTICAL    ,
-	CELLTERRAIN_REWARD_FELSTACK ,
-	CELLTERRAIN_REWARD_GOLD ,
 
 	CELLTERRAIN_COUNT ,
 };
@@ -67,7 +65,7 @@ struct LevelCell {
 	void add_reward(enum RewardState _rewardstate);
 	void set_cell_terrain_if_empty(enum CellTerrain const _cellterrain) ;
 	void set_blocked_by_entity(IDEntity id);
-	enum RewardState try_to_claim_reward(void);
+	enum RewardState take_reward_from_this(void);
 
 	// TODO render with a blink-cycle(maybe every 0.25 seconds or something, the level will cycle through showing reward-terrain-entity )
 	void wrender(WINDOW * w) const;
@@ -354,6 +352,8 @@ struct Level {
 		);
 
 
+
+	void update_players_collect_rewards(void);
 
 
 }; // struct Level

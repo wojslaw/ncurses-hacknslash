@@ -238,7 +238,6 @@ int main()
 			case '3': LEVEL.make_player_use_ability_id_autotarget(3); break;
 			case '4': LEVEL.make_player_use_ability_id_autotarget(4); break;
 			case '5': LEVEL.make_player_use_ability_id_autotarget(5); break;
-			case '=': LEVEL.ref_player_entity().consume_food();  break;
 			// movement 
 			case '\n':
 			case '\r':

@@ -47,15 +47,15 @@ const Vec2d DIRECTION_VECTOR[DIRECTION_COUNT] = {
 enum RewardState {
 	RewardState_none  ,
 	RewardState_collected ,
-	RewardState_gold  ,
 	RewardState_felstack  ,
+	RewardState_gold  ,
 };
 
 
 
 
 	enum RewardState
-try_to_claim_reward_at_ptr(enum RewardState * ptr_rewardstate);
+try_to_take_reward_at_ptr(enum RewardState * ptr_rewardstate);
 
 
 
@@ -78,10 +78,13 @@ struct Entity {
 	BaseEntity const& ref_base_entity(void) const { return baseentity_ref_from_id(id_base_entity); }
 
 	// resources and persistent state
-	int resource_food = 0;
-	int resource_money = 0;
+	int resource_gold = 0;
+	int resource_felstack = 0;
 	int explevel_level = 0;
 	int explevel_points = 0;
+
+	int total_collected_felstack = 0;
+	int total_collected_gold = 0;
 
 	int explevel_points_for_next_level(void) const {
 		return 10+(explevel_level*2);
@@ -133,7 +136,7 @@ struct Entity {
 	CountdownTimer timer_recently_hit = CountdownTimer(0.75,0);
 	CountdownTimer timer_recently_hit_heavily = CountdownTimer(0.75,0);
 	CountdownTimer timer_is_in_battle = CountdownTimer(8.0,0);
-	CountdownTimer timer_decay = CountdownTimer(SECONDS_CORPSE_DECAY);
+	CountdownTimer timer_decay = CountdownTimer(SECONDS_CORPSE_DECAY,0.0);
 	CountdownTimer timer_recently_healed = CountdownTimer(0.75,0);;
 	CountdownTimer timer_ability  = CountdownTimer(1.0,0);;
 
@@ -248,7 +251,6 @@ public:
 	void update_time_from_globaltimer(GlobalTimer const & GLOBALTIMER);
 
 	bool has_planned_movement(void);
-	void consume_food(void);
 
 
 	int fprint_as_tsv_row(FILE * f);
@@ -280,7 +282,9 @@ public:
 
 	void wprint_detailed_entity_info_enemy(WINDOW * w) const;
 
-	enum RewardState try_to_claim_reward(void);
+	enum RewardState take_reward_from_this(void);
+	void add_reward(enum RewardState _rewardstate);
+
 };
 
 

@@ -21,8 +21,6 @@ cellterrain_symbol(enum CellTerrain cellterrain)
 		case CELLTERRAIN_HASH            :return '#' ;
 		case CELLTERRAIN_WALL_HORIZONTAL :return ACS_HLINE ;
 		case CELLTERRAIN_WALL_VERTICAL   :return ACS_VLINE ;
-		case CELLTERRAIN_REWARD_FELSTACK :return '$' ;
-		case CELLTERRAIN_REWARD_GOLD     :return '$' ;
 		default: assert(false);
 	}
 }
@@ -37,8 +35,6 @@ int const TABLE_CELLTERRAIN_ATTRS[] = {
 	[CELLTERRAIN_HASH]            = ATTR_TERRAIN ,
 	[CELLTERRAIN_WALL_HORIZONTAL] = ATTR_TERRAIN ,
 	[CELLTERRAIN_WALL_VERTICAL]   = ATTR_TERRAIN ,
-	[CELLTERRAIN_REWARD_FELSTACK] = ATTR_TERRAIN_REWARD_FELSTACK ,
-	[CELLTERRAIN_REWARD_GOLD    ] = ATTR_TERRAIN_REWARD_GOLD ,
 };
 
 
@@ -49,8 +45,6 @@ int const TABLE_CELLTERRAIN_IS_BLOCKING[] = {
 	[CELLTERRAIN_HASH]            = true ,
 	[CELLTERRAIN_WALL_HORIZONTAL] = true ,
 	[CELLTERRAIN_WALL_VERTICAL]   = true ,
-	[CELLTERRAIN_REWARD_FELSTACK] = false,
-	[CELLTERRAIN_REWARD_GOLD    ] = false,
 };
 
 
@@ -61,21 +55,9 @@ int const TABLE_CELLTERRAIN_IS_DESTRUCTIBLE[] = {
 	[CELLTERRAIN_HASH]            = true ,
 	[CELLTERRAIN_WALL_HORIZONTAL] = true ,
 	[CELLTERRAIN_WALL_VERTICAL]   = true ,
-	[CELLTERRAIN_REWARD_FELSTACK] = false,
-	[CELLTERRAIN_REWARD_GOLD    ] = false,
 };
 
 
-int const TABLE_CELLTERRAIN_IS_OVERWRITEABLE[] = {
-	[CELLTERRAIN_NONE]            = false ,
-	[CELLTERRAIN_WARNING]         = false ,
-	[CELLTERRAIN_RUBBLE]          = false ,
-	[CELLTERRAIN_HASH]            = false ,
-	[CELLTERRAIN_WALL_HORIZONTAL] = false ,
-	[CELLTERRAIN_WALL_VERTICAL]   = false ,
-	[CELLTERRAIN_REWARD_FELSTACK] = true  ,
-	[CELLTERRAIN_REWARD_GOLD    ] = true  ,
-};
 
 
 CellTerrain const TABLE_CELLTERRAIN_WHEN_DAMAGED_REDUCE_TO[] = {
@@ -85,8 +67,26 @@ CellTerrain const TABLE_CELLTERRAIN_WHEN_DAMAGED_REDUCE_TO[] = {
 	[CELLTERRAIN_HASH]            = CELLTERRAIN_RUBBLE ,
 	[CELLTERRAIN_WALL_HORIZONTAL] = CELLTERRAIN_RUBBLE ,
 	[CELLTERRAIN_WALL_VERTICAL]   = CELLTERRAIN_RUBBLE ,
-	[CELLTERRAIN_REWARD_FELSTACK] = CELLTERRAIN_REWARD_FELSTACK   ,
-	[CELLTERRAIN_REWARD_GOLD    ] = CELLTERRAIN_REWARD_GOLD       ,
+};
+
+
+
+
+int const
+TABLE_REWARDSTATE_ATTR[] = {
+	[RewardState_none]       = 0 ,
+	[RewardState_collected]  = 0 ,
+	[RewardState_felstack]   = ATTR_TERRAIN_REWARD_FELSTACK ,
+	[RewardState_gold]       = ATTR_TERRAIN_REWARD_GOLD ,
+};
+
+
+chtype const
+TABLE_REWARDSTATE_CHTYPE[] = {
+	[RewardState_none]       =  0  ,
+	[RewardState_collected]  =  0  ,
+	[RewardState_felstack]   = '$' ,
+	[RewardState_gold]       = '$' ,
 };
 
 
@@ -114,9 +114,9 @@ LevelCell::add_reward(enum RewardState _rewardstate)
 
 
 	enum RewardState
-LevelCell::try_to_claim_reward(void)
+LevelCell::take_reward_from_this(void)
 {
-	return try_to_claim_reward_at_ptr(&rewardstate);
+	return try_to_take_reward_at_ptr(&rewardstate);
 }
 
 
@@ -210,18 +210,11 @@ LevelCell::wrender(WINDOW * w) const
 	switch(rewardstate) {
 		// as reward
 		case RewardState_gold:
-			{
-				wattron(w,TABLE_CELLTERRAIN_ATTRS[CELLTERRAIN_REWARD_GOLD]);
-				waddch(w,cellterrain_symbol(CELLTERRAIN_REWARD_GOLD));
-				wattroff(w,TABLE_CELLTERRAIN_ATTRS[CELLTERRAIN_REWARD_GOLD]);
-				break;
-			}
-
 		case RewardState_felstack:
 			{
-				wattron(w,TABLE_CELLTERRAIN_ATTRS[CELLTERRAIN_REWARD_FELSTACK]);
-				waddch(w,cellterrain_symbol(CELLTERRAIN_REWARD_FELSTACK));
-				wattroff(w,TABLE_CELLTERRAIN_ATTRS[CELLTERRAIN_REWARD_FELSTACK]);
+				wattron(w ,TABLE_REWARDSTATE_ATTR[rewardstate]);
+				waddch(w,TABLE_REWARDSTATE_CHTYPE[rewardstate]);
+				wattroff(w,TABLE_REWARDSTATE_ATTR[rewardstate]);
 				break;
 			}
 
@@ -775,18 +768,19 @@ Level::update_time_from_globaltimer(GlobalTimer const & GLOBALTIMER)
 		}
 	}
 
+	ensure_entities_are_within_bounds(); // TODO check if crashes
 	// entities
 	for(Entity & entity : vector_of_entity) {
+		//
 		assert(is_position_within_bounds_of_level_vec2d(entity.vec2d_position));
 		entity.update_time_from_globaltimer(GLOBALTIMER);
-		enum RewardState const rewardstate = entity.try_to_claim_reward();
+		enum RewardState const rewardstate = entity.take_reward_from_this();
 		LevelCell &levelcell = ref_levelcell_at_vec2d(entity.vec2d_position);
 		levelcell.add_reward(rewardstate);
 	}
 	// 
 	delete_decayed_entities_if_player_has_no_target();
 	//
-	ensure_entities_are_within_bounds();
 	// TODO push away entities from an occupied cell
 	update_table_of_cells_with_pointers_to_entities();
 	update_collision_table();
@@ -794,6 +788,7 @@ Level::update_time_from_globaltimer(GlobalTimer const & GLOBALTIMER)
 	update_entities_direction_planned();
 	update_entities_positions();
 	update_entity_combat_rounds();
+	update_players_collect_rewards();
 }
 
 
@@ -1848,6 +1843,31 @@ Level::Level(
 
 
 
+	void
+Level::update_players_collect_rewards(void)
+{
+	for(
+			int offset_y = -1;
+			    offset_y <= +1;
+			  ++offset_y
+	   ) {
+		for(
+				int offset_x = -1;
+				    offset_x <= +1;
+				  ++offset_x
+		   ) {
+			Vec2d const position_to_check
+				= Vec2d(
+						ref_player_entity().vec2d_position.y + offset_y
+						,ref_player_entity().vec2d_position.x + offset_x
+					   );
+			if(is_position_within_bounds_of_level_vec2d(position_to_check)) {
+				LevelCell & ref_levelcell = ref_levelcell_at_vec2d(position_to_check);
+				ref_player_entity().add_reward(ref_levelcell.take_reward_from_this());
+			}
+		}
+	}
+}
 
 
 

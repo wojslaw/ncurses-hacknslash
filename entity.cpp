@@ -11,7 +11,7 @@
 
 
 	enum RewardState
-try_to_claim_reward_at_ptr(enum RewardState * ptr_rewardstate)
+try_to_take_reward_at_ptr(enum RewardState * ptr_rewardstate)
 {
 	assert(ptr_rewardstate);
 
@@ -55,14 +55,13 @@ Entity::fprint_as_tsv_row(FILE * f)
 	assert(f);
 	if(f==0) { return -1; }
 	return fprintf(f
-			,"%zu\t%d\t%d\t%d\t%d\t%lf\t%lf\n"
+			,"%zu\t%d\t%d\t%d\t%d\t%lf\n"
 			,id_base_entity
-			,resource_food
-			,resource_money
 			,explevel_level
 			,explevel_points
+			,resource_felstack
+			,resource_gold
 			,total_seconds
-			,timer_wellfed.remaining_seconds
 		   );
 }
 
@@ -72,14 +71,13 @@ Entity::fscan_as_tsv_row(FILE * f)
 	assert(f);
 	if(f==0) { return -1; }
 	return fscanf(f
-			,"%zu\t%d\t%d\t%d\t%d\t%lf\t%lf\n"
+			,"%zu\t%d\t%d\t%d\t%d\t%lf\n"
 			,&id_base_entity
-			,&resource_food
-			,&resource_money
 			,&explevel_level
 			,&explevel_points
+			,&resource_felstack
+			,&resource_gold
 			,&total_seconds
-			,&timer_wellfed.remaining_seconds
 		   );
 }
 
@@ -316,6 +314,8 @@ Entity::wprint_detailed_entity_info(WINDOW * w) const
 	/* wprintw(w,"target: %zu" , id_of_target); */
 	wmove(w,getcury(w)+1,1);
 	wprintw(w,"fed:%.1f( %.1f)" ,timer_wellfed.remaining_seconds, timer_regenerate_life.remaining_seconds);
+	wprintw(w," $%d",resource_gold);
+	wprintw(w," F%d",resource_felstack);
 	wmove(w,getcury(w)+1,1);
 	wprintw(w,"DEF %d  ATK:%d-%d  range %d"
 			,get_defense()
@@ -506,14 +506,6 @@ Entity::order_stop_full_stop(void)
 
 
 
-	void
-Entity::consume_food(void)
-{
-	if(resource_food >= 1) {
-		timer_wellfed.remaining_seconds += 4.0;
-		--resource_food;
-	}
-}
 
 
 
@@ -723,9 +715,12 @@ Entity::modify_life(int const delta_life)
 		int const rewardroll = rand()%16;
 		switch(rewardroll) {
 			case 0: rewardstate = RewardState_felstack; break;
-			case 1: rewardstate = RewardState_gold; break;
-			case 2: rewardstate = RewardState_gold; break;
-			case 3: rewardstate = RewardState_gold; break;
+			case 1: rewardstate = RewardState_gold;     break;
+			case 2: rewardstate = RewardState_gold;     break;
+			case 3: rewardstate = RewardState_gold;     break;
+			// only show corpse if no reward
+			default:
+					timer_decay.reset();
 		}
 	}
 
@@ -981,9 +976,9 @@ entity_is_farther_distance_from_point(
 
 
 	enum RewardState
-Entity::try_to_claim_reward(void)
+Entity::take_reward_from_this(void)
 {
-	return try_to_claim_reward_at_ptr(&rewardstate);
+	return try_to_take_reward_at_ptr(&rewardstate);
 }
 
 
@@ -991,3 +986,27 @@ Entity::try_to_claim_reward(void)
 
 
 
+
+
+
+	void
+Entity::add_reward(enum RewardState _rewardstate)
+{
+	switch(_rewardstate) {
+		case RewardState_felstack:
+			{
+				++resource_felstack;
+				++total_collected_felstack;
+				break;
+			}
+		case RewardState_gold:
+			{
+				++resource_gold;
+				++total_collected_gold;
+				break;
+			}
+		case RewardState_collected:
+		case RewardState_none:
+			break;
+	}
+}
