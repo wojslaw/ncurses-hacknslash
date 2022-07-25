@@ -8,6 +8,15 @@
 
 
 
+
+	void
+LevelCell::set_blocked_by_entity(IDEntity id)
+{
+	has_entity = true;
+	id_of_entity = id;
+}
+
+
 	void
 LevelCell::clear(void)
 {
@@ -24,11 +33,7 @@ LevelCell::is_cell_blocked_by_entity(void) const
 		assert(has_entity);
 		assert(id_of_entity != (size_t)-1);
 	}
-	return(
-			has_entity
-			&& 
-			(id_of_entity != (size_t)-1)
-			) ;
+	return(has_entity);
 }
 
 
@@ -170,7 +175,7 @@ Level::update_table_of_cells_with_pointers_to_entities(void)
 		}
 		//
 		LevelCell & levelcell = ref_levelcell_at_vec2d(entity.vec2d_position);
-		levelcell.id_of_entity = id_of_entity;
+		levelcell.set_blocked_by_entity(id_of_entity);
 		//
 		++id_of_entity;
 	}
@@ -187,7 +192,6 @@ Level::update_table_of_cells_with_pointers_to_entities(void)
 		LevelCell & levelcell = ref_levelcell_at_vec2d(visual_entity.vec2d_position);
 		levelcell.ptr_visual_entity = &visual_entity;
 		levelcell.id_of_entity = id_of_entity;
-		levelcell.has_entity = true;
 		//
 		++id_of_entity;
 	}
@@ -435,6 +439,105 @@ Level::wrender_level_centered_on_player_entity_fill_window(
 			,y_start 
 			,x_start );
 }
+
+
+
+
+
+
+
+
+
+
+
+
+	void
+Level::make_entityid_use_ability_id_on_position(
+		 IDEntity identity
+		,int const id_ability
+		,Vec2d const& position
+		)
+{
+	Entity & entity = ref_from_entityid(identity);
+	assert(id_ability >= 0);
+	assert((size_t)id_ability < entity.vector_of_abilities.size());
+	assert(is_position_within_bounds_of_level_vec2d(position));
+
+	if(not entity.is_ready_to_cast_ability()) {
+		// TODO notify not ready
+		return;
+	}
+	Ability& ref_ability = entity.vector_of_abilities.at(id_ability);
+	if(!ref_ability.is_ability_ready()) {
+		// TODO notify not ready
+		return;
+	}
+
+	if(     (not entity.has_selected_target)
+	        &&
+	        (ref_ability.abilitytype == ABILITYTYPE_ATTACK_TARGET )
+	        ) {
+		return;
+	}
+
+	std::vector<IDEntity> vector_identity_of_picked_targets;
+
+	switch(ref_ability.abilitytype) {
+		case ABILITYTYPE_SELF_HEAL:
+			{
+				assert(false);
+				entity.make_entity_use_healing_ability_id(id_ability);
+				break;
+			}
+		case ABILITYTYPE_ATTACK_AOE_TARGET:
+			{
+				make_visual_effect_on_point_vec2d(position,ref_ability.stat_range);
+				
+				vector_identity_of_picked_targets
+					= get_targetable_entities_around_point_with_range_skip_player(
+							position
+							,ref_ability.stat_range
+							);
+				break;
+			}
+		case ABILITYTYPE_ATTACK_AOE_SELF:
+			{
+				assert(false);
+				make_visual_effect_on_player(ref_ability.stat_range);
+				vector_identity_of_picked_targets
+					= get_targetable_entities_around_point_with_range_skip_player(
+							entity.vec2d_position
+							,ref_ability.stat_range
+							);
+				break;
+			}
+		case ABILITYTYPE_ATTACK_TARGET:
+			{
+				assert(false);
+				make_visual_effect_on_target(0);
+				break;
+			}
+		default:
+			{
+				move(0,0);
+				printw("invalid ability type %d" , ref_ability.abilitytype);
+				fprintf(stderr,"invalid ability type %d", ref_ability.abilitytype);
+			}
+	}
+
+	if(vector_identity_of_picked_targets.size() > 0) {
+		int const damage_to_deal = entity.make_entity_roll_ability_id(id_ability);
+		for(IDEntity identity : vector_identity_of_picked_targets ) {
+			Entity & ref_entity_target = ref_from_entityid(identity);
+			ref_entity_target.take_damage(damage_to_deal);
+		}
+	}
+}
+
+
+
+
+
 
 
 
@@ -1653,7 +1756,7 @@ Level::update_entities_positions(void) {
 			ref_entity.position_restore_last();
 		}
 		if(cell_at_new_position.is_cell_blocked_by_entity()) {
-			if(cell_at_new_position.id_of_entity != id_of_entity) { // skip check if same
+			if(cell_at_new_position.id_of_entity != id_of_entity) { // only block if not the same entity
 				ref_entity.position_restore_last();
 			}
 		}
@@ -1745,29 +1848,24 @@ Level::vec2d_position_from_window_mouse(
 
 
 
+
+
+
+
+
 	bool
-Level::handle_input_mouse_select_target_at_position(
-		 WINDOW * w
-		,int y
-		,int x
+Level::make_player_select_target_at_position(
+		Vec2d const& position
 		)
 {
-	assert(w);
-	assert(y >= 0);
-	assert(x >= 0);
-	assert(y <= get_highest_y());
-	assert(x <= get_highest_x());
-
-	Vec2d const vec2d_position_at_mouse
-		= vec2d_position_from_window_mouse(
-				w
-				,y
-				,x
-				);
+	assert(position.y >= 0);
+	assert(position.x >= 0);
+	assert(position.y <= get_highest_y());
+	assert(position.x <= get_highest_x());
 
 	std::vector<IDEntity> const entityid_at_pos
 		= get_targetable_entities_around_point_with_range_skip_player(
-				vec2d_position_at_mouse
+				 position
 				,0
 				);
 
@@ -1779,7 +1877,7 @@ Level::handle_input_mouse_select_target_at_position(
 	// slightly higher search-range so you don't have to click exactly
 	std::vector<IDEntity> const entityid_at_pos_higher_search
 		= get_targetable_entities_around_point_with_range_skip_player(
-				vec2d_position_at_mouse
+				 position
 				,1
 				);
 	if(entityid_at_pos_higher_search.size() > 0) {
@@ -1798,34 +1896,52 @@ Level::handle_input_mouse_select_target_at_position(
 	void
 Level::handle_input_mouse(
 		 WINDOW * w
-		,int y
-		,int x
+		,int mouse_y
+		,int mouse_x
 		,mmask_t bstate
 		)
 {
 
+	assert(w);
+	assert(mouse_y >= 0);
+	assert(mouse_x >= 0);
+	assert(mouse_y <  getmaxy(w));
+	assert(mouse_x <  getmaxx(w));
 
-	bool const just_selected_target
-		= handle_input_mouse_select_target_at_position(
-				 w
-				 ,y
-				 ,x );
+	Vec2d const vec2d_position_at_mouse
+		= vec2d_position_from_window_mouse(
+				w
+				,mouse_y
+				,mouse_x
+				);
 
-	if(just_selected_target) {
-		if(
-				(bstate == BUTTON3_PRESSED        )
-				||
-				(bstate == BUTTON3_RELEASED       )
-				||
-				(bstate == BUTTON3_CLICKED        )
-				||
-				(bstate == BUTTON3_DOUBLE_CLICKED )
-				||
-				(bstate == BUTTON3_TRIPLE_CLICKED )
-		  ) {
-			make_player_use_ability_id_autotarget(0);
-		}
+	switch(bstate) {
+		case BUTTON1_PRESSED        :
+		case BUTTON1_RELEASED       :
+		case BUTTON1_CLICKED        :
+		case BUTTON1_DOUBLE_CLICKED :
+		case BUTTON1_TRIPLE_CLICKED :
+			{
+				make_player_select_target_at_position(
+						vec2d_position_at_mouse );
+				break;
+			}
+
+		case BUTTON3_PRESSED        :
+		case BUTTON3_RELEASED       :
+		case BUTTON3_CLICKED        :
+		case BUTTON3_DOUBLE_CLICKED :
+		case BUTTON3_TRIPLE_CLICKED :
+			{
+				make_entityid_use_ability_id_on_position(
+						 0
+						,0
+						,vec2d_position_at_mouse
+						);
+				break;
+			}
 	}
+
 }
 
 

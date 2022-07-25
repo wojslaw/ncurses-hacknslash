@@ -81,10 +81,10 @@ int main()
 
 	init_colorpairs();
 
-	int const w_gamewindow_size_y = WINDOW_HALFSIZE_Y*2+3; // I don't know why, but it needs +3
-	int const w_gamewindow_size_x = WINDOW_HALFSIZE_X*2+3; // ah, I know: +1 player, +2 border
-	int const w_gamewindow_start_y = (LINES/2)-(w_gamewindow_size_y); // I don't know why, but it needs +3 to 
-	int const w_gamewindow_start_x = (COLS/2)-(w_gamewindow_size_x); // I don't know why, but it needs +3 to 
+	int const w_gamewindow_size_y = WINDOW_HALFSIZE_Y*2+1; // I don't know why, but it needs +3
+	int const w_gamewindow_size_x = WINDOW_HALFSIZE_X*2+1; // ah, I know: +1 player, +2 border
+	int const w_gamewindow_start_y = (LINES/2)-(w_gamewindow_size_y);
+	int const w_gamewindow_start_x = (COLS/2)-(w_gamewindow_size_x);
 
 	WINDOW * w_gamewindow
 		= newwin(

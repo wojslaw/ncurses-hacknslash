@@ -104,6 +104,7 @@ struct LevelCell {
 	bool is_cell_walkable(void) const;
 
 	void set_cell_terrain_if_empty(enum CellTerrain const _cellterrain) ;
+	void set_blocked_by_entity(IDEntity id);
 
 
 	// mutating methods
@@ -295,7 +296,7 @@ struct Level {
 
 	void make_player_use_ability_id_autotarget(int const id);
 
-	bool handle_input_mouse_select_target_at_position(
+	bool handle_input_mouse(
 		 WINDOW * w
 		,int y
 		,int x
@@ -376,11 +377,8 @@ struct Level {
 			,mmask_t bstate
 			);
 
-	void input_mouse_set_target(
-			 WINDOW * w
-			,int y
-			,int x
-			,mmask_t bstate
+	bool make_player_select_target_at_position(
+			Vec2d const& position
 			);
 
 	Vec2d vec2d_position_from_window_mouse(
@@ -388,6 +386,13 @@ struct Level {
 			,int y
 			,int x
 			) const;
+
+	void make_entityid_use_ability_id_on_position(
+		 IDEntity identity
+		,int const id_ability
+		,Vec2d const& position
+		);
+
 
 
 
