@@ -1,3 +1,5 @@
+TODO ensure rewards get placed somewhere if there is a reward on the current tile
+
 TODO always display the target, on top of the stack of monsters
 TODO mouse-spell: let's say that id=0 at vector of active abilities will be the mouse spell
 
@@ -89,3 +91,12 @@ around 1000 entities the game starts slowing down, and at 2k it gets really slow
 
 
 IDEA achievement/conduct: "purity of keys" - disabled mouse
+
+
+
+
+
+
+
+ancof: level.cpp:307: LevelCell& Level::ref_levelcell_at_vec2d(const Vec2d&): Assertion `v.x <= get_highest_x()' failed.: 20 [miliseconds])
+60.2outmake: *** [Makefile:12: run] Aborted         │

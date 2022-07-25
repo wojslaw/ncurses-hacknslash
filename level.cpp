@@ -8,12 +8,12 @@
 
 
 
-
+// I wanted to use an array-table for symbols, but VLINE HLINE get drawn as ^0
+// I think ACS_ get initialized or something only after ncurses is started
 
 	chtype
 cellterrain_symbol(enum CellTerrain cellterrain)
 {
-	return(TABLE_CELLTERRAIN_SYMBOL[cellterrain]);
 	switch(cellterrain) {
 		case CELLTERRAIN_NONE            :return ' ' ;
 		case CELLTERRAIN_WARNING         :return '.' ;
@@ -21,11 +21,25 @@ cellterrain_symbol(enum CellTerrain cellterrain)
 		case CELLTERRAIN_HASH            :return '#' ;
 		case CELLTERRAIN_WALL_HORIZONTAL :return ACS_HLINE ;
 		case CELLTERRAIN_WALL_VERTICAL   :return ACS_VLINE ;
-		case CELLTERRAIN_REWARD          :return '$' ;
+		case CELLTERRAIN_REWARD_FELSTACK :return '$' ;
+		case CELLTERRAIN_REWARD_GOLD     :return '$' ;
 		default: assert(false);
 	}
 }
 
+
+
+
+int const TABLE_CELLTERRAIN_ATTRS[] = {
+	[CELLTERRAIN_NONE]            = 0 ,
+	[CELLTERRAIN_WARNING]         = ATTR_TERRAIN ,
+	[CELLTERRAIN_RUBBLE]          = ATTR_TERRAIN ,
+	[CELLTERRAIN_HASH]            = ATTR_TERRAIN ,
+	[CELLTERRAIN_WALL_HORIZONTAL] = ATTR_TERRAIN ,
+	[CELLTERRAIN_WALL_VERTICAL]   = ATTR_TERRAIN ,
+	[CELLTERRAIN_REWARD_FELSTACK] = ATTR_TERRAIN_REWARD_FELSTACK ,
+	[CELLTERRAIN_REWARD_GOLD    ] = ATTR_TERRAIN_REWARD_GOLD ,
+};
 
 
 int const TABLE_CELLTERRAIN_IS_BLOCKING[] = {
@@ -35,7 +49,8 @@ int const TABLE_CELLTERRAIN_IS_BLOCKING[] = {
 	[CELLTERRAIN_HASH]            = true ,
 	[CELLTERRAIN_WALL_HORIZONTAL] = true ,
 	[CELLTERRAIN_WALL_VERTICAL]   = true ,
-	[CELLTERRAIN_REWARD]          = false ,
+	[CELLTERRAIN_REWARD_FELSTACK] = false,
+	[CELLTERRAIN_REWARD_GOLD    ] = false,
 };
 
 
@@ -46,7 +61,8 @@ int const TABLE_CELLTERRAIN_IS_DESTRUCTIBLE[] = {
 	[CELLTERRAIN_HASH]            = true ,
 	[CELLTERRAIN_WALL_HORIZONTAL] = true ,
 	[CELLTERRAIN_WALL_VERTICAL]   = true ,
-	[CELLTERRAIN_REWARD]          = true ,
+	[CELLTERRAIN_REWARD_FELSTACK] = false,
+	[CELLTERRAIN_REWARD_GOLD    ] = false,
 };
 
 
@@ -57,7 +73,8 @@ int const TABLE_CELLTERRAIN_IS_OVERWRITEABLE[] = {
 	[CELLTERRAIN_HASH]            = false ,
 	[CELLTERRAIN_WALL_HORIZONTAL] = false ,
 	[CELLTERRAIN_WALL_VERTICAL]   = false ,
-	[CELLTERRAIN_REWARD]          = false ,
+	[CELLTERRAIN_REWARD_FELSTACK] = true  ,
+	[CELLTERRAIN_REWARD_GOLD    ] = true  ,
 };
 
 
@@ -68,12 +85,39 @@ CellTerrain const TABLE_CELLTERRAIN_WHEN_DAMAGED_REDUCE_TO[] = {
 	[CELLTERRAIN_HASH]            = CELLTERRAIN_RUBBLE ,
 	[CELLTERRAIN_WALL_HORIZONTAL] = CELLTERRAIN_RUBBLE ,
 	[CELLTERRAIN_WALL_VERTICAL]   = CELLTERRAIN_RUBBLE ,
-	[CELLTERRAIN_REWARD]          = CELLTERRAIN_NONE   ,
+	[CELLTERRAIN_REWARD_FELSTACK] = CELLTERRAIN_REWARD_FELSTACK   ,
+	[CELLTERRAIN_REWARD_GOLD    ] = CELLTERRAIN_REWARD_GOLD       ,
 };
 
 
 
 
+
+	void
+LevelCell::add_reward(enum RewardState _rewardstate)
+{
+	if(_rewardstate == RewardState_none) {
+		return;
+	}
+	if(_rewardstate == RewardState_collected) {
+		return;
+	}
+
+	if(rewardstate == RewardState_felstack) {
+		return;
+	}
+	if(rewardstate == RewardState_gold) {
+		return;
+	}
+	rewardstate = _rewardstate;
+}
+
+
+	enum RewardState
+LevelCell::try_to_claim_reward(void)
+{
+	return try_to_claim_reward_at_ptr(&rewardstate);
+}
 
 
 
@@ -163,22 +207,29 @@ LevelCell::damage_this_cell(void)
 LevelCell::wrender(WINDOW * w) const
 {
 	assert(w);
-	if(cellterrain != CELLTERRAIN_NONE) {
-		wattron(w,ATTR_TERRAIN);
-	}
-	// the ACS_HLINE and ACS_VLINE don't want to work from an array ;_; whether int or chtype
-	waddch(w,cellterrain_symbol(cellterrain));
-	/* switch(cellterrain) { */
-	/* 	case CELLTERRAIN_NONE            : waddch(w,' '        ); break; */
-	/* 	case CELLTERRAIN_WARNING         : waddch(w,'.'        ); break; */
-	/* 	case CELLTERRAIN_RUBBLE          : waddch(w,'~'        ); break; */
-	/* 	case CELLTERRAIN_HASH            : waddch(w,'#'        ); break; */
-	/* 	case CELLTERRAIN_WALL_HORIZONTAL : waddch(w,ACS_HLINE  ); break; */
-	/* 	case CELLTERRAIN_WALL_VERTICAL   : waddch(w,ACS_VLINE  ); break; */
-	/* 	case CELLTERRAIN_REWARD          : waddch(w,'%'        ); break; */
-	/* } */
-	if(cellterrain != CELLTERRAIN_NONE) {
-		wattroff(w,ATTR_TERRAIN);
+	switch(rewardstate) {
+		// as reward
+		case RewardState_gold:
+			{
+				wattron(w,TABLE_CELLTERRAIN_ATTRS[CELLTERRAIN_REWARD_GOLD]);
+				waddch(w,cellterrain_symbol(CELLTERRAIN_REWARD_GOLD));
+				wattroff(w,TABLE_CELLTERRAIN_ATTRS[CELLTERRAIN_REWARD_GOLD]);
+				break;
+			}
+
+		case RewardState_felstack:
+			{
+				wattron(w,TABLE_CELLTERRAIN_ATTRS[CELLTERRAIN_REWARD_FELSTACK]);
+				waddch(w,cellterrain_symbol(CELLTERRAIN_REWARD_FELSTACK));
+				wattroff(w,TABLE_CELLTERRAIN_ATTRS[CELLTERRAIN_REWARD_FELSTACK]);
+				break;
+			}
+
+		// as terrain
+		default:
+		wattron(w,TABLE_CELLTERRAIN_ATTRS[cellterrain]);
+		waddch(w,cellterrain_symbol(cellterrain));
+		wattroff(w,TABLE_CELLTERRAIN_ATTRS[cellterrain]);
 	}
 }
 
@@ -206,16 +257,6 @@ LevelCell::wprint_detailed_info(WINDOW * w)
 
 
 
-	void
-LevelCell::wrender_move(WINDOW * w
-			,int const y
-			,int const x
-			) const
-{
-	assert(w);
-	wmove(w,y,x);
-	wrender(w);
-}
 
 
 
@@ -736,7 +777,11 @@ Level::update_time_from_globaltimer(GlobalTimer const & GLOBALTIMER)
 
 	// entities
 	for(Entity & entity : vector_of_entity) {
+		assert(is_position_within_bounds_of_level_vec2d(entity.vec2d_position));
 		entity.update_time_from_globaltimer(GLOBALTIMER);
+		enum RewardState const rewardstate = entity.try_to_claim_reward();
+		LevelCell &levelcell = ref_levelcell_at_vec2d(entity.vec2d_position);
+		levelcell.add_reward(rewardstate);
 	}
 	// 
 	delete_decayed_entities_if_player_has_no_target();

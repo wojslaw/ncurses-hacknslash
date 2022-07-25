@@ -25,6 +25,11 @@ void init_colorpairs(void)
 			,COLOR_BLACK);
 
 	init_pair(
+			 ENUM_COLORPAIR_YELLOW
+			,COLOR_YELLOW
+			,COLOR_BLACK);
+
+	init_pair(
 			ENUM_COLORPAIR_WHITE_ON_BLUE
 			,COLOR_WHITE
 			,COLOR_BLUE);

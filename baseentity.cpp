@@ -19,6 +19,7 @@ const struct BaseEntity TABLE_BASEENTITY[] = {
 		.attack_range= 6,
 		.defense_base = 1,
 		.seconds_movement = 0.20 ,
+		.flag_lives_on_zero_hp = true , // a special bonus to the player
 	} ,
 	[ID_BaseEntity_wraith] = {
 		.ncurses_symbol = 'w',

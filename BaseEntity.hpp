@@ -32,6 +32,8 @@ struct BaseEntity {
 	double seconds_movement = 0.0;
 	double seconds_regen = 60.0;
 	//
+	//
+	bool flag_lives_on_zero_hp = true;
 	bool flag_has_collision = true;
 	bool flag_destroys_terrain = false;
 	bool flag_is_vampiric = false;

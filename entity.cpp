@@ -10,6 +10,39 @@
 
 
 
+	enum RewardState
+try_to_claim_reward_at_ptr(enum RewardState * ptr_rewardstate)
+{
+	assert(ptr_rewardstate);
+
+	enum RewardState const rewardstate_to_return = *ptr_rewardstate;
+
+	switch(*ptr_rewardstate) {
+		case RewardState_gold :
+		case RewardState_felstack: 
+		{
+			*ptr_rewardstate = RewardState_collected;
+			break;
+		}
+		case RewardState_none:
+		case RewardState_collected:
+			break;
+	}
+
+	return rewardstate_to_return;
+}
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 
@@ -82,6 +115,9 @@ Entity::is_alive(void) const {
 
 	bool
 Entity::is_dead(void) const {
+	if(ref_base_entity().flag_lives_on_zero_hp) {
+		return stat_life < 0;
+	}
 	return stat_life <= 0;
 }
 
@@ -650,8 +686,7 @@ Entity::take_damage(int const damage_to_take)
 	if(damage_to_take <= 0) {
 		return;
 	}
-	stat_life -= damage_to_take;
-	timer_recently_hit.reset();
+	modify_life(-damage_to_take);
 	if(damage_to_take >= (stat_life)/THRESHOLD_HEAVILY_DAMAGED) {
 		timer_recently_hit_heavily.reset();
 	}
@@ -681,6 +716,17 @@ Entity::modify_life(int const delta_life)
 	if(delta_life < 0) {
 		timer_recently_hit.reset();
 		last_amount_of_damage_taken = (-delta_life);
+	}
+
+	// roll reward if dead:
+	if(is_dead()) {
+		int const rewardroll = rand()%16;
+		switch(rewardroll) {
+			case 0: rewardstate = RewardState_felstack; break;
+			case 1: rewardstate = RewardState_gold; break;
+			case 2: rewardstate = RewardState_gold; break;
+			case 3: rewardstate = RewardState_gold; break;
+		}
 	}
 
 }
@@ -926,3 +972,22 @@ entity_is_farther_distance_from_point(
 	int const distance_2 = vec2d_highest_distance_between(e2.vec2d_position,vec2d_point);
 	return(distance_1 > distance_2);
 }
+
+
+
+
+
+
+
+
+	enum RewardState
+Entity::try_to_claim_reward(void)
+{
+	return try_to_claim_reward_at_ptr(&rewardstate);
+}
+
+
+
+
+
+

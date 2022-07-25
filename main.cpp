@@ -138,13 +138,24 @@ int main()
 	LEVEL.ref_player_entity().id_of_target = 1;
 	LEVEL.ref_player_entity().flag_follow_target = false;
 
+	//// explosion
+	//LEVEL.ref_player_entity().vector_of_abilities.emplace_back(Ability());
+	//LEVEL.ref_player_entity().vector_of_abilities.back().abilitytype = ABILITYTYPE_ATTACK_AOE_TARGET;
+	//LEVEL.ref_player_entity().vector_of_abilities.back().stack_max = 8;
+	//LEVEL.ref_player_entity().vector_of_abilities.back().timer_stack = CountdownTimer(3.0);
+	//LEVEL.ref_player_entity().vector_of_abilities.back().stat_roll_base = 1;
+	//LEVEL.ref_player_entity().vector_of_abilities.back().stat_roll_dice = 2;
+
+	// sniper shot : should add weapon damage
 	LEVEL.ref_player_entity().vector_of_abilities.emplace_back(Ability());
 	LEVEL.ref_player_entity().vector_of_abilities.back().abilitytype = ABILITYTYPE_ATTACK_AOE_TARGET;
-	LEVEL.ref_player_entity().vector_of_abilities.back().stack_max = 8;
-	LEVEL.ref_player_entity().vector_of_abilities.back().timer_stack = CountdownTimer(3.0);
-	LEVEL.ref_player_entity().vector_of_abilities.back().stat_roll_base = 1;
-	LEVEL.ref_player_entity().vector_of_abilities.back().stat_roll_dice = 2;
+	LEVEL.ref_player_entity().vector_of_abilities.back().stack_max = 3;
+	LEVEL.ref_player_entity().vector_of_abilities.back().timer_stack = CountdownTimer(6.0);
+	LEVEL.ref_player_entity().vector_of_abilities.back().stat_roll_base = 4;
+	LEVEL.ref_player_entity().vector_of_abilities.back().stat_roll_dice = 6;
+	LEVEL.ref_player_entity().vector_of_abilities.back().stat_range = 0;
 
+	// hopeful spark
 	LEVEL.ref_player_entity().vector_of_abilities.emplace_back(Ability());
 	LEVEL.ref_player_entity().vector_of_abilities.back().abilitytype = ABILITYTYPE_SELF_HEAL;
 	LEVEL.ref_player_entity().vector_of_abilities.back().stack_max = 8;
@@ -152,6 +163,7 @@ int main()
 	LEVEL.ref_player_entity().vector_of_abilities.back().stat_roll_base = 5;
 	LEVEL.ref_player_entity().vector_of_abilities.back().stat_roll_dice = 4;
 
+	// 
 	LEVEL.ref_player_entity().vector_of_abilities.emplace_back(Ability());
 	LEVEL.ref_player_entity().vector_of_abilities.back().abilitytype = ABILITYTYPE_ATTACK_AOE_SELF;
 	LEVEL.ref_player_entity().vector_of_abilities.back().stack_max = 4;
@@ -174,6 +186,14 @@ int main()
 	LEVEL.ref_player_entity().vector_of_abilities.back().timer_stack = CountdownTimer(8.0);
 	LEVEL.ref_player_entity().vector_of_abilities.back().stat_roll_base = 3;
 	LEVEL.ref_player_entity().vector_of_abilities.back().stat_roll_dice = 6;
+
+	// Blood divination:
+	LEVEL.ref_player_entity().vector_of_abilities.emplace_back(Ability());
+	LEVEL.ref_player_entity().vector_of_abilities.back().abilitytype = ABILITYTYPE_SELF_HEAL;
+	LEVEL.ref_player_entity().vector_of_abilities.back().stack_max = 1;
+	LEVEL.ref_player_entity().vector_of_abilities.back().timer_stack = CountdownTimer(4.0);
+	LEVEL.ref_player_entity().vector_of_abilities.back().stat_roll_base = -2;
+	LEVEL.ref_player_entity().vector_of_abilities.back().stat_roll_dice =  1;
 
 	{
 		FILE * file_savefile = fopen("save.out","r");
@@ -217,6 +237,7 @@ int main()
 			case '2': LEVEL.make_player_use_ability_id_autotarget(2); break;
 			case '3': LEVEL.make_player_use_ability_id_autotarget(3); break;
 			case '4': LEVEL.make_player_use_ability_id_autotarget(4); break;
+			case '5': LEVEL.make_player_use_ability_id_autotarget(5); break;
 			case '=': LEVEL.ref_player_entity().consume_food();  break;
 			// movement 
 			case '\n':
@@ -427,26 +448,8 @@ int main()
 			refresh();
 		}
 	} // loop
-
-	// why doesn't this work?? ACS_HLINE gets drawn as ^0
-	const chtype
-		TABLE[1] = {
-			ACS_HLINE ,
-
-		};
-
-	timeout(-1);
-	clear();
-	printw("\n\n%d\n" , ACS_HLINE);
-	addch(ACS_HLINE);
-
-	printw("\n\n%d\n"
-			,TABLE_CELLTERRAIN_SYMBOL[CELLTERRAIN_WALL_HORIZONTAL]);
-	addch(TABLE_CELLTERRAIN_SYMBOL[CELLTERRAIN_WALL_HORIZONTAL]);
-
-
-	getch();
 	endwin();
+
 
 	{
 		FILE * file_savefile = fopen("save.out","w");

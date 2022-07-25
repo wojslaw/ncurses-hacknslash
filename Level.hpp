@@ -39,29 +39,11 @@ enum CellTerrain {
 	CELLTERRAIN_HASH             ,
 	CELLTERRAIN_WALL_HORIZONTAL  ,
 	CELLTERRAIN_WALL_VERTICAL    ,
-	CELLTERRAIN_REWARD ,
+	CELLTERRAIN_REWARD_FELSTACK ,
+	CELLTERRAIN_REWARD_GOLD ,
 
 	CELLTERRAIN_COUNT ,
 };
-
-
-// why doesn't this work?? ACS_HLINE gets drawn as ^0
-// aah I think I know - ACS_ get initialized or something only after ncurses is started
-	const chtype
-TABLE_CELLTERRAIN_SYMBOL[CELLTERRAIN_COUNT] = {
-		[CELLTERRAIN_NONE            ] = ' ' ,
-		[CELLTERRAIN_WARNING         ] = '.' ,
-		[CELLTERRAIN_RUBBLE          ] = '~' ,
-		[CELLTERRAIN_HASH            ] = '#' ,
-		[CELLTERRAIN_WALL_HORIZONTAL ] = (chtype)ACS_HLINE ,
-		[CELLTERRAIN_WALL_VERTICAL   ] = (chtype)ACS_VLINE ,
-		[CELLTERRAIN_REWARD          ] = '$' ,
-};
-
-
-
-
-
 
 
 
@@ -71,6 +53,7 @@ TABLE_CELLTERRAIN_SYMBOL[CELLTERRAIN_COUNT] = {
 struct LevelCell {
 	enum CellTerrain cellterrain = CELLTERRAIN_NONE;
 	bool has_entity = false;
+	enum RewardState rewardstate = RewardState_none;
 	IDEntity id_of_entity = IDEntity_invalid;
 	VisualEntity const * ptr_visual_entity = 0;
 
@@ -81,18 +64,17 @@ struct LevelCell {
 	bool is_cell_blocked(void) const;
 	bool is_cell_walkable(void) const;
 
+	void add_reward(enum RewardState _rewardstate);
 	void set_cell_terrain_if_empty(enum CellTerrain const _cellterrain) ;
 	void set_blocked_by_entity(IDEntity id);
+	enum RewardState try_to_claim_reward(void);
 
+	// TODO render with a blink-cycle(maybe every 0.25 seconds or something, the level will cycle through showing reward-terrain-entity )
+	void wrender(WINDOW * w) const;
 
 	// mutating methods
 	void damage_this_cell(void);
 
-	void wrender(WINDOW * w) const;
-	void wrender_move(WINDOW * w
-			,int const y
-			,int const x
-			) const ;
 
 	void wprint_detailed_info(WINDOW * w);
 };

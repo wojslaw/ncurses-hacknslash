@@ -44,6 +44,25 @@ const Vec2d DIRECTION_VECTOR[DIRECTION_COUNT] = {
 };
 
 
+enum RewardState {
+	RewardState_none  ,
+	RewardState_collected ,
+	RewardState_gold  ,
+	RewardState_felstack  ,
+};
+
+
+
+
+	enum RewardState
+try_to_claim_reward_at_ptr(enum RewardState * ptr_rewardstate);
+
+
+
+
+
+
+
 
 
 
@@ -181,6 +200,7 @@ struct Entity {
 	int  ncurses_get_symbol(void) const ;
 	int ncurses_get_attr_life(void) const ;
 	int ncurses_get_attr_lifebar(void) const;
+	enum RewardState rewardstate = RewardState_none;
 	bool is_renderable(void) const ;
 	bool is_heavily_damaged(void) const ;
 	bool is_slowed(void) const;
@@ -259,6 +279,8 @@ public:
 		 WINDOW * w) const ;
 
 	void wprint_detailed_entity_info_enemy(WINDOW * w) const;
+
+	enum RewardState try_to_claim_reward(void);
 };
 
 
