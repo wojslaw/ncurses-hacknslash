@@ -9,6 +9,76 @@
 
 
 
+
+	chtype
+cellterrain_symbol(enum CellTerrain cellterrain)
+{
+	return(TABLE_CELLTERRAIN_SYMBOL[cellterrain]);
+	switch(cellterrain) {
+		case CELLTERRAIN_NONE            :return ' ' ;
+		case CELLTERRAIN_WARNING         :return '.' ;
+		case CELLTERRAIN_RUBBLE          :return '~' ;
+		case CELLTERRAIN_HASH            :return '#' ;
+		case CELLTERRAIN_WALL_HORIZONTAL :return ACS_HLINE ;
+		case CELLTERRAIN_WALL_VERTICAL   :return ACS_VLINE ;
+		case CELLTERRAIN_REWARD          :return '$' ;
+		default: assert(false);
+	}
+}
+
+
+
+int const TABLE_CELLTERRAIN_IS_BLOCKING[] = {
+	[CELLTERRAIN_NONE]    = false ,
+	[CELLTERRAIN_WARNING] = false ,
+	[CELLTERRAIN_RUBBLE]          = true ,
+	[CELLTERRAIN_HASH]            = true ,
+	[CELLTERRAIN_WALL_HORIZONTAL] = true ,
+	[CELLTERRAIN_WALL_VERTICAL]   = true ,
+	[CELLTERRAIN_REWARD]          = false ,
+};
+
+
+int const TABLE_CELLTERRAIN_IS_DESTRUCTIBLE[] = {
+	[CELLTERRAIN_NONE]    = false ,
+	[CELLTERRAIN_WARNING] = false ,
+	[CELLTERRAIN_RUBBLE]          = true ,
+	[CELLTERRAIN_HASH]            = true ,
+	[CELLTERRAIN_WALL_HORIZONTAL] = true ,
+	[CELLTERRAIN_WALL_VERTICAL]   = true ,
+	[CELLTERRAIN_REWARD]          = true ,
+};
+
+
+int const TABLE_CELLTERRAIN_IS_OVERWRITEABLE[] = {
+	[CELLTERRAIN_NONE]            = false ,
+	[CELLTERRAIN_WARNING]         = false ,
+	[CELLTERRAIN_RUBBLE]          = false ,
+	[CELLTERRAIN_HASH]            = false ,
+	[CELLTERRAIN_WALL_HORIZONTAL] = false ,
+	[CELLTERRAIN_WALL_VERTICAL]   = false ,
+	[CELLTERRAIN_REWARD]          = false ,
+};
+
+
+CellTerrain const TABLE_CELLTERRAIN_WHEN_DAMAGED_REDUCE_TO[] = {
+	[CELLTERRAIN_NONE]            = CELLTERRAIN_NONE   ,
+	[CELLTERRAIN_WARNING]         = CELLTERRAIN_NONE   ,
+	[CELLTERRAIN_RUBBLE]          = CELLTERRAIN_NONE   ,
+	[CELLTERRAIN_HASH]            = CELLTERRAIN_RUBBLE ,
+	[CELLTERRAIN_WALL_HORIZONTAL] = CELLTERRAIN_RUBBLE ,
+	[CELLTERRAIN_WALL_VERTICAL]   = CELLTERRAIN_RUBBLE ,
+	[CELLTERRAIN_REWARD]          = CELLTERRAIN_NONE   ,
+};
+
+
+
+
+
+
+
+
+
 	void
 LevelCell::set_blocked_by_entity(IDEntity id)
 {
@@ -21,7 +91,7 @@ LevelCell::set_blocked_by_entity(IDEntity id)
 LevelCell::clear(void)
 {
 	has_entity = false;
-	id_of_entity = -1;
+	id_of_entity = IDEntity_invalid;
 	ptr_visual_entity = 0;
 }
 
@@ -97,15 +167,16 @@ LevelCell::wrender(WINDOW * w) const
 		wattron(w,ATTR_TERRAIN);
 	}
 	// the ACS_HLINE and ACS_VLINE don't want to work from an array ;_; whether int or chtype
-	switch(cellterrain) {
-		case CELLTERRAIN_NONE            : waddch(w,' '        ); break;
-		case CELLTERRAIN_WARNING         : waddch(w,'.'        ); break;
-		case CELLTERRAIN_RUBBLE          : waddch(w,'~'        ); break;
-		case CELLTERRAIN_HASH            : waddch(w,'#'        ); break;
-		case CELLTERRAIN_WALL_HORIZONTAL : waddch(w,ACS_HLINE  ); break;
-		case CELLTERRAIN_WALL_VERTICAL   : waddch(w,ACS_VLINE  ); break;
-		case CELLTERRAIN_CORPSE          : waddch(w,'%'        ); break;
-	}
+	waddch(w,cellterrain_symbol(cellterrain));
+	/* switch(cellterrain) { */
+	/* 	case CELLTERRAIN_NONE            : waddch(w,' '        ); break; */
+	/* 	case CELLTERRAIN_WARNING         : waddch(w,'.'        ); break; */
+	/* 	case CELLTERRAIN_RUBBLE          : waddch(w,'~'        ); break; */
+	/* 	case CELLTERRAIN_HASH            : waddch(w,'#'        ); break; */
+	/* 	case CELLTERRAIN_WALL_HORIZONTAL : waddch(w,ACS_HLINE  ); break; */
+	/* 	case CELLTERRAIN_WALL_VERTICAL   : waddch(w,ACS_VLINE  ); break; */
+	/* 	case CELLTERRAIN_REWARD          : waddch(w,'%'        ); break; */
+	/* } */
 	if(cellterrain != CELLTERRAIN_NONE) {
 		wattroff(w,ATTR_TERRAIN);
 	}
@@ -123,7 +194,7 @@ LevelCell::wprint_detailed_info(WINDOW * w)
 	}
 	if(TABLE_CELLTERRAIN_IS_DESTRUCTIBLE[cellterrain]) {
 		wprintw(w,"destructible into: %c\n"
-				,TABLE_CELLTERRAIN_SYMBOL[TABLE_CELLTERRAIN_WHEN_DAMAGED_REDUCE_TO[cellterrain]]
+				,cellterrain_symbol(TABLE_CELLTERRAIN_WHEN_DAMAGED_REDUCE_TO[cellterrain])
 				);
 	}
 }

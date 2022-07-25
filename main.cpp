@@ -409,13 +409,9 @@ int main()
 		LEVEL.wprint_entitylist(w_text_entitylist);
 		LEVEL.ref_player_entity().wprint_detailed_entity_info(w_text_player);
 		werase(w_text_target);
-		if( (LEVEL.ref_player_entity().has_selected_target)
-		    &&
-			(LEVEL.ref_player_entity().id_of_target > 0)
-				) {
+		if( LEVEL.ref_player_entity().has_selected_target) {
 			LEVEL.ref_target().wprint_detailed_entity_info_enemy(w_text_target);
 		}
-		mvaddch(LINES-2,COLS-2,TABLE_CELLTERRAIN_SYMBOL[CELLTERRAIN_WALL_HORIZONTAL]);
 		wrefresh(w_text_target);
 		wrefresh(w_gamewindow);
 		wrefresh(w_text_entitylist);
@@ -432,8 +428,24 @@ int main()
 		}
 	} // loop
 
+	// why doesn't this work?? ACS_HLINE gets drawn as ^0
+	const chtype
+		TABLE[1] = {
+			ACS_HLINE ,
+
+		};
+
+	timeout(-1);
+	clear();
+	printw("\n\n%d\n" , ACS_HLINE);
+	addch(ACS_HLINE);
+
+	printw("\n\n%d\n"
+			,TABLE_CELLTERRAIN_SYMBOL[CELLTERRAIN_WALL_HORIZONTAL]);
+	addch(TABLE_CELLTERRAIN_SYMBOL[CELLTERRAIN_WALL_HORIZONTAL]);
 
 
+	getch();
 	endwin();
 
 	{

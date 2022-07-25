@@ -16,6 +16,7 @@
 typedef struct Level Level;
 typedef struct LevelCell LevelCell;
 typedef size_t IDEntity;
+constexpr IDEntity IDEntity_invalid = -1;
 
 
 #define FLAG_PRINT_ENTITYLIST_DEBUG  false
@@ -29,61 +30,38 @@ typedef size_t IDEntity;
 
 
 
+
+
 enum CellTerrain {
 	CELLTERRAIN_NONE = 0 ,
-	CELLTERRAIN_WARNING ,
-	CELLTERRAIN_RUBBLE ,
-	CELLTERRAIN_HASH ,
-	CELLTERRAIN_WALL_HORIZONTAL ,
-	CELLTERRAIN_WALL_VERTICAL ,
-	CELLTERRAIN_CORPSE ,
+	CELLTERRAIN_WARNING          ,
+	CELLTERRAIN_RUBBLE           ,
+	CELLTERRAIN_HASH             ,
+	CELLTERRAIN_WALL_HORIZONTAL  ,
+	CELLTERRAIN_WALL_VERTICAL    ,
+	CELLTERRAIN_REWARD ,
+
+	CELLTERRAIN_COUNT ,
 };
 
 
-// not that useful, because somehow reading from the array doesn't show the proper values ;_;
-chtype const TABLE_CELLTERRAIN_SYMBOL[] = {
-	[CELLTERRAIN_NONE]             = ' ' ,
-	[CELLTERRAIN_WARNING]          = '.' ,
-	[CELLTERRAIN_RUBBLE]           = '~' ,
-	[CELLTERRAIN_HASH]             = '#' ,
-	[CELLTERRAIN_WALL_HORIZONTAL]  = ACS_HLINE ,
-	[CELLTERRAIN_WALL_VERTICAL]    = ACS_VLINE ,
-	[CELLTERRAIN_CORPSE]           = '%' ,
+// why doesn't this work?? ACS_HLINE gets drawn as ^0
+// aah I think I know - ACS_ get initialized or something only after ncurses is started
+	const chtype
+TABLE_CELLTERRAIN_SYMBOL[CELLTERRAIN_COUNT] = {
+		[CELLTERRAIN_NONE            ] = ' ' ,
+		[CELLTERRAIN_WARNING         ] = '.' ,
+		[CELLTERRAIN_RUBBLE          ] = '~' ,
+		[CELLTERRAIN_HASH            ] = '#' ,
+		[CELLTERRAIN_WALL_HORIZONTAL ] = (chtype)ACS_HLINE ,
+		[CELLTERRAIN_WALL_VERTICAL   ] = (chtype)ACS_VLINE ,
+		[CELLTERRAIN_REWARD          ] = '$' ,
 };
 
 
 
-int const TABLE_CELLTERRAIN_IS_BLOCKING[] = {
-	[CELLTERRAIN_NONE]    = false ,
-	[CELLTERRAIN_WARNING] = false ,
-	[CELLTERRAIN_RUBBLE]          = true ,
-	[CELLTERRAIN_HASH]            = true ,
-	[CELLTERRAIN_WALL_HORIZONTAL] = true ,
-	[CELLTERRAIN_WALL_VERTICAL]   = true ,
-	[CELLTERRAIN_CORPSE]          = false ,
-};
 
 
-int const TABLE_CELLTERRAIN_IS_DESTRUCTIBLE[] = {
-	[CELLTERRAIN_NONE]    = false ,
-	[CELLTERRAIN_WARNING] = false ,
-	[CELLTERRAIN_RUBBLE]          = true ,
-	[CELLTERRAIN_HASH]            = true ,
-	[CELLTERRAIN_WALL_HORIZONTAL] = true ,
-	[CELLTERRAIN_WALL_VERTICAL]   = true ,
-	[CELLTERRAIN_CORPSE]          = true ,
-};
-
-
-CellTerrain const TABLE_CELLTERRAIN_WHEN_DAMAGED_REDUCE_TO[] = {
-	[CELLTERRAIN_NONE]            = CELLTERRAIN_NONE   ,
-	[CELLTERRAIN_WARNING]         = CELLTERRAIN_NONE   ,
-	[CELLTERRAIN_RUBBLE]          = CELLTERRAIN_NONE   ,
-	[CELLTERRAIN_HASH]            = CELLTERRAIN_RUBBLE ,
-	[CELLTERRAIN_WALL_HORIZONTAL] = CELLTERRAIN_RUBBLE ,
-	[CELLTERRAIN_WALL_VERTICAL]   = CELLTERRAIN_RUBBLE ,
-	[CELLTERRAIN_CORPSE]          = CELLTERRAIN_NONE   ,
-};
 
 
 
@@ -93,7 +71,7 @@ CellTerrain const TABLE_CELLTERRAIN_WHEN_DAMAGED_REDUCE_TO[] = {
 struct LevelCell {
 	enum CellTerrain cellterrain = CELLTERRAIN_NONE;
 	bool has_entity = false;
-	size_t id_of_entity = (size_t)(-1);
+	IDEntity id_of_entity = IDEntity_invalid;
 	VisualEntity const * ptr_visual_entity = 0;
 
 	void clear(void);
